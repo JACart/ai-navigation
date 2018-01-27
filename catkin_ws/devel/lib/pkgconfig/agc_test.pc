@@ -1,0 +1,8 @@
+prefix=/home/weilannw/catkin_ws/devel
+
+Name: agc_test
+Description: Description of agc_test
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/weilannw/catkin_ws/devel/lib 
+Requires: 
