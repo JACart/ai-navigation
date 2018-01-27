@@ -1,2 +1,0 @@
-agc_test
--DCATKIN_DEVEL_PREFIX=/home/weilannw/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/weilannw/catkin_ws/install -G Unix Makefiles
