@@ -1,0 +1,6 @@
+<launch>
+  <param name="robot_description" textfile="$(find agc_test)/golfcart.sdf" />
+  <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+  <node name="spawn_sdf" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description -sdf -model golfcart" />
+</launch>
