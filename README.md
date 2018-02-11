@@ -4,7 +4,9 @@
 How to use this package:
 
 1 Have ROS kinetic installed: http://wiki.ros.org/kinetic/Installation/Ubuntu
+
 2 Put this repo in your ~/ directory
+
 3 In the workspace's root directory run the following command. 
   If your ~/.bashrc file contains the command 
   "source <current directory this readme is in>/devel/setup.bash", delete it
