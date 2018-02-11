@@ -5,13 +5,9 @@ How to use this package:
 
 1 Have ROS kinetic installed: http://wiki.ros.org/kinetic/Installation/Ubuntu
 2 Put this repo in your ~/ directory
-3 In the workspace's root directory run:
-	sudo apt-get install ros-kinetic-controller-manager
-	catkin_make
-        source $(pwd)/devel/setup.bash
-	echo source $(pwd)/devel/setup.bash >> ~/.bashrc
-	rosdep install --from-paths src --ignore-src
-  Now the catkin workspace is set up and necessary dependencies are installed
+3 In the workspace's root directory run the following command: 
+	bash workspace_setup.bash
+  If no errors, the catkin workspace is set up and necessary dependencies are installed
 4 To run the simulation use the following commands
   each in a new terminal tab:
 	roscore 
