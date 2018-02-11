@@ -9,7 +9,7 @@ How to use this package:
 
 3 In the workspace's root directory run the following command. 
   If your ~/.bashrc file contains the command 
-  "source *current directory this readme is in*/devel/setup.bash", delete it
+  "source [current directory this readme is in]/devel/setup.bash", delete it
   and restart the terminal before running:
 
 	source workspace_setup.bash
