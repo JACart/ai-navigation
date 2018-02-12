@@ -2,7 +2,6 @@
 set -x
 sudo apt-get install ros-kinetic-controller-manager
 cd src
-git clone https://github.com/weilannw/ackermann_vehicle-1.git
 git clone https://github.com/ros-drivers/ackermann_msgs.git
 cd ..
 catkin_make
