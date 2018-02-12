@@ -1,9 +1,6 @@
 #!bin/bash
 set -x
 sudo apt-get install ros-kinetic-controller-manager
-cd src
-git clone https://github.com/ros-drivers/ackermann_msgs.git
-cd ..
 catkin_make
 source $(pwd)/devel/setup.bash
 echo source $(pwd)/devel/setup.bash >> ~/.bashrc

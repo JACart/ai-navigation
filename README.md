@@ -1,6 +1,10 @@
 # Autonomous-Navigation
 *Zack Allen Nicholas Weiland Jordan Domsky Alex Martin*
 
+Install with:
+
+	git clone --recurse-submodules https://github.com/domskyja/Autonomous-Navigation.git
+
 How to use this package:
 
 1 Have ROS kinetic installed: http://wiki.ros.org/kinetic/Installation/Ubuntu
