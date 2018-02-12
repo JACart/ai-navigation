@@ -1,0 +1,3 @@
+[submodule "ackermann_msgs"]
+	path = ackermann_msgs
+	url = https://github.com/ros-drivers/ackermann_msgs.git
