@@ -1,8 +1,0 @@
-prefix=/home/weilannw/Autonomous-Navigation/planning_navigation/devel
-
-Name: planning_msgs
-Description: Description of planning_msgs
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/weilannw/Autonomous-Navigation/planning_navigation/devel/lib 
-Requires: 

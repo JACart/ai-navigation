@@ -1,0 +1,8 @@
+prefix=/home/weilannw/Autonomous-Navigation/catkin_ws/devel
+
+Name: navigation
+Description: Description of navigation
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/weilannw/Autonomous-Navigation/catkin_ws/devel/lib 
+Requires: message_runtime

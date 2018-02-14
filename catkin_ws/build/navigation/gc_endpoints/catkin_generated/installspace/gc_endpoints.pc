@@ -1,0 +1,8 @@
+prefix=/home/weilannw/Autonomous-Navigation/catkin_ws/install
+
+Name: gc_endpoints
+Description: Description of gc_endpoints
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/weilannw/Autonomous-Navigation/catkin_ws/install/lib 
+Requires: 
