@@ -1,0 +1,8 @@
+prefix=/home/weilannw/Autonomous-Navigation/planning_navigation/devel
+
+Name: gc_planning
+Description: Description of gc_planning
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/weilannw/Autonomous-Navigation/planning_navigation/devel/lib 
+Requires: 

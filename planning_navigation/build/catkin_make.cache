@@ -1,0 +1,2 @@
+gc_endpoints:gc_planning:gc_testing/gc_description:gc_testing/gc_testing
+-DCATKIN_DEVEL_PREFIX=/home/weilannw/Autonomous-Navigation/planning_navigation/devel -DCMAKE_INSTALL_PREFIX=/home/weilannw/Autonomous-Navigation/planning_navigation/install -G Unix Makefiles
