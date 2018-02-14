@@ -117,10 +117,12 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/gtest/cmake_install.cmake")
-  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_testing/gc_description/cmake_install.cmake")
-  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_endpoints/cmake_install.cmake")
-  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_planning/cmake_install.cmake")
-  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_testing/gc_testing/cmake_install.cmake")
+  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_endpoints/cmake_install.cmake")
+  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_planning/cmake_install.cmake")
+  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_testing/gc_testing/cmake_install.cmake")
+  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_testing/gc_testing_description/cmake_install.cmake")
+  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation_msgs/cmake_install.cmake")
+  include("/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/navigation/cmake_install.cmake")
 
 endif()
 

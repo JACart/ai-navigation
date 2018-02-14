@@ -303,108 +303,144 @@ clean: gtest/CMakeFiles/gtest_main.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Directory level rules for directory gc_testing/gc_description
+# Directory level rules for directory navigation/gc_endpoints
 
 # Convenience name for "all" pass in the directory.
-gc_testing/gc_description/all:
+navigation/gc_endpoints/all:
 
-.PHONY : gc_testing/gc_description/all
+.PHONY : navigation/gc_endpoints/all
 
 # Convenience name for "clean" pass in the directory.
-gc_testing/gc_description/clean: gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
+navigation/gc_endpoints/clean: navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/clean
 
-.PHONY : gc_testing/gc_description/clean
+.PHONY : navigation/gc_endpoints/clean
 
 # Convenience name for "preinstall" pass in the directory.
-gc_testing/gc_description/preinstall:
+navigation/gc_endpoints/preinstall:
 
-.PHONY : gc_testing/gc_description/preinstall
+.PHONY : navigation/gc_endpoints/preinstall
 
 #=============================================================================
-# Target rules for target gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir
+# Target rules for target navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir
 
 # All Build rule for target.
-gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/all:
-	$(MAKE) -f gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/build.make gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/depend
-	$(MAKE) -f gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/build.make gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/build
+navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/all:
+	$(MAKE) -f navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/build.make navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/depend
+	$(MAKE) -f navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/build.make navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/weilannw/Autonomous-Navigation/planning_navigation/build/CMakeFiles --progress-num= "Built target _catkin_empty_exported_target"
-.PHONY : gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/all
+.PHONY : navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/all
 
 # Build rule for subdir invocation for target.
-gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/rule: cmake_check_build_system
+navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/weilannw/Autonomous-Navigation/planning_navigation/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/weilannw/Autonomous-Navigation/planning_navigation/build/CMakeFiles 0
-.PHONY : gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/rule
+.PHONY : navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/rule
 
 # Convenience name for target.
-_catkin_empty_exported_target: gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/rule
+_catkin_empty_exported_target: navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/rule
 
 .PHONY : _catkin_empty_exported_target
 
 # clean rule for target.
-gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/clean:
-	$(MAKE) -f gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/build.make gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
-.PHONY : gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
+navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/clean:
+	$(MAKE) -f navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/build.make navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/clean
+.PHONY : navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/clean
 
 # clean rule for target.
-clean: gc_testing/gc_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
+clean: navigation/gc_endpoints/CMakeFiles/_catkin_empty_exported_target.dir/clean
 
 .PHONY : clean
 
 #=============================================================================
-# Directory level rules for directory gc_endpoints
+# Directory level rules for directory navigation/gc_planning
 
 # Convenience name for "all" pass in the directory.
-gc_endpoints/all:
+navigation/gc_planning/all:
 
-.PHONY : gc_endpoints/all
+.PHONY : navigation/gc_planning/all
 
 # Convenience name for "clean" pass in the directory.
-gc_endpoints/clean:
+navigation/gc_planning/clean:
 
-.PHONY : gc_endpoints/clean
+.PHONY : navigation/gc_planning/clean
 
 # Convenience name for "preinstall" pass in the directory.
-gc_endpoints/preinstall:
+navigation/gc_planning/preinstall:
 
-.PHONY : gc_endpoints/preinstall
+.PHONY : navigation/gc_planning/preinstall
 
 #=============================================================================
-# Directory level rules for directory gc_planning
+# Directory level rules for directory navigation/gc_testing/gc_testing
 
 # Convenience name for "all" pass in the directory.
-gc_planning/all:
+navigation/gc_testing/gc_testing/all:
 
-.PHONY : gc_planning/all
+.PHONY : navigation/gc_testing/gc_testing/all
 
 # Convenience name for "clean" pass in the directory.
-gc_planning/clean:
+navigation/gc_testing/gc_testing/clean:
 
-.PHONY : gc_planning/clean
+.PHONY : navigation/gc_testing/gc_testing/clean
 
 # Convenience name for "preinstall" pass in the directory.
-gc_planning/preinstall:
+navigation/gc_testing/gc_testing/preinstall:
 
-.PHONY : gc_planning/preinstall
+.PHONY : navigation/gc_testing/gc_testing/preinstall
 
 #=============================================================================
-# Directory level rules for directory gc_testing/gc_testing
+# Directory level rules for directory navigation/gc_testing/gc_testing_description
 
 # Convenience name for "all" pass in the directory.
-gc_testing/gc_testing/all:
+navigation/gc_testing/gc_testing_description/all:
 
-.PHONY : gc_testing/gc_testing/all
+.PHONY : navigation/gc_testing/gc_testing_description/all
 
 # Convenience name for "clean" pass in the directory.
-gc_testing/gc_testing/clean:
+navigation/gc_testing/gc_testing_description/clean:
 
-.PHONY : gc_testing/gc_testing/clean
+.PHONY : navigation/gc_testing/gc_testing_description/clean
 
 # Convenience name for "preinstall" pass in the directory.
-gc_testing/gc_testing/preinstall:
+navigation/gc_testing/gc_testing_description/preinstall:
 
-.PHONY : gc_testing/gc_testing/preinstall
+.PHONY : navigation/gc_testing/gc_testing_description/preinstall
+
+#=============================================================================
+# Directory level rules for directory navigation_msgs
+
+# Convenience name for "all" pass in the directory.
+navigation_msgs/all:
+
+.PHONY : navigation_msgs/all
+
+# Convenience name for "clean" pass in the directory.
+navigation_msgs/clean:
+
+.PHONY : navigation_msgs/clean
+
+# Convenience name for "preinstall" pass in the directory.
+navigation_msgs/preinstall:
+
+.PHONY : navigation_msgs/preinstall
+
+#=============================================================================
+# Directory level rules for directory navigation/navigation
+
+# Convenience name for "all" pass in the directory.
+navigation/navigation/all:
+
+.PHONY : navigation/navigation/all
+
+# Convenience name for "clean" pass in the directory.
+navigation/navigation/clean:
+
+.PHONY : navigation/navigation/clean
+
+# Convenience name for "preinstall" pass in the directory.
+navigation/navigation/preinstall:
+
+.PHONY : navigation/navigation/preinstall
 
 #=============================================================================
 # Special targets to cleanup operation of make.

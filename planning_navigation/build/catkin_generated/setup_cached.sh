@@ -8,6 +8,8 @@
 
 # modified environment variables
 export CMAKE_PREFIX_PATH="/home/weilannw/Autonomous-Navigation/planning_navigation/devel:$CMAKE_PREFIX_PATH"
+export LD_LIBRARY_PATH="/home/weilannw/Autonomous-Navigation/planning_navigation/devel/lib:$LD_LIBRARY_PATH"
+export PKG_CONFIG_PATH="/home/weilannw/Autonomous-Navigation/planning_navigation/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
 export PWD="/home/weilannw/Autonomous-Navigation/planning_navigation/build"
 export ROSLISP_PACKAGE_DIRECTORIES="/home/weilannw/Autonomous-Navigation/planning_navigation/devel/share/common-lisp"
 export ROS_PACKAGE_PATH="/home/weilannw/Autonomous-Navigation/planning_navigation/src:$ROS_PACKAGE_PATH"

@@ -256,22 +256,46 @@ gc_description_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_n
 gc_description_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/gc_testing/gc_description
 
 //Value Computed by CMake
-gc_endpoints_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_endpoints
+gc_endpoints_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_endpoints
 
 //Value Computed by CMake
-gc_endpoints_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/gc_endpoints
+gc_endpoints_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation/gc_endpoints
 
 //Value Computed by CMake
-gc_planning_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_planning
+gc_planning_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_planning
 
 //Value Computed by CMake
-gc_planning_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/gc_planning
+gc_planning_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation/gc_planning
 
 //Value Computed by CMake
-gc_testing_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/gc_testing/gc_testing
+gc_testing_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_testing/gc_testing
 
 //Value Computed by CMake
-gc_testing_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/gc_testing/gc_testing
+gc_testing_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation/gc_testing/gc_testing
+
+//Value Computed by CMake
+gc_testing_description_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/gc_testing/gc_testing_description
+
+//Value Computed by CMake
+gc_testing_description_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation/gc_testing/gc_testing_description
+
+//The directory containing a CMake configuration file for gencpp.
+gencpp_DIR:PATH=/opt/ros/kinetic/share/gencpp/cmake
+
+//The directory containing a CMake configuration file for geneus.
+geneus_DIR:PATH=/opt/ros/kinetic/share/geneus/cmake
+
+//The directory containing a CMake configuration file for genlisp.
+genlisp_DIR:PATH=/opt/ros/kinetic/share/genlisp/cmake
+
+//The directory containing a CMake configuration file for genmsg.
+genmsg_DIR:PATH=/opt/ros/kinetic/share/genmsg/cmake
+
+//The directory containing a CMake configuration file for gennodejs.
+gennodejs_DIR:PATH=/opt/ros/kinetic/share/gennodejs/cmake
+
+//The directory containing a CMake configuration file for genpy.
+genpy_DIR:PATH=/opt/ros/kinetic/share/genpy/cmake
 
 //Value Computed by CMake
 gtest_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/gtest
@@ -297,6 +321,29 @@ gtest_force_shared_crt:BOOL=OFF
 
 //Dependencies for the target
 gtest_main_LIB_DEPENDS:STATIC=general;-lpthread;general;gtest;
+
+//The directory containing a CMake configuration file for message_generation.
+message_generation_DIR:PATH=/opt/ros/kinetic/share/message_generation/cmake
+
+//Value Computed by CMake
+navigation_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation/navigation
+
+//Value Computed by CMake
+navigation_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation/navigation
+
+//Value Computed by CMake
+navigation_msgs_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation_msgs
+
+navigation_msgs_DIR:PATH=
+
+//Value Computed by CMake
+navigation_msgs_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation_msgs
+
+//Value Computed by CMake
+planning_msgs_BINARY_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/build/navigation_msgs
+
+//Value Computed by CMake
+planning_msgs_SOURCE_DIR:STATIC=/home/weilannw/Autonomous-Navigation/planning_navigation/src/navigation_msgs
 
 
 ########################
@@ -400,7 +447,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=6
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
