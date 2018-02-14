@@ -1,6 +1,0 @@
-#!/bin/bash
-
-DATA="data: '${1:-0.0} ${2:-0.0} ${3:-0.01} ${4:-10.0}'"
-COMMAND="rostopic pub -1 /plan_instr std_msgs/String \"${DATA}\""
-echo "$COMMAND"
-eval $COMMAND
