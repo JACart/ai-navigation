@@ -1,5 +1,5 @@
 import rospy
-from auto_ros.msg import fe_request, lat_long_point, list_of_goals
+from navigation_msgs.msg import fe_request, lat_long_point, list_of_goals
 
 wilson_address = "951 Madison Dr. Harrisonburg, VA"
 lakeview_address = "298 Port Republic Road, Harrisonburg, VA"
