@@ -1,6 +1,6 @@
 *.swp
 *.swo
-*/devel/
-*/build/
+catkin_ws/devel
+catkin_ws/build
 src/CMakeLists.txt
 *.catkin_workspace

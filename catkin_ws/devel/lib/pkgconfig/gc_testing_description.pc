@@ -1,8 +1,0 @@
-prefix=/home/weilannw/Autonomous-Navigation/catkin_ws/devel
-
-Name: gc_testing_description
-Description: Description of gc_testing_description
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/weilannw/Autonomous-Navigation/catkin_ws/devel/lib 
-Requires: 
