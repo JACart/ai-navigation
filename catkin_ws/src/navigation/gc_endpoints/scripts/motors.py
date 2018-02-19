@@ -35,8 +35,9 @@ class MotorEndpoint(object):
         self.speed_string =  str(self.goal_speed)+ ',' + str(self.current_speed)
         self.speed_ser.write(self.speed_string.encode())
         rospy.loginfo("String being sent: "+self.speed_string)
-        s
+        
 if __name__ == "__main__": 
-    MotorEndpoint()
-except rospy.ROSInterruptException:
-    pass
+    try:
+        MotorEndpoint()
+    except rospy.ROSInterruptException:
+        pass
