@@ -2,7 +2,7 @@ import rospy
 import serial
 from navigation_msgs.msg import vel_angle
 
-speed_port = '/dev/ttyACM2'
+speed_port = '/dev/ttyACM0'
 turn_port = ''
 test_increment = 0.1
 global current_speed
