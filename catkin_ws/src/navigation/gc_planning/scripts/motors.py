@@ -2,7 +2,7 @@ import rospy
 import serial
 from navigation_msgs.msg import vel_angle
 
-speed_port = '/dev/ttyACM0'
+speed_port = '/dev/ttyACM2'
 turn_port = ''
 test_increment = 0.1
 global current_speed
@@ -33,7 +33,7 @@ class MotorNode(object):
             self.speed_string =  str(self.goal_speed)+ ',' + str(self.current_speed)
             print "String being sent: "+self.speed_string
             self.speed_ser.write(self.speed_string.encode())
-            #response = self.speed_ser.readline()
+            response = self.speed_ser.readline()
             print "Response: "+response
             self.current_speed = self.current_speed +test_increment
             rospy.sleep(0.5)
@@ -48,5 +48,6 @@ class MotorNode(object):
         self.speed_string =  str(self.goal_speed)+ ',' + str(self.current_speed)
         self.speed_ser.write(self.speed_string.encode())
         rospy.loginfo("String being sent: "+self.speed_string)
+        
 if __name__ == "__main__": 
     MotorNode()

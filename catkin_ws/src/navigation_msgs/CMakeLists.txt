@@ -12,6 +12,7 @@ add_message_files(
     list_of_goals.msg
     vel_angle_step.msg
     vel_angle.msg
+    emergency_stop.msg
 )
  generate_messages(
    DEPENDENCIES
