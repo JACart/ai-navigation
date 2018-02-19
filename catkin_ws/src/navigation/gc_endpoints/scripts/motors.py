@@ -2,7 +2,7 @@ import rospy
 import serial
 from navigation_msgs.msg import vel_angle
 
-speed_port = '/dev/ttyACM0'
+speed_port = '/dev/ttyACM0' #hardcoded depending on computer
 turn_port = ''
 
 class MotorEndpoint(object):
@@ -33,6 +33,7 @@ class MotorEndpoint(object):
     def motion_callback(self, planned_vel_angle):
         if self.killswitch:
             self.speed_ser.write("0.0, 0.0".encode())
+            rospy.loginfo("Killswitch activated")
         else
             self.goal_speed = planned_vel_angle.vel
             self.goal_angle = planned_vel_angle.angle
