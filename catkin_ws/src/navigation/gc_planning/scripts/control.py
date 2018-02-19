@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-#this will be replaced with pid controller code
+#linear step function will probably be replaced with something better
 import rospy
 import math
 from geometry_msgs.msg import Vector3
 from navigation_msgs.msg import vel_angle
 from navigation_msgs.msg import vel_angle_step
 class VelStepNode(object):
+   
     def __init__(self):
         self.cmd_msg = vel_angle()
         self.cmd_msg.vel = 0.0
@@ -20,9 +21,9 @@ class VelStepNode(object):
         self.control()
         
     def control(self):
-        cmd_p = rospy.Publisher('nav_cmd', vel_angle, queue_size=10)
-        instr_s = rospy.Subscriber('nav_instr', vel_angle_step, self.get_input)
-        rospy.init_node('control', anonymous=False)
+        cmd_p = rospy.Publisher('/nav_cmd', vel_angle, queue_size=10)
+        instr_s = rospy.Subscriber('/nav_instr', vel_angle_step, self.get_input)
+        rospy.init_node('vel_step', anonymous=False)
         rate = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():
             self.cmd_msg.vel = self.step_toward_value(self.cmd_msg.vel, self.input_vel, self.vel_step)
