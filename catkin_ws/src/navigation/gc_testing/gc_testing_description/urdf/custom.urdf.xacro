@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="tortoisebot">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="tortoisebot">
   <link name="base_link">
     <visual>
       <geometry>
@@ -123,6 +123,13 @@
     <child link="left_wheel"/>
     <origin rpy="-1.5708 0 0" xyz="-1.1685 0.5 -0.889"/>
   </joint>
+
+
+  <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+  <VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" hz="10" samples="440">
+    <origin xyz="0 0 0.889" rpy="0 0 0" />
+  </VLP-16>
+
 
   <gazebo>
     <plugin name="differential_drive_controller"
