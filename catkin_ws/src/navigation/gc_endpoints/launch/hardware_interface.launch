@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <group>
+        <node name="motors" pkg="gc_endpoints" type="motors.py"/>
+        <node name="kill_switch" pkg="gc_endpoints" type="emergency_stop.py"/>
+    </group>
+</launch>

@@ -30,8 +30,8 @@ class VelStepNode(object):
             self.cmd_msg.angle = self.step_toward_value(self.cmd_msg.angle, self.input_angle, self.angle_step)
             cmd_p.publish(self.cmd_msg)
             rospy.loginfo("\n\tForward velocity instruction: "+str(self.cmd_msg.vel)+
-    		      "\n\tWheel angle instruction:      "+str(self.cmd_msg.angle)+"\n")+
-                 "\n\tCurrent actual velocity:      "+str(self.cmd_msg.vel_curr)+"\n")
+                          "\n\tWheel angle instruction:      "+str(self.cmd_msg.angle)+
+                          "\n\tCurrent actual velocity:      "+str(self.cmd_msg.vel_curr))
             rate.sleep()
     
     def get_input(self, vel_angle_instr):
@@ -41,7 +41,7 @@ class VelStepNode(object):
         self.vel_step = float(vel_angle_instr.vel_step)
         self.angle_step = float(vel_angle_instr.angle_step)
 
-    def step_toward_value(cur, dest, step): 
+    def step_toward_value(self, cur, dest, step): 
         diff = abs(dest - cur)
         if(diff < step):
             step = diff

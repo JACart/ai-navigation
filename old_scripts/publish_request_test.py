@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import rospy
 from navigation_msgs.msg import fe_request, lat_long_point, list_of_goals
 

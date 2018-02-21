@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="testing" default="true"/>
+  <arg name="gazebo" default="true"/>
+
+  <!-- launch testing interface-->
+  <group  if="$(arg testing)">
+     <include file="$(find gc_testing)/launch/testing_interface.launch">
+          <arg name="gazebo" value="$(arg gazebo)" />
+     </include>
+  </group>
+  <!-- launch hardware interface-->
+  <group unless="$(arg testing)">
+      <include file="$(find gc_endpoints)/launch/hardware_interface.launch"/>
+  </group>
+  <!--always launch planning nodes-->
+  <group>
+      <include file="$(find gc_planning)/launch/planning.launch"/>
+  </group>
+</launch>

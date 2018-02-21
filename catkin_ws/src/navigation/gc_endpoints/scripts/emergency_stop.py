@@ -1,3 +1,4 @@
+#!/usr/bin/env python 
 import rospy
 from navigation_msgs.msg import emergency_stop
 import socket
@@ -28,7 +29,7 @@ class EmergencyNode(object):
                  self.pub.publish(stop_message)
         
 if __name__ == "__main__": 
-    try():
+    try:
         EmergencyNode()
     except rospy.ROSInterruptException:
         pass

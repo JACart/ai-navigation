@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<launch>
+    <group>
+        <node name="control" pkg="gc_planning" type="control.py"/>
+    </group>
+</launch>

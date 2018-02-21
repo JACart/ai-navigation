@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<launch>
+    <arg name="gazebo" default="true"/>
+    <include file="$(find gc_testing_description)/launch/sim.launch">
+        <arg name="gazebo" value="$(arg gazebo)" />
+    </include>
+    <!-- this node translate to cmd_vel from nav_cmd to talk to simulation -->
+    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="vel_angle_to_twist.py"/>
+</launch>
