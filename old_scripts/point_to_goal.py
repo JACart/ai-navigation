@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""
+This code is reference for creating a node that can convert gps differences into XYZ points. It is present in the GPStoXYZ node.
+All of the math has been tested to be correct. (excluding using elevation for z-difference)
+"""
+
 import sys
 import rospy
 import actionlib
@@ -13,6 +18,7 @@ class GoalNode(object):
         
         rospy.init_node('goal_node')
         
+        #These lines arent valid
         self.goal_subscriber = rospy.Subscriber("latlng_goals", CustomMessage)
         self.goal_publisher = rospy.Publisher("point_goal", Point)
 
