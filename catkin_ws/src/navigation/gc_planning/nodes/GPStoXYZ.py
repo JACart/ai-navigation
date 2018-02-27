@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+"""
+Author(s): Zack Allen
 
-#Author(s): Zack Allen
-
+TODO: add a publisher that publishes the current distance between the cars location and the goal location.
+"""
 import sys
 import tf
 import rospy
