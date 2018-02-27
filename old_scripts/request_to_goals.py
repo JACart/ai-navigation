@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""
+This code takes a front end request message, and contacts googlemaps api to recieve a polyline of a valid path. 
+This will likely be unused in the final design.
+"""
+
 import sys
 import rospy
 
