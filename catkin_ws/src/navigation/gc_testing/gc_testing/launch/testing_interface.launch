@@ -5,5 +5,5 @@
         <arg name="gazebo" value="$(arg gazebo)" />
     </include>
     <!-- this node translate to cmd_vel from nav_cmd to talk to simulation -->
-    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="vel_angle_to_twist.py"/>
+    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="nav_cmd_to_cmd_vel.py"/>
 </launch>

@@ -5,7 +5,7 @@ Autonomous golf cart planning and simulation built on ROS kinetic
 
 Cd into planning_navigation and then compile the workspace by running:
 
-        catkin_make
+	catkin_make
 
 Get ros to recognize the package
 
@@ -20,4 +20,6 @@ To get the necessary ros dependencies if you have problems running the launch fi
   
 	rosdep install --from-paths src --ignore-src
 
+Here is the ROS node architecture:
 
+![architecture](./pics/architecture.png)

@@ -5,9 +5,9 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
 class VelAngleToTwist(object):
     def __init__(self):
-      rospy.init_node('vel_angle_to_twist')
+      rospy.init_node('nav_cmd_to_cmd_vel')
       self.cmd_p = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
-      self.vel_angle_s = rospy.Subscriber('nav_cmd', vel_angle, self.convert)
+      self.vel_angle_s = rospy.Subscriber('nav_cmd', vel_angle, self.convert, queue_size = 10)
       self.twist_msg = Twist()
       rospy.spin()
     def convert(self, vel_angle):
