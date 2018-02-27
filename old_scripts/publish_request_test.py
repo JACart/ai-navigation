@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+The purpose of this file is to send an example request that would come from the front end.
+This code would be used if the car itself was making calls to googlemaps api. Other than that, this serves no purpose.
+"""
 import rospy
 from navigation_msgs.msg import fe_request, lat_long_point, list_of_goals
 
