@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+"""
+This script is used to send messages to an arduino over serial. These messages give the motor team the information they need.
+This code should be used as reference when making motor endpoint nodes.
+"""
 import rospy
 import serial
 from navigation_msgs.msg import vel_angle
 
-speed_port = '/dev/ttyACM0'
+speed_port = '/dev/ttyACM0' #This port must be changed whenever using this script to test an arduino. Port varies depending on system.
 turn_port = ''
 test_increment = 0.1
 global current_speed
