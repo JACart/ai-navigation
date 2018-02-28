@@ -17,10 +17,8 @@ import polyline
 from geometry_msgs.msg import Pose, Point
 from navigation_msgs.msg import fe_request, lat_long_point, list_of_goals
 
-google_key = "AIzaSyBr3X8u8KiIUQZ10DklCgZA0v0mwEHqgCo"
-google_elevation_key = "AIzaSyCb4WGLDXdpGa-rxRaEpcXVYdW4cbDatCs"
-google_client_id = "367861727622-dg8ip5ahi55dvaem7gbfir4rusq255f2.apps.googleusercontent.com"
-google_client_secret = "UUEer_AKQq867oxlxj0uWHca"
+google_key = ""
+google_elevation_key = ""
 
 class GoalNode(object):
     
