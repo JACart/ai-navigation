@@ -9,7 +9,7 @@ add_message_files(
     FILES
     fe_request.msg
     lat_long_point.msg
-    list_of_goals.msg
+    waypoints_array.msg
     vel_angle_step.msg
     vel_angle.msg
     emergency_stop.msg
