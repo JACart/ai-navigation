@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #this linear step function will probably be replaced with something better
-from datetime import datetime
+import rospy
 import math
 
 vel_step = 0.05 #per timestep
@@ -23,16 +23,16 @@ class Control(object):
     ''' returns fraction of stepsize based on the desired timestep size and the
 	difference in milliseconds between the current and last call ''' 
     def deltastep(self, stepsize):
-	return self.delta_time/self.timestep * stepsize
+	return (self.delta_time/self.timestep) * stepsize
 
     def update_goal_vel_angle(self, vel_goal, angle_goal):
-	self.prev_time = datetime().total_seconds * 1000
+	self.prev_time = rospy.get_rostime() * 1000
         self.vel_goal = float(vel_goal)
         self.angle_goal = float(angle_goal)
 
     def step(self):
-	millis = datetime().total_seconds
-	self.delta_time = millis * 1000 - self.prev_time
+	millis = rospy.get_rostime() * 1000
+	self.delta_time = millis - self.prev_time
 	self.prev_time = millis
 	self.vel = self.step_toward_value(self.vel, self.vel_goal, self.deltastep(self.vel_step))
 	self.angle = self.step_toward_value(self.angle, self.angle_goal, self.deltastep(self.angle_step))
