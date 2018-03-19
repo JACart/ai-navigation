@@ -2,6 +2,6 @@
 
 <launch>
     <group>
-        <node name="control" pkg="gc_planning" type="control.py"/>
+        <node name="TheOvermind" pkg="gc_planning" type="TheOvermind.py" required="true"/>
     </group>
 </launch>
