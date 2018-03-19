@@ -7,7 +7,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 from navigation_msgs.msg import emergency_stop, lat_long_point 
 from ..scripts import control, point_to_goal
-class Brain(object):
+class TheOvermind(object):
 
     def __init__(self):
         self.vel_curr = 0.0
@@ -40,6 +40,6 @@ class Brain(object):
 	pass
 if __name__ == '__main__':
     try:
-       Brain()
+       TheOvermind()
     except rospy.ROSInterruptException:
         pass
