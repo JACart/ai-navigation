@@ -2,12 +2,12 @@
 
 import rospy
 import math
-import PointToGoal
+import point_to_goal
 from navigation_msgs.msg import WaypointsArray, LatLongPoint 
 
 class WaypointHandler(object):
     ''' must supply a minimum tolerance -- the distance threshold between
-	current location and target wherein the cart is considered to have
+	current location and target where the cart is considered to have
 	reached the target waypoint. '''
     def __init__(self, min_tolerance):
 	self.goal_index = None #index of the current target in waypoints array
@@ -17,12 +17,11 @@ class WaypointHandler(object):
 	self.tolerance = min_tolerance
 
     ''' current actual location updated from gps (pose_and_speed topic) ''' 
-    def set_curr_location(self, odom_point, tolerance):
+    def set_curr_location(self, odom_data, tolerance):
 	#the tolerance passed into this method must somehow be calculated from the Odometry
 	#message's pose covariance matrix
-	self.curr_pos = odom_point
-	self.tolerance = 
-		min_tolerance if (min_tolerance > tolerance) else tolerance
+	self.curr_pos = odom_data
+	self.tolerance = min_tolerance if (min_tolerance > tolerance) else tolerance
 	    #tolerance is updated based on certainty of current location, minimum tolerance is
 	    #used if tolerance is too low
 
@@ -47,11 +46,7 @@ class WaypointHandler(object):
     def distance_from_goal(self):
 	distance = 0
 	if self.waypoints:
-	    distance += point_to_goal.distance_between_points(
-			self.waypoints[self.goal_index].latitude,
-			self.waypoints[self.goal_index].longitude,
-			self.curr_pos.pose.pose.position.x,
-			self.curr_pos.pose.pose.position.y)
+	    distance += self.distance_from_next() 
 	    for i in range(self.goal_index, waypoints.length()-1):
 		point = self.waypoints[i]
 		point2 = self.waypoints[i+1]
@@ -63,12 +58,18 @@ class WaypointHandler(object):
     ''' indicates whether the next point has been reached ''' 
     def reached_next_point(self):
 	goal = self.waypoints[self.goal_index]
-	return (math.abs
-		(point_to_goal.distance_between_points
-			(goal.latitude, goal.longitude, #these are in meters, as are the poses 
-			 self.curr_pos.pose.pose.position.x, self.curr_pos.pose.pose.position.y)) 
-		< tolerance) #not sure if x and y agree with lat and long
+	return math.abs(self.distance_from_next()) < self.tolerance
 
+    ''' distance between car and the next point ''' 
+    def distance_from_next(self):
+	if not self.waypoints:
+	    return 
+	return point_to_goal.distance_between_points(
+			self.waypoints[self.goal_index].latitude,
+			self.waypoints[self.goal_index].longitude,
+			self.curr_pos.pose.pose.position.x,
+			self.curr_pos.pose.pose.position.y) #not sure if x and y agree with lat and long
+   
     ''' current position is a message of type nav_msgs/Odometry. 
 	Returns true if the final goal point has been reached'''
     def update_pos(self, current_position, tolerance):
