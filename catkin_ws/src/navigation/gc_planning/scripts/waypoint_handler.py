@@ -21,7 +21,7 @@ class WaypointHandler(object):
 	#the tolerance passed into this method must somehow be calculated from the Odometry
 	#message's pose covariance matrix
 	self.curr_pos = odom_data
-	self.tolerance = min_tolerance if (min_tolerance > tolerance) else tolerance
+	self.tolerance = self.min_tolerance if (self.min_tolerance > tolerance) else tolerance
 	    #tolerance is updated based on certainty of current location, minimum tolerance is
 	    #used if tolerance is too low
 
@@ -45,18 +45,21 @@ class WaypointHandler(object):
 	and between each waypoint not yet reached'''
     def distance_from_goal(self):
 	distance = 0
-	if self.waypoints:
-	    distance += self.distance_from_next() 
-	    for i in range(self.goal_index, waypoints.length()-1):
-		point = self.waypoints[i]
-		point2 = self.waypoints[i+1]
-		distance += point_to_goal.distance_between_points(
-				point.latitude, point.longitude, point2.latitude, point2.longitude
+	if not self.waypoints:
+	    return distance
+	distance += self.distance_from_next() 
+	for i in range(self.goal_index, waypoints.length()-1):
+ 	    point = self.waypoints[i]
+	    point2 = self.waypoints[i+1]
+	    distance += point_to_goal.distance_between_points(
+		point.latitude, point.longitude, point2.latitude, point2.longitude
 			    )
 	return distance
 				    
     ''' indicates whether the next point has been reached ''' 
     def reached_next_point(self):
+	if not self.waypoints:
+	    return False
 	goal = self.waypoints[self.goal_index]
 	return math.abs(self.distance_from_next()) < self.tolerance
 
@@ -79,6 +82,8 @@ class WaypointHandler(object):
     
     ''' retrieves the current goal '''
     def get_goal(self):
+	if not self.waypoints:
+	    return None
 	return self.waypoints[self.goal_index]	
 
 if __name__ == '__main__':

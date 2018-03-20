@@ -2,6 +2,7 @@
 
 import rospy
 import math
+#from threading import Thread, Lock
 import controller, point_to_goal, waypoint_handler
 from geometry_msgs.msg import Twist, Vector3
 from nav_msgs.msg import Odometry
@@ -16,6 +17,7 @@ class TheOvermind(object):
     def __init__(self):
 	global hertz
 	global tolerance
+#	self.mutex = Lock()
 	self.odom = None
 	self.tolerance = tolerance #allowed imprecision for reaching a waypoint
 	self.current_goal = None #current goal from list of goals
@@ -25,7 +27,6 @@ class TheOvermind(object):
 	#util classes
 	self.waypoints = waypoint_handler.WaypointHandler(self.tolerance)
 	self.controller = controller.Controller(hertz)
-	print self.controller.millis_since_epoch()
 	#publishers                                    
         self.vel_angle_p = rospy.Publisher('/vel_angle', VelAngle, queue_size=10)
         #subscribers	
@@ -33,7 +34,6 @@ class TheOvermind(object):
 	self.point_cloud_s = rospy.Subscriber('/2d_point_cloud', PointCloud2, self.point_cloud_callback, queue_size=10) 
 	self.killswitch_s = rospy.Subscriber('/stop', EmergencyStop, self.killswitch_callback, queue_size=10) 
 	self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
-
         rospy.init_node('the_overmind', anonymous=False)
 	self.control() 
 
@@ -48,13 +48,15 @@ class TheOvermind(object):
 	    rate.sleep()
     
     def odom_callback(self, msg):
+#	self.mutex.acquire()
 	self.odom = msg
 	self.vel_angle.vel_curr = msg.twist.twist.linear.x
 	#if the final goal has not been reached, get the next goal
 	if not self.waypoints.update_pos(msg, 0):
-	    self.current_goal = get_goal()
+	    self.current_goal = self.waypoints.get_goal()
 	else:
 	    self.current_goal = None
+#	self.mutex.release()
 
     ''' set a flag to true if emergency stop is activated '''		
     def killswitch_callback(self, msg):

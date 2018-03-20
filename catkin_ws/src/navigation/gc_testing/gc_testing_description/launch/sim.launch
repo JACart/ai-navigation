@@ -6,7 +6,7 @@
 
   <group>
       <!-- Start Gazebo with an empty world -->
-      <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+      <include file="$(find gc_testing_description)/launch/empty_world.launch"/>
     
       <!-- Spawn a TortoiseBot in Gazebo, taking the description from the
            parameter server -->
