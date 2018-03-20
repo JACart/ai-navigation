@@ -19,10 +19,10 @@ class Control(object):
 	self.delta_time = 0.0
 
     ''' sets the acceleration (velocity step size in terms of timesteps rather than seconds) '''
-    def set_acceleration(self, acceleration):
+    def set_acceleration(self, acceleration, goal_velocity):
 	seconds = self.timestep/1000.0	 #seconds per timestep
 	self.vel_step = acceleration*seconds #meters per timestep
-  
+ 	self.vel_goal = goal_velocity 
     ''' returns fraction of stepsize based on the desired timestep size and the
 	difference in milliseconds between the current and last call ''' 
     def deltastep(self, stepsize):
