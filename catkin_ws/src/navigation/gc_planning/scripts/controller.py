@@ -5,7 +5,6 @@ import math
 
 angle_step = 1.0 #per timestep
 
-''' uses a linear acceleration function '''
 class Controller(object):
     def __init__(self, timestephz):
 	global angle_step
@@ -26,7 +25,7 @@ class Controller(object):
 	(velocity step size in terms of timesteps rather than seconds) '''
     def accelerate(self, acceleration, goal_velocity):
 	seconds = self.timestep/1000.0	 #seconds per timestep
-	self.vel_step = acceleration*seconds #meters per timestep
+	self.vel_step = acceleration*seconds #meters per second per timestep
 	self.vel_goal = goal_velocity
 
     ''' returns fraction of stepsize based on the desired timestep size and the

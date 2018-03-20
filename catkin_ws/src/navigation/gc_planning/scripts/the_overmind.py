@@ -7,9 +7,9 @@ from geometry_msgs.msg import Twist, Vector3
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 from navigation_msgs.msg import EmergencyStop, LatLongPoint, WaypointsArray, VelAngle 
-max_speed = 2.2352 #5 mph converted to m/s
+max_speed = 2.2352 #5 mph converted to m/s (temporary max)
 tolerance = 1.0
-acceleration = 1.5 #acceleration in meters per second used by linear control function
+acceleration = 1.5 #acceleration in meters per second used by controller
 hertz = 10 #rospy execution cycles/s
 class TheOvermind(object):
     
@@ -75,8 +75,8 @@ class TheOvermind(object):
 	    self.controller.accelerate(acceleration, max_speed)
 	elif self.in_deceleration_range():
 	    self.controller.accelerate(acceleration, 0) 
-	self.vel_angle.vel = self.controller.get_velocity
-	self.vel_angle.angle = self.controller.get_angle
+	self.vel_angle.vel = self.controller.get_velocity()
+	self.vel_angle.angle = self.controller.get_angle()
    
     def is_approx(actual, expected, tolerance):
 	return expected - tolerance < actual < expected + tolerance
@@ -85,22 +85,17 @@ class TheOvermind(object):
 	pass
 
     ''' Checks if in range to start decelerating (the range is based on tolerance). 
-        The car is in range when, if decelerating, the time it takes to reach 0 distance from the goal 
-	is approximately equivalent to the time it takes to reach a speed of zero.
-	the equation dist = speed^2/2*acceleration is derived from the kinematic equations, 
-	and when it is true indicates the equivalence in t values. A predefined 
-	acceleration is necessary to find this equivalence '''
+        The car is in range when, if it were to decelerate, the time it takes to reach 0 distance from the goal 
+	is about equivalent to the time it takes to reach a speed of zero.
+	the equation dist = speed^2/2*acceleration indicates this. A constant
+	acceleration is used to find this equivalence '''
     def in_deceleration_range(self):
 	global acceleration #hardcoded acceleration constant
 	if not (self.waypoints and self.waypoints.waypoints):
 	    return False
 	dist = waypoints.distance_from_goal()
 	return is_approx(dist, (self.speed * self.speed)/2*acceleration, self.tolerance)
-   
-    ''' used to get the magnitude of the speed given by the odometry msg ''' 
-    def vector3_to_scalar(self, ):
-	return 1
-	
+  
 if __name__ == '__main__':
     try:
        TheOvermind()

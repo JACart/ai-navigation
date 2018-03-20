@@ -10,7 +10,6 @@ add_message_files(
     FErequest.msg
     LatLongPoint.msg
     WaypointsArray.msg
-    VelAngleStep.msg
     VelAngle.msg
     EmergencyStop.msg
 )
