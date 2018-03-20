@@ -45,7 +45,7 @@ class WaypointHandler(object):
 	goal = self.waypoints[self.goal_index]
 	return (math.abs
 		(point_to_goal.distance_between_points
-			(goal.latitude, goal.longitude, 
+			(goal.latitude, goal.longitude, #these are in meters, as are the poses 
 			 self.curr_loc.pose.pose.position.x, self.curr_loc.pose.pose.position.y)) 
 		< tolerance)
 

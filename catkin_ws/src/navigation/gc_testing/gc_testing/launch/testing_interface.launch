@@ -4,6 +4,6 @@
     <include file="$(find gc_testing_description)/launch/sim.launch">
         <arg name="rviz" value="$(arg rviz)" />
     </include>
-    <!-- this node translate to cmd_vel from nav_cmd to talk to simulation -->
-    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="nav_cmd_to_cmd_vel.py"/>
+    <!-- this node translate to Twist from VelAngle to talk to simulation -->
+    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="vel_angle_to_twist.py"/>
 </launch>

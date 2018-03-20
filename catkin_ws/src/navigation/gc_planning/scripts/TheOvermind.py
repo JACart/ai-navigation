@@ -8,15 +8,22 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 from navigation_msgs.msg import EmergencyStop, LatLongPoint, WaypointsArray, VelAngle 
 
-hertz = 10 #rospy speed
+tolerance = 1.0
+acceleration = 1.5 #acceleration in meters per second used by linear control function
+hertz = 10 #rospy execution cycles/s
 class TheOvermind(object):
     
     def __init__(self):
+	global hertz
+	global tolerance
+	self.cmd_acceleration = 0.0 #used to tell the controller how fast to accelerate
+	self.tolerance = tolerance #allowed imprecision for reaching a waypoint
 	self.current_goal = None #current goal from list of goals
         self.vel_curr = 0.0 #current velocity
 	self.kill = False
 	#util classes
 	self.waypoints = WaypointHandler.WaypointHandler(0)
+	self.controller = Control.Control(hertz) 
 	#publishers                                    
         self.vel_angle_p = rospy.Publisher('/vel_angle', VelAngle, queue_size=10)
         #subscribers	
@@ -32,8 +39,9 @@ class TheOvermind(object):
 	global hertz
         rate = rospy.Rate(hertz) # 10hz
         while not rospy.is_shutdown():
-       	    #if killswitch publish 0 to vel_angle's vel_curr, and leave the angle the same
-            rate.sleep()    
+       	    #if killswitch, publish 0 to vel_angle's vel_curr, and leave the angle the same
+            
+	    rate.sleep()
     
     def odom_callback(self, msg):
 	self.odom_info = msg
@@ -53,6 +61,11 @@ class TheOvermind(object):
 
     def point_cloud_callback(self, msg):
 	pass
+    def move_toward_goal():
+	pass
+    def decelerate_if_in_range():
+	#if(dist == (math.exp(speed, 2)/2*acceleration):
+	 #   self.control.set_acceleration
 if __name__ == '__main__':
     try:
        TheOvermind()

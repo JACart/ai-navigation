@@ -3,15 +3,13 @@
 import rospy
 import math
 
-vel_step = 0.05 #per timestep
 angle_step = 1.0 #per timestep
 
 class Control(object):
     def __init__(self, timestephz):
-	global vel_step
 	global angle_step
-	self.timestep = float(timestephz)/1000 #convert hz to millis
-        self.vel_step = vel_step
+	self.timestep = (1.0/float(timestephz))*1000 #convert hz to millis per timestep
+        self.vel_step = 0.0
         self.angle_step = angle_step
         self.vel = 0.0
         self.angle = 0.0
@@ -20,6 +18,11 @@ class Control(object):
 	self.prev_time = 0.0
 	self.delta_time = 0.0
 
+    ''' sets the acceleration (velocity step size in terms of timesteps rather than seconds) '''
+    def set_acceleration(self, acceleration):
+	seconds = self.timestep/1000.0	 #seconds per timestep
+	self.vel_step = acceleration*seconds #meters per timestep
+  
     ''' returns fraction of stepsize based on the desired timestep size and the
 	difference in milliseconds between the current and last call ''' 
     def deltastep(self, stepsize):
@@ -29,7 +32,7 @@ class Control(object):
 	self.prev_time = rospy.get_rostime() * 1000
         self.vel_goal = float(vel_goal)
         self.angle_goal = float(angle_goal)
-
+     
     def step(self):
 	millis = rospy.get_rostime() * 1000
 	self.delta_time = millis - self.prev_time

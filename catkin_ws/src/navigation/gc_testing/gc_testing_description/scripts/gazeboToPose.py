@@ -9,8 +9,8 @@ from geometry_msgs.msg import Point
 def gps():
 
     rospy.init_node('gps', anonymous=False)
-    cmd_vel_s = rospy.Subscriber('odom', Odometry, read_gps)
-    #ackermann_p = rospy.Publisher('pose_and_speed', AckermannDrive, queue_size=10)
+    odom_s = rospy.Subscriber('odom', Odometry, read_gps)
+    odom_p = rospy.Publisher('pose_and_speed', Odometry, queue_size=10)
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
 	    rate.sleep()
@@ -22,7 +22,7 @@ def read_gps(odom_msg):
     p.z = odom_msg.pose.pose.position.z
     #print "x:", odom_msg.pose.pose.position.x, " y:", odom_msg.pose.pose.position.x
     print odom_msg.header.frame_id
-
+    odom
     #TODO PUBLISH HERE
 
 if __name__ == '__main__':

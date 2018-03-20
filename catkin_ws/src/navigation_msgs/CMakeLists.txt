@@ -7,12 +7,12 @@ find_package(catkin REQUIRED COMPONENTS
 )
 add_message_files(
     FILES
-    fe_request.msg
-    lat_long_point.msg
-    waypoints_array.msg
-    vel_angle_step.msg
-    vel_angle.msg
-    emergency_stop.msg
+    FErequest.msg
+    LatLongPoint.msg
+    WaypointsArray.msg
+    VelAngleStep.msg
+    VelAngle.msg
+    EmergencyStop.msg
 )
  generate_messages(
    DEPENDENCIES

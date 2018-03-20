@@ -3,5 +3,6 @@
 <launch>
     <group>
         <node name="TheOvermind" pkg="gc_planning" type="TheOvermind.py" required="true"/>
+        <node name="GPStoXYZ" pkg="gc_planning" type="GPStoXYZ.py" required="true"/>
     </group>
 </launch>

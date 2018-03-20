@@ -29,4 +29,7 @@ def getGoal():
 
 	
 if __name__ == "__main__":
-    server_endpoint()
+    try:
+	server_endpoint()
+    except rospy.ROSInterruptException:
+	pass
