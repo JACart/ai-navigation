@@ -49,7 +49,7 @@ class TheOvermind(object):
     
     def odom_callback(self, msg):
 	self.odom = msg
-	self.vel_angle.vel_curr = vector3_to_scalar(msg.twist.twist.linear)
+	self.vel_angle.vel_curr = msg.twist.twist.linear.x
 	#if the final goal has not been reached, get the next goal
 	if not self.waypoints.update_pos(msg, 0):
 	    self.current_goal = get_goal()
