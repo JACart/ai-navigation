@@ -3,7 +3,7 @@
 import rospy
 import math
 #from threading import Thread, Lock
-import controller, point_to_goal, waypoint_handler
+import controller, gps_util, waypoint_handler
 from geometry_msgs.msg import Twist, Vector3
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
@@ -17,7 +17,7 @@ class TheOvermind(object):
     def __init__(self):
 	global hertz
 	global tolerance
-#	self.mutex = Lock()
+
 	self.odom = None
 	self.tolerance = tolerance #allowed imprecision for reaching a waypoint
 	self.current_goal = None #current goal from list of goals
@@ -48,7 +48,6 @@ class TheOvermind(object):
 	    rate.sleep()
     
     def odom_callback(self, msg):
-#	self.mutex.acquire()
 	self.odom = msg
 	self.vel_angle.vel_curr = msg.twist.twist.linear.x
 	#if the final goal has not been reached, get the next goal
@@ -56,7 +55,6 @@ class TheOvermind(object):
 	    self.current_goal = self.waypoints.get_goal()
 	else:
 	    self.current_goal = None
-#	self.mutex.release()
 
     ''' set a flag to true if emergency stop is activated '''		
     def killswitch_callback(self, msg):

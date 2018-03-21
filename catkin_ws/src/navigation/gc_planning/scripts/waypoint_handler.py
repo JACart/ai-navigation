@@ -2,7 +2,7 @@
 
 import rospy
 import math
-import point_to_goal
+import gps_util
 from navigation_msgs.msg import WaypointsArray, LatLongPoint 
 
 class WaypointHandler(object):
@@ -51,8 +51,11 @@ class WaypointHandler(object):
 	for i in range(self.goal_index, waypoints.length()-1):
  	    point = self.waypoints[i]
 	    point2 = self.waypoints[i+1]
-	    distance += point_to_goal.distance_between_points(
-		point.latitude, point.longitude, point2.latitude, point2.longitude
+	    distance += gps_util.distance_between_points(
+				point.latitude, 
+				point.longitude, 
+				point2.latitude, 
+				point2.longitude
 			    )
 	return distance
 				    
@@ -65,13 +68,14 @@ class WaypointHandler(object):
 
     ''' distance between car and the next point ''' 
     def distance_from_next(self):
+	curr_lat_lng = gps_util.xyz_to_lat_long(self.curr_pos.pose.pose.position);
 	if not self.waypoints:
-	    return 
-	return point_to_goal.distance_between_points(
+	    return None
+	return gps_util.distance_between_points(
 			self.waypoints[self.goal_index].latitude,
 			self.waypoints[self.goal_index].longitude,
-			self.curr_pos.pose.pose.position.x,
-			self.curr_pos.pose.pose.position.y) #not sure if x and y agree with lat and long
+			curr_lat_lng[0],
+			curr_lat_lng[1])
    
     ''' current position is a message of type nav_msgs/Odometry. 
 	Returns true if the final goal point has been reached'''
