@@ -1,12 +1,11 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="testing" default="true"/>
-  <arg name="gazebo" default="true"/>
-
+  <arg name="rviz" default="false"/>
   <!-- launch testing interface-->
   <group  if="$(arg testing)">
      <include file="$(find gc_testing)/launch/testing_interface.launch">
-          <arg name="gazebo" value="$(arg gazebo)" />
+          <arg name="rviz" value="$(arg rviz)" />
      </include>
   </group>
   <!-- launch hardware interface-->

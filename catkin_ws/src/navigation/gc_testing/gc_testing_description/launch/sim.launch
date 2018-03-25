@@ -1,12 +1,12 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="gazebo" default="true"/>
+  <arg name="rviz" default="true"/>
   <!-- Load the TortoiseBot URDF model into the parameter server -->
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find gc_testing_description)/urdf/custom.urdf.xacro'" />
 
-  <group if="$(arg gazebo)">
+  <group>
       <!-- Start Gazebo with an empty world -->
-      <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+      <include file="$(find gc_testing_description)/launch/empty_world.launch"/>
     
       <!-- Spawn a TortoiseBot in Gazebo, taking the description from the
            parameter server -->
@@ -16,7 +16,7 @@
             type="robot_state_publisher"/>
   </group>
   <!-- RViz -->
-  <group unless="$(arg gazebo)">
+  <group if="$(arg rviz)">
       <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find gc_testing_description)/rviz/velodyne.rviz"/>
   </group>
 </launch>
