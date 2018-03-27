@@ -20,11 +20,15 @@ class server_endpoint(object):
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
 
-        self.get_locations()
-
+        #self.get_locations()
+        self.send_status()
         rospy.spin()
 
     def get_locations(self):
+        """
+        The waypoints in the actual server are not set up yet. I used this as test code for publishing to the waypoints topic.
+        This code will need to be updated once the server is.
+        """
         url = 'http://'+server_ip+':'+server_port+'/locations'
         print url
         r = requests.get(url)
@@ -46,6 +50,26 @@ class server_endpoint(object):
 
     def get_waypoints(self):
         pass
+    def send_status(self):
+        """
+        Attempted to try a post but posts were not allowed on the server. Same applied for put.
+        """
+        url = 'http://'+server_ip+':'+server_port+'/cardata'
+        #All of the payload values need to be set based on subscribers to topics. None of this should be hardcoded in the end
+        payload = {}
+        payload['Cardata'] = {}
+        payload['Cardata']['battery'] = 37.3
+        payload['Cardata']['camera'] = "BAD"
+        payload['Cardata']['gps'] = "3.776,-70.2212"
+        payload['Cardata']['lightware'] = "BAD"
+        payload['Cardata']['rplidar'] = "GOOD"
+        payload['Cardata']['velocity'] = 3.6
+        payload['Cardata']['velodyne'] = "GOOD"
+
+
+
+        r = requests.put(url, data = payload)
+        print r.text
 
 def getGoal():
     r = requests.get('https://practice-jad006.c9users.io/quotations')
