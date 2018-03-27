@@ -17,7 +17,7 @@ class server_endpoint(object):
         rospy.init_node('server_endpoint')
         #self.cmd_p = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
         #publish to waypoints topic
-        self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10)
+        self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10, latch=True)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
 
         #self.get_locations()
