@@ -20,12 +20,16 @@ class server_endpoint(object):
         #publish to waypoints topic
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10, latch=True)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
-
-        self.get_locations()
+        rospy.sleep(3)
+        r = rospy.Rate(10)
+        self.waypoint_list = None
+        while not rospy.is_shutdown():
+            self.get_waypoints()
+            r.sleep()
         #self.send_status()
         rospy.spin()
 
-    def get_locations(self):
+    def get_waypoints(self):
         """
         The waypoints in the actual server are not set up yet. I used this as test code for publishing to the waypoints topic.
         This code will need to be updated once the server is.
@@ -44,12 +48,12 @@ class server_endpoint(object):
             w_list.append(current)
         #if len(waypoints.waypoints) == 0:
         #    return
-        waypoints.waypoints = w_list
-        self.waypoint_pub.publish(waypoints)
-        print "published"
-
-    def get_waypoints(self):
-        pass
+        
+        if not str(w_list) == str(self.waypoint_list):
+            self.waypoint_list = w_list
+            waypoints.waypoints = w_list
+            self.waypoint_pub.publish(waypoints)
+            print "published"
     def send_status(self):
         """
         Attempted to try a post but posts were not allowed on the server. Same applied for put.
