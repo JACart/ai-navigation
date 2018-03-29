@@ -1,2 +1,2 @@
 std_msgs/Header header
-sensor_msgs/NavSatfix[] waypoints
+sensor_msgs/NavSatFix[] waypoints
