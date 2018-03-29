@@ -69,9 +69,10 @@ class WaypointHandler(object):
     ''' current position is a message of type nav_msgs/Odometry. 
 	Returns true if the final goal point has been reached'''
     def update_pos(self, current_position, tolerance):
+        if not current_position:
+            return False
         self.curr_pos = current_position
         self.tolerance = self.min_tolerance if (self.min_tolerance > tolerance) else tolerance
-        self.set_curr_location(current_position, tolerance)
         return self.reached_next_point() and not self.next_point()
         #this line will call the necessary methods -- only return true when the final goal has been reached	
     
