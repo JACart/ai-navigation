@@ -12,7 +12,7 @@ max_speed = 2.2352 #5 mph converted to m/s (temporary max)
 tolerance = 2.0
 hertz = 10 #rospy execution cycles/s
 class TheOvermind(object):
-    
+
     def __init__(self):
         global hertz
         global tolerance
