@@ -2,7 +2,7 @@
 <launch>
   <arg name="rviz" default="true"/>
   <!-- Load the TortoiseBot URDF model into the parameter server -->
-  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find gc_testing_description)/urdf/custom.urdf.xacro'" />
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find gc_testing_description)/urdf/custom-backup.urdf.xacro'" />
 
   <group>
       <!-- Start Gazebo with an empty world -->

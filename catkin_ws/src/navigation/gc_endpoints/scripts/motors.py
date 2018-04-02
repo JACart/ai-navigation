@@ -37,18 +37,20 @@ class MotorEndpoint(object):
         rospy.spin()
         
     def motion_callback(self, planned_vel_angle):
+
         if self.killswitch:
-            self.speed_ser.write(":0.0,0.0".encode())
+            self.speed_ser.write(":0.0,0.0,0.0".encode())
             rospy.loginfo("Killswitch activated")
         else:
             self.goal_speed = planned_vel_angle.vel
             self.goal_angle = planned_vel_angle.angle
             self.current_speed = planned_vel_angle.vel_curr
-            self.speed_string =  str(':'+self.goal_speed)+ ',' + str(self.current_speed)
+            self.speed_string =  ':'+str(self.goal_speed)+ ',' + str(self.current_speed)+','+str(self.goal_angle)
             self.speed_ser.write(self.speed_string.encode())
-            response = self.speed_ser.readline()
+            #response = self.speed_ser.readline(eol:="\n")
             rospy.loginfo("String being sent: "+self.speed_string)
-            rospy.loginfo("Response: "+response)
+            #rospy.loginfo("Response: "+response)
+        #print 'GOT IT'
         
     def kill(self, data):
         self.killswitch = data.emergency_stop

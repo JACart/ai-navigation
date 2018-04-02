@@ -4,7 +4,7 @@
     <visual>
       <geometry>
         <!-- l w h 2.337 1.27 1.778-->
-        <box size="0.6 0.3 0.3"/>
+        <box size="2.337 1.27 1.778"/>
       </geometry>
       <material name="silver">
         <color rgba="0.75 0.75 0.75 1"/>
@@ -12,7 +12,7 @@
     </visual>
     <collision>
       <geometry>
-        <box size="0.6 0.3 0.3"/>
+        <box size="2.337 1.27 1.778"/>
       </geometry>
     </collision>
     <inertial>
@@ -45,7 +45,7 @@
     <axis xyz="0 0 1"/>
     <parent link="base_link"/>
     <child link="front_caster"/>
-    <origin rpy="0 0 0" xyz="0.3 0 0"/>
+    <origin rpy="0 0 0" xyz="1.1 0 -0.739"/>
   </joint>
 
   <link name="front_wheel">
@@ -97,7 +97,7 @@
     <axis xyz="0 0 1"/>
     <parent link="base_link"/>
     <child link="right_wheel"/>
-    <origin rpy="-1.5708 0 0" xyz="-0.2825 -0.125 -0.15"/>
+    <origin rpy="-1.5708 0 0" xyz="-1.1685 -0.5 -0.889"/>
   </joint>
   <link name="left_wheel">
     <visual>
@@ -121,13 +121,13 @@
     <axis xyz="0 0 1"/>
     <parent link="base_link"/>
     <child link="left_wheel"/>
-    <origin rpy="-1.5708 0 0" xyz="-0.28825 0.125 -0.15"/>
+    <origin rpy="-1.5708 0 0" xyz="-1.1685 0.5 -0.889"/>
   </joint>
 
 
   <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
   <VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" hz="10" samples="440">
-    <origin xyz="0 0 0.15" rpy="0 0 0" />
+    <origin xyz="0 0 0.889" rpy="0 0 0" />
   </VLP-16>
 
 
@@ -137,7 +137,7 @@
       <leftJoint>left_wheel_joint</leftJoint>
       <rightJoint>right_wheel_joint</rightJoint>
       <robotBaseFrame>base_link</robotBaseFrame>
-      <wheelSeparation>0.25</wheelSeparation>
+      <wheelSeparation>1.0</wheelSeparation>
       <wheelDiameter>0.07</wheelDiameter>
       <publishWheelJointState>true</publishWheelJointState>
     </plugin>

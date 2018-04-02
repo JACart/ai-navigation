@@ -2,6 +2,7 @@
 
 import rospy
 import readchar
+import time
 from navigation_msgs.msg import vel_angle
 
 class teleop(object):
@@ -11,7 +12,7 @@ class teleop(object):
         self.motion_pub = rospy.Publisher('/nav_cmd', vel_angle, queue_size=10)
 
         print 'Move with WSAD\nCTRL-C to exit\n'
-
+        rate = rospy.Rate(10)
 
         while (True):
             key = readchar.readkey()
@@ -20,7 +21,7 @@ class teleop(object):
                 exit(0)
 
             msg = vel_angle()
-            msg.vel_curr = ord(key)
+            msg.vel_curr = 3 #ord(key)
             msg.vel = 0
             msg.angle = 0
 
@@ -39,7 +40,10 @@ class teleop(object):
                 msg.vel = 1
                 msg.angle = 360
 
+
             self.motion_pub.publish(msg)
+            rate.sleep()
+            #time.sleep(0.05)
 
         rospy.spin()
 
