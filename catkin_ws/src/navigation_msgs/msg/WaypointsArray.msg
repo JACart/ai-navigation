@@ -1,2 +1,2 @@
 std_msgs/Header header
-LatLongPoint[] waypoints
+sensor_msgs/NavSatFix[] waypoints

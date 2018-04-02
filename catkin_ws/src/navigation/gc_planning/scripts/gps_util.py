@@ -51,6 +51,18 @@ def distance_between_points(lat1, lng1, lat2, lng2):
     distance = earth_radius * c
     return distance
     
+def xy_angle_between_points(point1, point2):
+    distx = point2.x - point1.x
+    disty = point2.y - point1.y
+    #y is forward while x is sideways
+    return (math.atan2(distx, disty)*180/math.pi)%360
+    
+def xyz_dist_between_points(point1, point2):
+    distx = point1.x - point2.x
+    disty = point1.y - point2.y
+    distz = point1.z - point2.z
+    return math.sqrt(disty*disty + distx*distx + distz*distz)
+    
 def xyz_to_lat_long(point):
     """
     :return: lat-long based on a single point in meters (0,0,0 represents xlabs)
@@ -92,6 +104,10 @@ def xyz_between_points(lat1, lng1, elev1, theta1, lat2, lng2, elev2):
     sideways = math.sin(angle)*distance_flat
     verticle = elev2-elev1
     return (forward, sideways, verticle)
+def lat_long_to_xyz(lat, lng):
+    global anchor_lat
+    global anchor_lng
+    return xyz_between_points( lat, lng, 0, direction_between_points(lat, lng, anchor_lat, anchor_lng), anchor_lat, anchor_lng, 0)
 def xy_between_points(lat1, lng1, theta1, lat2, lng2):
     distance_flat = distance_between_points(lat1,lng1,lat2,lng2)
     angle = math.radians( (theta1+direction_between_points(lat1,lng1,lat2,lng2)) % 360 )

@@ -2,6 +2,7 @@
 import rospy
 import requests
 from navigation_msgs.msg import LatLongPoint, WaypointsArray
+from sensor_msgs.msg import NavSatFix
 """
 This node is used to interface with the server to grab intermediary waypoints and other relevant information.
 This node should also post to the server with information that goes to the frontend.
@@ -19,12 +20,16 @@ class server_endpoint(object):
         #publish to waypoints topic
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10, latch=True)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
-
-        #self.get_locations()
-        self.send_status()
+        rospy.sleep(3)
+        r = rospy.Rate(10)
+        self.waypoint_list = None
+        while not rospy.is_shutdown():
+            self.get_waypoints()
+            r.sleep()
+        #self.send_status()
         rospy.spin()
 
-    def get_locations(self):
+    def get_waypoints(self):
         """
         The waypoints in the actual server are not set up yet. I used this as test code for publishing to the waypoints topic.
         This code will need to be updated once the server is.
@@ -36,41 +41,46 @@ class server_endpoint(object):
         waypoints = WaypointsArray()
         w_list = []
         for location in locations['Locations']:
-            print "looping"
-            current = LatLongPoint()
+            current = NavSatFix()
             current.latitude = float(location['lat'])
             current.longitude = float(location['long'])
-            current.elevation = float(0)
+            current.altitude = float(0)
             w_list.append(current)
         #if len(waypoints.waypoints) == 0:
         #    return
-        waypoints.waypoints = w_list
-        self.waypoint_pub.publish(waypoints)
-        print "published"
-
-    def get_waypoints(self):
-        pass
+        
+        if not str(w_list) == str(self.waypoint_list):
+            self.waypoint_list = w_list
+            waypoints.waypoints = w_list
+            self.waypoint_pub.publish(waypoints)
+            print "published"
     def send_status(self):
         """
         Attempted to try a post but posts were not allowed on the server. Same applied for put.
         """
         url = 'http://'+server_ip+':'+server_port+'/cardata'
+        r = requests.get(url)
+        print "Get request: "
+        print r.json()
         #All of the payload values need to be set based on subscribers to topics. None of this should be hardcoded in the end
+        
         payload = {}
-        payload['Cardata'] = {}
-        payload['Cardata']['battery'] = 37.3
-        payload['Cardata']['camera'] = "BAD"
-        payload['Cardata']['gps'] = "3.776,-70.2212"
-        payload['Cardata']['lightware'] = "BAD"
-        payload['Cardata']['rplidar'] = "GOOD"
-        payload['Cardata']['velocity'] = 3.6
-        payload['Cardata']['velodyne'] = "GOOD"
-
-
-
-        r = requests.put(url, data = payload)
-        print r.text
-
+        payload['Cardata'] = []
+        cardata = {}
+        cardata['battery'] = 37.3
+        cardata['camera'] = "BAD"
+        cardata['gps'] = "3.776,-70.2212"
+        cardata['lightware'] = "BAD"
+        cardata['rplidar'] = "GOOD"
+        cardata['velocity'] = 3.6
+        cardata['velodyne'] = "GOOD"
+        payload['Cardata'].append(cardata)
+        print "Payload: "
+        print unicode(payload)
+        print "Post request: "
+        r = requests.post(url, data = unicode(payload))
+        print r.json()
+        
 def getGoal():
     r = requests.get('https://practice-jad006.c9users.io/quotations')
 
