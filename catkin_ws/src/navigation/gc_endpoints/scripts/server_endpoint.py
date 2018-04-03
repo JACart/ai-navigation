@@ -22,7 +22,7 @@ class server_endpoint(object):
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10, latch=True)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
         """
-        subscriber for gps data
+        subscriber for gps data --- NavSatFix from the rostopic titled /fix
         subscriber for velocity
         subscriber for camera
         subscriber for lightware
