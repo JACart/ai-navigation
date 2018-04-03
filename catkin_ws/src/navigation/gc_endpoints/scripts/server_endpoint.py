@@ -43,11 +43,62 @@ class server_endpoint(object):
         rospy.sleep(1)
         r = rospy.Rate(2)
         self.waypoint_list = None
+
+
+        ''' ================================================== NEW =========================='''
+        ''' SEND STATUS IN THE CALLBACK OF EACH UPDATE! '''
+        self.goals = None
+
+        have_goal = False
+
         while not rospy.is_shutdown():
+            #loop until we get a goal from the api 
+            while not have_goal:
+                have_goal = self.get_goals()
+                r.sleep()
+
+
+            print "got it"
+            self.parse_goals()
+            have_goal = self.clear_goals()
+            r.sleep()
+
+        ''' ================================================== END =========================='''
+
+        '''while not rospy.is_shutdown():
             self.get_waypoints()
             self.send_status()
-            r.sleep()
-        rospy.spin()
+            r.sleep()'''
+        #rospy.spin()
+
+    def get_goals(self):
+        url = 'http://'+server_ip+':'+server_port+'/goals'
+        r = requests.get(url)
+        self.goals = r.json()
+
+        if not r.ok:
+            print "Error connecting to API"
+            return r.ok
+
+        return self.goals['Goals'] != []
+
+    def parse_goals(self):
+        waypoints = WaypointsArray()
+        w_list = []
+        for location in self.goals['Goals']:
+            current = NavSatFix()
+            current.latitude = float(location['lat'])
+            current.longitude = float(location['long'])
+            current.altitude = float(location['elev'])
+            w_list.append(current)
+
+        waypoints.waypoints = w_list
+        self.waypoint_pub.publish(waypoints)
+
+    def clear_goals(self):
+        url = 'http://'+server_ip+':'+server_port+'/clear'
+        r = requests.get(url)
+        return not r.ok
 
     def get_waypoints(self):
         """
@@ -72,9 +123,11 @@ class server_endpoint(object):
             self.waypoint_list = w_list
             waypoints.waypoints = w_list
             self.waypoint_pub.publish(waypoints)
+
+
     def send_status(self):
         """
-        Attempted to try a post but posts were not allowed on the server. Same applied for put.
+        Sends POST request to /cardata on server
         """
         url = 'http://'+server_ip+':'+server_port+'/cardata'
         r = requests.get(url)
@@ -92,8 +145,7 @@ class server_endpoint(object):
         
         payload = {}
         payload["newData"] = cardata
-        
-        #json_headers =   
+
         r = requests.post(url, json= payload, headers={ 'Content-Type': 'application/json',})
         if not r.ok:
             print "Error making post request: "+str(r.status_code)

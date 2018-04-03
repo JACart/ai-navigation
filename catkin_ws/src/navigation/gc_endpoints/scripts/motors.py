@@ -14,6 +14,8 @@ class MotorEndpoint(object):
         self.current_speed = 0.0
         self.goal_speed = 0.0
         self.goal_angle = 0.0
+
+        self.cmd_msg = None
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
@@ -33,15 +35,19 @@ class MotorEndpoint(object):
         self.speed_string = ''
         response = "No response yet"
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', vel_angle, self.motion_callback, queue_size = 10)
-        self.killswitch_subscriber = rospy.Subscriber('/emergency_stop', emergency_stop, self.kill, queue_size = 10)
-        rospy.spin()
+        self.killswitch_subscriber = rospy.Subscriber('/emergency_stop', emergency_stop, self.kill_callback, queue_size = 10)
+        rate = rospy.Rate(20)
+
+        while not rospy.is_shutdown():
+            self.send_to_motors()
+            rate.sleep()
         
     def motion_callback(self, planned_vel_angle):
 
         if self.killswitch:
             self.speed_ser.write(":0.0,0.0,0.0".encode())
             rospy.loginfo("Killswitch activated")
-        else:
+        '''else:
             self.goal_speed = planned_vel_angle.vel
             self.goal_angle = planned_vel_angle.angle
             self.current_speed = planned_vel_angle.vel_curr
@@ -49,11 +55,23 @@ class MotorEndpoint(object):
             self.speed_ser.write(self.speed_string.encode())
             #response = self.speed_ser.readline(eol:="\n")
             rospy.loginfo("String being sent: "+self.speed_string)
-            #rospy.loginfo("Response: "+response)
-        #print 'GOT IT'
+            #rospy.loginfo("Response: "+response)'''
+
+        self.cmd_msg = planned_vel_angle
+
         
-    def kill(self, data):
+    def kill_callback(self, data):
         self.killswitch = data.emergency_stop
+
+
+    def send_to_motors(self):
+        spd = self.cmd_msg.vel
+        angle = self.cmd_msg.angle
+        cur_spd = self.cmd_msg.vel_curr
+
+        msg_to_motors =  ':'+str(spd)+ ',' + str(angle)+','+str(cur_spd)
+        self.speed_ser.write(msg_to_motors.encode())
+        rospy.loginfo("String being sent: "+ msg_to_motors)
         
         
 if __name__ == "__main__": 
