@@ -3,6 +3,7 @@
 import sys
 import tf
 import rospy
+import math
 
 #This class still needs testing
 
@@ -61,7 +62,7 @@ def xyz_dist_between_points(point1, point2):
     distx = point1.x - point2.x
     disty = point1.y - point2.y
     distz = point1.z - point2.z
-    return math.sqrt(disty*disty + distx*distx + distz*distz)
+    return math.sqrt(disty ** 2 + distx ** 2 + distz ** 2)
     
 def xyz_to_lat_long(point):
     """
@@ -107,10 +108,53 @@ def xyz_between_points(lat1, lng1, elev1, theta1, lat2, lng2, elev2):
 def lat_long_to_xyz(lat, lng):
     global anchor_lat
     global anchor_lng
-    return xyz_between_points( lat, lng, 0, direction_between_points(lat, lng, anchor_lat, anchor_lng), anchor_lat, anchor_lng, 0)
+    xyz = xyz_between_points( lat, lng, 0, direction_between_points(lat, lng, anchor_lat, anchor_lng), anchor_lat, anchor_lng, 0)
+
+    return Point(xyz[0], xyz[1], xyz[2])
+
 def xy_between_points(lat1, lng1, theta1, lat2, lng2):
     distance_flat = distance_between_points(lat1,lng1,lat2,lng2)
     angle = math.radians( (theta1+direction_between_points(lat1,lng1,lat2,lng2)) % 360 )
     forward = math.cos(angle)*distance_flat
     sideways = math.sin(angle)*distance_flat
     return (forward, sideways)
+
+def midpoint(p1, p2):
+    x = (p1.x + p2.x) / 2.0
+    y = (p1.y + p2.y) / 2.0
+
+    return Point(x, y, 0)
+
+def add_intermediate_points(points):
+    threshold = 1.0
+
+    #keeps the final point to add at the end
+    final = points[0]
+
+    newPoints = []
+    prev = points.pop()
+
+    #loop until points is empty
+    #we are using points as a stack here
+    while points:
+        #get the next point on the stack
+        new = points.pop()
+        dist = xyz_dist_between_points(prev, new)
+
+        #if the distance is greater than the threshold
+        if dist > threshold:
+            #put the point on the stack
+            points.append(new)
+            mid = midpoint(new, prev)
+            #add the midpoint to the stack
+            points.append(mid)
+        else:
+            #add the start point to the newPoints and switch new point to the prev point
+            newPoints.append(prev)
+            prev = new
+
+    #add the final point
+    newPoints.append(final)
+    return newPoints
+
+
