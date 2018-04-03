@@ -55,7 +55,6 @@ class server_endpoint(object):
         This code will need to be updated once the server is.
         """
         url = 'http://'+server_ip+':'+server_port+'/locations'
-        print url
         r = requests.get(url)
         locations = r.json()
         waypoints = WaypointsArray()
@@ -73,18 +72,13 @@ class server_endpoint(object):
             self.waypoint_list = w_list
             waypoints.waypoints = w_list
             self.waypoint_pub.publish(waypoints)
-            print "published"
     def send_status(self):
         """
         Attempted to try a post but posts were not allowed on the server. Same applied for put.
         """
         url = 'http://'+server_ip+':'+server_port+'/cardata'
         r = requests.get(url)
-        print "Get request: "
-        print r.json()
-        #All of the payload values need to be set based on subscribers to topics. None of this should be hardcoded in the end
-        
-        
+
         cardata = {}
         cardata["battery"] = self.battery
         cardata["camera"] = self.camera
@@ -98,17 +92,11 @@ class server_endpoint(object):
         
         payload = {}
         payload["newData"] = cardata
-        #payload['newData'].append(cardata)
         
-        json_headers = { 'Content-Type': 'application/json',}  
-        
-        
-        print "Payload: "
-        print payload
-        print "Post request: "
-        r = requests.post(url, json= payload, headers=json_headers)
-        print r
-        print r.json()
+        #json_headers =   
+        r = requests.post(url, json= payload, headers={ 'Content-Type': 'application/json',})
+        if not r.ok:
+            print "Error making post request: "+str(r.status_code)
 	
 if __name__ == "__main__":
     try:
