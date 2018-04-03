@@ -3,7 +3,6 @@
 import sys
 import tf
 import rospy
-
 #This class still needs testing
 
 from geometry_msgs.msg import Pose, Point #point iis able to be used for path planning in a 3d space

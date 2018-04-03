@@ -73,7 +73,7 @@ class TheOvermind(object):
         dist = self.waypoints.distance_from_next()
         angle = self.waypoints.angle_from_next()
         self.vel_curr = self.vel_pid_controller.update_PID(dist or 0)
-        self.angle_curr = self.angle_pid_controller.update_PID(angle or 0)
+        self.angle_pid_controller.update_PID(angle or 0)
 	
     def is_approx(actual, expected, tolerance):
         return expected - tolerance < actual < expected + tolerance
