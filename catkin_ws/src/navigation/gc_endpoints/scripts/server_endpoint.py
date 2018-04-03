@@ -17,16 +17,36 @@ class server_endpoint(object):
     def __init__(self):
         rospy.init_node('server_endpoint')
         #self.cmd_p = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
+        
         #publish to waypoints topic
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10, latch=True)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
-        rospy.sleep(3)
-        r = rospy.Rate(10)
+        """
+        subscriber for gps data
+        subscriber for velocity
+        subscriber for camera
+        subscriber for lightware
+        subscriber for velodyne
+        subscriber for rplidar
+        """
+        #variables to be set by callbacks
+        self.battery = 0.0
+        self.camera = "No Data Yet"
+        self.elevation = 0.0
+        self.lat = 0.0
+        self.lon = 0.0
+        self.lightware = "No Data Yet"
+        self.rplidar = "No Data Yet"
+        self.velocity = 0.0
+        self.velodyne = "No Data Yet"
+
+        rospy.sleep(1)
+        r = rospy.Rate(2)
         self.waypoint_list = None
         while not rospy.is_shutdown():
             self.get_waypoints()
+            self.send_status()
             r.sleep()
-        #self.send_status()
         rospy.spin()
 
     def get_waypoints(self):
@@ -64,40 +84,31 @@ class server_endpoint(object):
         print r.json()
         #All of the payload values need to be set based on subscribers to topics. None of this should be hardcoded in the end
         
-        payload = {}
-        payload['Cardata'] = []
-        cardata = {}
-        cardata['battery'] = 37.3
-        cardata['camera'] = "BAD"
-        cardata['gps'] = "3.776,-70.2212"
-        cardata['lightware'] = "BAD"
-        cardata['rplidar'] = "GOOD"
-        cardata['velocity'] = 3.6
-        cardata['velodyne'] = "GOOD"
-        payload['Cardata'].append(cardata)
-        print "Payload: "
-        print unicode(payload)
-        print "Post request: "
-        r = requests.post(url, data = unicode(payload))
-        print r.json()
         
-def getGoal():
-    r = requests.get('https://practice-jad006.c9users.io/quotations')
-
-    print r.status_code
-    print r.ok
-
-    print r.headers['content-type']
-
-    #print r.text
-
-    #print r.json()
-
-
-    return r.ok
-
-
-
+        cardata = {}
+        cardata["battery"] = self.battery
+        cardata["camera"] = self.camera
+        cardata["elevation"] = self.elevation
+        cardata["lat"] = self.lat
+        cardata["lon"] = self.lon
+        cardata["lightware"] = self.lightware
+        cardata["rplidar"] = self.rplidar
+        cardata["velocity"] = self.velocity
+        cardata["velodyne"] = self.velodyne
+        
+        payload = {}
+        payload["newData"] = cardata
+        #payload['newData'].append(cardata)
+        
+        json_headers = { 'Content-Type': 'application/json',}  
+        
+        
+        print "Payload: "
+        print payload
+        print "Post request: "
+        r = requests.post(url, json= payload, headers=json_headers)
+        print r
+        print r.json()
 	
 if __name__ == "__main__":
     try:
