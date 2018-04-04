@@ -126,7 +126,7 @@ def midpoint(p1, p2):
     return Point(x, y, 0)
 
 def add_intermediate_points(points):
-    threshold = 1.0
+    threshold = 5.0
 
     #keeps the final point to add at the end
     final = points[0]
