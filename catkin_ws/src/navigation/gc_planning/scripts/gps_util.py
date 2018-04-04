@@ -3,11 +3,12 @@
 import sys
 import tf
 import rospy
+
 import math
 
 #This class still needs testing
 
-from geometry_msgs.msg import Pose, Point #point iis able to be used for path planning in a 3d space
+from geometry_msgs.msg import Pose, Point #point is able to be used for path planning in a 3d space
 from sensor_msgs.msg import NavSatFix #standard ros message for GPS data
 
 #current anchor is the center of the xlabs building, with direction pointing directly north
