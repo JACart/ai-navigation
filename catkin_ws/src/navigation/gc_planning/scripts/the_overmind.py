@@ -4,7 +4,8 @@ import rospy
 import math
 #from threading import Thread, Lock
 import pid, gps_util, waypoint_handler
-from geometry_msgs.msg import Twist, Vector3
+from std_msgs.msg import Header
+from geometry_msgs.msg import Twist, Vector3, Point, PointStamped
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 from navigation_msgs.msg import EmergencyStop, LatLongPoint, WaypointsArray, VelAngle 
@@ -30,6 +31,7 @@ class TheOvermind(object):
         self.vel_pid_controller = pid.PID(1,0,0,0,0)
         #publishers                                    
         self.vel_angle_p = rospy.Publisher('/vel_angle', VelAngle, queue_size=10)
+        self.xyz_waypoint_pub = rospy.Publisher('/xyz_waypoints', PointStamped, queue_size=10, latch = True)
         #subscribers	
         self.odom_s = rospy.Subscriber('/pose_and_speed', Odometry, self.odom_callback, queue_size=10)
         self.point_cloud_s = rospy.Subscriber('/2d_point_cloud', PointCloud2, self.point_cloud_callback, queue_size=10) 
@@ -64,8 +66,18 @@ class TheOvermind(object):
 
     def waypoints_callback(self, msg):
         #replace the waypoints array with new data
-        self.waypoints.set_points(msg.waypoints)
-        self.current_goal = get_goal()
+        xyz_points = []
+        for gps_point in msg.waypoints:
+            point = PointStamped()
+            point.header = Header()
+            point.header.frame_id = '/odom'
+            point.point = gps_util.get_point(gps_point)
+            xyz_points.append(point)
+            self.xyz_waypoint_pub.publish(point)
+        
+        #self.waypoints.set_points(msg.waypoints) # This line currently does not work due to errors in waypoint handler
+        
+        #self.current_goal = get_goal()
 
     ''' handles controller related things in the main loop '''
     def controller_handler(self):
