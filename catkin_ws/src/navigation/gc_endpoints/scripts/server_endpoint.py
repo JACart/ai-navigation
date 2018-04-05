@@ -22,13 +22,14 @@ class server_endpoint(object):
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size = 10, latch=True)
         #subscribe to various sensor topics (in order to post that data back to the server for frontend)
         """
-        subscriber for gps data --- NavSatFix from the rostopic titled /fix
+        subscriber for gps data --- Done
         subscriber for velocity
         subscriber for camera
         subscriber for lightware
         subscriber for velodyne
         subscriber for rplidar
         """
+        self.gps_sub = rospy.Subscriber('/fix', NavSatFix, self.gps_callback)
         #variables to be set by callbacks
         self.battery = 0.0
         self.camera = "No Data Yet"
@@ -149,7 +150,20 @@ class server_endpoint(object):
         r = requests.post(url, json= payload, headers={ 'Content-Type': 'application/json',})
         if not r.ok:
             print "Error making post request: "+str(r.status_code)
-	
+    def gps_callback(self, gps_data):
+        """
+        Sets lat and long using data from GPS
+        """
+        lat = gps_data.latitude
+        lon = gps_data.longitude
+        if (not self.lat == lat) or (not self.lon == lon):
+            print "New GPS Found, data being posted to server"
+            self.lat = lat
+            self.lon = lon
+            self.send_status()
+        
+        
+        pass
 if __name__ == "__main__":
     try:
 	server_endpoint()

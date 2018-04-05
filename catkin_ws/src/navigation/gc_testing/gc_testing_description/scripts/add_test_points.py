@@ -2,6 +2,7 @@
 
 import rospy
 from navigation_msgs.msg import WaypointsArray, LatLongPoint
+from sensor_msgs.msg import NavSatFix
 
 class add_test_points(object):
     def __init__(self):
@@ -13,11 +14,11 @@ class add_test_points(object):
         p_array = []
         
         for line in f:
-            l = LatLongPoint()
+            l = NavSatFix()
             items = line.split(",")
             l.latitude =  (float) (items[0])
             l.longitude = (float) (items[1])
-            l.elevation = (float) (items[2].split("\n")[0])
+            l.altitude = (float) (items[2].split("\n")[0])
 
             p_array.append(l)
 
