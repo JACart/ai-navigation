@@ -39,7 +39,8 @@ class MotorEndpoint(object):
         rate = rospy.Rate(20)
 
         while not rospy.is_shutdown():
-            self.send_to_motors()
+            if self.cmd_msg is not None:
+                self.send_to_motors()
             rate.sleep()
         
     def motion_callback(self, planned_vel_angle):
@@ -69,7 +70,7 @@ class MotorEndpoint(object):
         angle = self.cmd_msg.angle
         cur_spd = self.cmd_msg.vel_curr
 
-        msg_to_motors =  ':'+str(spd)+ ',' + str(angle)+','+str(cur_spd)
+        msg_to_motors =  ':'+str(spd)+','+str(cur_spd)+","+ str(angle)
         self.speed_ser.write(msg_to_motors.encode())
         rospy.loginfo("String being sent: "+ msg_to_motors)
         
