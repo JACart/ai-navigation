@@ -17,6 +17,6 @@
   </group>
   <!-- RViz -->
   <group if="$(arg rviz)">
-      <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find gc_testing_description)/rviz/velodyne.rviz"/>
+      <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find gc_testing_description)/rviz/t.rviz"/>
   </group>
 </launch>

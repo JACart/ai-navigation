@@ -157,8 +157,8 @@ def lat_long_to_xyz(lat, lng):
 def xy_between_points(lat1, lng1, theta1, lat2, lng2):
     distance_flat = distance_between_points(lat1,lng1,lat2,lng2)
     angle = math.radians( (theta1+direction_between_points(lat1,lng1,lat2,lng2)) % 360 )
-    forward = math.cos(angle)*distance_flat
-    sideways = math.sin(angle)*distance_flat
+    sideways = math.cos(angle)*distance_flat
+    forward = math.sin(angle)*distance_flat
     return (forward, sideways)
 
 def midpoint(p1, p2):
@@ -170,11 +170,11 @@ def midpoint(p1, p2):
 
     return Point(x, y, 0)
 
-def add_intermediate_points(points):
+def add_intermediate_points(points, threshold):
     """
     Method for adding more points to a list of geometric points within a threshold.
     """
-    threshold = 5.0
+    #threshold = 5.0
 
     #keeps the final point to add at the end
     final = points[0]
