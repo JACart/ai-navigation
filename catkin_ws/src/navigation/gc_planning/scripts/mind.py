@@ -2,9 +2,10 @@
 import gps_util
 import rospy
 from navigation_msgs.msg import WaypointsArray, LatLongPoint
+from nav_msgs.msg import Path
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Header
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, PoseStamped, Point
 
 
 import cubic_spline_planner #might want to move where this is
@@ -12,11 +13,22 @@ import pure_pursuit #same as above
 import matplotlib.pyplot as plt #THIS IS TEMPORARY
 
 class mind(object):
+
+    #Creates a poseStamped object from a point
+    def create_poseStamped(self, point):
+        stamped = PoseStamped()
+        stamped.header = Header()
+        stamped.header.frame_id = '/odom'
+        stamped.pose.position = point
+        return stamped
+
     def __init__(self):
         rospy.init_node('mind')
 
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
-        self.xyz_waypoint_pub = rospy.Publisher('/xyz_waypoints', PointStamped, queue_size=10, latch = True)
+        #self.xyz_waypoint_pub = rospy.Publisher('/xyz_waypoints', PointStamped, queue_size=10, latch = True)
+        self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch = True)
+        self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
 
         rospy.spin()
 
@@ -26,17 +38,14 @@ class mind(object):
 
         google_points = []
 
-        #Reads each point in the waypoint topic
+        #Reads each point in the waypoint topic into google_points
         for gps_point in msg.waypoints:
             point = gps_util.get_point(gps_point)
             google_points.append(point)
 
-            #Publishes to rviz for visualization
-            #self.xyz_waypoint_pub.publish(self.add_header(point))
-
         print len(google_points)
 
-        #just for testing
+        #================================================ just for testing ===============================================
         x = []
         y = []
 
@@ -45,28 +54,49 @@ class mind(object):
             y.append(p.y)
 
         #plt.scatter(x,y)
-        #TODO end testing here
+        #================================================ end testing ===============================================
 
-        li = gps_util.add_intermediate_points(google_points, 15.0)
-        print len(li)
+        #Adds more points between the google points
+        google_points_plus = gps_util.add_intermediate_points(google_points, 15.0)
+        print len(google_points_plus)
 
         ax = []
         ay = []
 
-        for p in li:
+        extra_points = Path()
+        extra_points.header = Header()
+        extra_points.header.frame_id = '/odom'
+
+        #Puts the x's and y's 
+        for p in google_points_plus:
+            extra_points.poses.append(self.create_poseStamped(p))
             ax.append(p.x)
             ay.append(p.y)
 
-        #just for testing
+        self.points_pub.publish(extra_points)
+
+        #================================================ just for testing ===============================================
         '''f2 = plt.figure()
         plt.scatter(ax, ay)'''
 
-        #TODO end testing here
+        #================================================ end testing ===============================================
 
 
 
         #calculate the spline
         cx, cy, cyaw, ck, s = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
+
+        path = Path()
+        path.header = Header()
+        path.header.frame_id = '/odom'
+
+        for i in range(0, len(cx)):
+            curve_point = Point()
+            curve_point.x = cx[i]
+            curve_point.y = cy[i]
+            path.poses.append(self.create_poseStamped(curve_point))
+
+        self.path_pub.publish(path)
 
         #just for testing
         '''f3 = plt.figure()
@@ -86,7 +116,7 @@ class mind(object):
 
         #================================================ pure persuit copy/pase ===============================================
 
-        k = 0.1  # look forward gain
+        '''k = 0.1  # look forward gain
         Lfc = 1.0  # look-ahead distance
         Kp = 1.0  # speed propotional gain
         dt = 0.1  # [s]
@@ -149,7 +179,7 @@ class mind(object):
         plt.xlabel("Time[s]")
         plt.ylabel("Speed[km/h]")
         plt.grid(True)
-        plt.show()
+        plt.show()'''
 
 
 class State:
@@ -162,14 +192,6 @@ class State:
 
 
         #================================================ pure persuit copy/pase END ===============================================
-
-
-    def add_header(self, point):
-        stamped = PointStamped()
-        stamped.header = Header()
-        stamped.header.frame_id = '/odom'
-        stamped.point = point
-        return stamped
 
 
 if __name__ == "__main__":
