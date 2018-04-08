@@ -2,6 +2,6 @@
 
 <launch>
     <group>
-        <node name="the_overmind" pkg="gc_planning" type="the_overmind.py" required="true"/>
+        <node name="mind" pkg="gc_planning" type="mind.py" required="true"/>
     </group>
 </launch>
