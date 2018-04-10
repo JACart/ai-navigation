@@ -1,6 +1,5 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="rviz" default="true"/>
   <!-- Load the TortoiseBot URDF model into the parameter server -->
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find gc_testing_description)/urdf/custom-backup.urdf.xacro'" />
 
@@ -14,9 +13,5 @@
             args="-param robot_description -urdf -model tortoisebot" />
       <node name="robot_state_publisher" pkg="robot_state_publisher"
             type="robot_state_publisher"/>
-  </group>
-  <!-- RViz -->
-  <group if="$(arg rviz)">
-      <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find gc_testing_description)/rviz/t.rviz"/>
   </group>
 </launch>
