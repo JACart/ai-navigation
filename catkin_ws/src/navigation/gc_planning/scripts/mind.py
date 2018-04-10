@@ -1,7 +1,7 @@
 #!/usr/bin/env python 
 import gps_util
 import rospy
-from navigation_msgs.msg import WaypointsArray, LatLongPoint, vel_angle
+from navigation_msgs.msg import WaypointsArray, LatLongPoint, VelAngle
 from nav_msgs.msg import Path, Odometry
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Header
@@ -31,10 +31,9 @@ class mind(object):
 
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
         self.odom_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.odom_callback, queue_size=10) 
-        #self.xyz_waypoint_pub = rospy.Publisher('/xyz_waypoints', PointStamped, queue_size=10, latch = True)
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch = True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
-        self.motion_pub = rospy.Publisher('/nav_cmd', vel_angle, queue_size=10)
+        self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
 
         rospy.spin()
 
@@ -150,7 +149,7 @@ class mind(object):
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
             state = self.update(state, ai, di)
 
-            time = time + dt
+            #time = time + dt
 
             x.append(state.x)
             y.append(state.y)
@@ -195,7 +194,9 @@ class mind(object):
         twist = self.odom.twist.twist #has linear and angular
                                       #should be sqrt( .x ^2 + .y ^2) for v
 
-        msg = vel_angle()
+        rospy.logerr("YOOOOOOOO")
+
+        msg = VelAngle()
         msg.vel = a
         msg.angle = delta
         msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
