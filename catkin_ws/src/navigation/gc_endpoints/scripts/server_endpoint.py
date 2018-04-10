@@ -75,12 +75,13 @@ class server_endpoint(object):
     def get_goals(self):
         url = 'http://'+server_ip+':'+server_port+'/goals'
         r = requests.get(url)
-        self.goals = r.json()
 
         if not r.ok:
             print "Error connecting to API"
+            rospy.logerr("Server_endpoint: Error connecting to API")
             return r.ok
 
+        self.goals = r.json()
         return self.goals['Goals'] != []
 
     def parse_goals(self):

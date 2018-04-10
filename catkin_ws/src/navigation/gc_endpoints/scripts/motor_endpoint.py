@@ -24,6 +24,7 @@ class MotorEndpoint(object):
             self.speed_ser = serial.Serial(speed_port, 9600)
         except:
             print("Error connecting to serial port")
+            rospy.logerr("Motor_endpoint: Error connecting to serial port")
             exit(0)
             
         rospy.loginfo("Speed serial established")

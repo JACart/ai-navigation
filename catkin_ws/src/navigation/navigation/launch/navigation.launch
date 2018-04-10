@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="testing" default="true"/>
-  <arg name="rviz" default="false"/>
+  <arg name="testing" default="false"/>
+  <arg name="rviz" default="true"/>
   <!-- launch testing interface-->
   <group  if="$(arg testing)">
      <include file="$(find gc_testing)/launch/testing_interface.launch"/>

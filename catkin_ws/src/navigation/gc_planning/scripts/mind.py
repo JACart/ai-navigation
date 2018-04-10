@@ -1,11 +1,13 @@
 #!/usr/bin/env python 
 import gps_util
 import rospy
-from navigation_msgs.msg import WaypointsArray, LatLongPoint
-from nav_msgs.msg import Path
+from navigation_msgs.msg import WaypointsArray, LatLongPoint, vel_angle
+from nav_msgs.msg import Path, Odometry
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Header
 from geometry_msgs.msg import PointStamped, PoseStamped, Point
+import tf.transformations as tf
+import math
 
 
 import cubic_spline_planner #might want to move where this is
@@ -25,12 +27,19 @@ class mind(object):
     def __init__(self):
         rospy.init_node('mind')
 
+        self.odom = Odometry()
+
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
+        self.odom_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.odom_callback, queue_size=10) 
         #self.xyz_waypoint_pub = rospy.Publisher('/xyz_waypoints', PointStamped, queue_size=10, latch = True)
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch = True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
+        self.motion_pub = rospy.Publisher('/nav_cmd', vel_angle, queue_size=10)
 
         rospy.spin()
+
+    def odom_callback(self, msg):
+        self.odom = msg
 
 
     #This reads from the waypoints topic and TODO
@@ -46,14 +55,14 @@ class mind(object):
         print len(google_points)
 
         #================================================ just for testing ===============================================
-        x = []
+        '''x = []
         y = []
 
         for p in google_points:
             x.append(p.x)
             y.append(p.y)
 
-        #plt.scatter(x,y)
+        plt.scatter(x,y)'''
         #================================================ end testing ===============================================
 
         #Adds more points between the google points
@@ -82,7 +91,6 @@ class mind(object):
         #================================================ end testing ===============================================
 
 
-
         #calculate the spline
         cx, cy, cyaw, ck, s = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
 
@@ -107,16 +115,16 @@ class mind(object):
         plt.axis("equal")
         plt.xlabel("x[m]")
         plt.ylabel("y[m]")
-        plt.legend()'''
+        plt.legend()
 
-        #plt.ion()
-        #plt.show()
+        plt.ion()
+        plt.show()'''
         #TODO end testing here
 
 
         #================================================ pure persuit copy/pase ===============================================
 
-        '''k = 0.1  # look forward gain
+        k = 0.1  # look forward gain
         Lfc = 1.0  # look-ahead distance
         Kp = 1.0  # speed propotional gain
         dt = 0.1  # [s]
@@ -126,7 +134,7 @@ class mind(object):
         T = 100.0  # max simulation time
 
         # initial state
-        state = State(x=50.0, y=-80.0, yaw=0.0, v=0.0)
+        state = State(x=50.0, y=-80.0, yaw=0.0, v=0.0) #TODO this has to be where we start
 
         lastIndex = len(cx) - 1
         time = 0.0
@@ -137,10 +145,10 @@ class mind(object):
         t = [0.0]
         target_ind = pure_pursuit.calc_target_index(state, cx, cy)
 
-        while T >= time and lastIndex > target_ind:
+        while lastIndex > target_ind:
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
-            state = pure_pursuit.update(state, ai, di)
+            state = self.update(state, ai, di)
 
             time = time + dt
 
@@ -153,20 +161,20 @@ class mind(object):
             #if show_animation:
             #f4 = plt.figure()
 
-            plt.cla()
+            '''plt.cla()
             plt.plot(cx, cy, ".r", label="course")
             plt.plot(x, y, "-b", label="trajectory")
             plt.plot(cx[target_ind], cy[target_ind], "xg", label="target")
             plt.axis("equal")
             plt.grid(True)
             plt.title("Speed[km/h]:" + str(state.v * 3.6)[:4])
-            plt.pause(0.001)
+            plt.pause(0.001)'''
 
         # Test
         assert lastIndex >= target_ind, "Cannot goal"
 
         #if show_animation:
-        plt.plot(cx, cy, ".r", label="course")
+        '''plt.plot(cx, cy, ".r", label="course")
         plt.plot(x, y, "-b", label="trajectory")
         plt.legend()
         plt.xlabel("x[m]")
@@ -180,6 +188,33 @@ class mind(object):
         plt.ylabel("Speed[km/h]")
         plt.grid(True)
         plt.show()'''
+
+    def update(self, state, a, delta):
+
+        pose = self.odom.pose.pose #.position (x,y,z)
+        twist = self.odom.twist.twist #has linear and angular
+                                      #should be sqrt( .x ^2 + .y ^2) for v
+
+        msg = vel_angle()
+        msg.vel = a
+        msg.angle = delta
+        msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        self.motion_pub.publish(msg)
+
+
+
+        state.x = pose.position.x
+        state.y = pose.position.y
+
+        quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        angles = tf.euler_from_quaternion(quat)
+
+        state.yaw = angles[2]
+
+        state.v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+
+
+        return state
 
 
 class State:
