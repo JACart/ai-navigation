@@ -203,6 +203,7 @@ def add_intermediate_points(points, threshold):
 
     #add the final point
     newPoints.append(final)
+    newPoints.reverse()
     return newPoints
 
 

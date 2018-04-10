@@ -78,7 +78,7 @@ class teleop(object):
     def vel_callback(self, msg):
         x_spd = msg.twist.twist.linear.x
         y_spd = msg.twist.twist.linear.y
-        self.cur_vel = Math.sqrt(x_spd ** 2 + y_spd ** 2)
+        self.cur_vel = math.sqrt(x_spd ** 2 + y_spd ** 2)
 
 
 if __name__ == "__main__":

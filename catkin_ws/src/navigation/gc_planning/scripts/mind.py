@@ -6,6 +6,7 @@ from nav_msgs.msg import Path, Odometry
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Header
 from geometry_msgs.msg import PointStamped, PoseStamped, Point
+from visualization_msgs.msg import Marker
 import tf.transformations as tf
 import math
 
@@ -24,6 +25,33 @@ class mind(object):
         stamped.pose.position = point
         return stamped
 
+    def create_marker(self, x, y):
+        marker = Marker()
+        marker.header.frame_id = '/odom'
+        marker.header.stamp = ros.time()
+        marker.ns = "my_namespace"
+        marker.id = 0
+        marker.type = 1 #cube
+        marker.action = 0 #add
+        marker.pose.position.x = x
+        marker.pose.position.y = y
+        marker.pose.position.z = 0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = 1
+        marker.scale.y = 0.1
+        marker.scale.z = 0.1
+        marker.color.a = 1.0
+        marker.color.r = 0.0
+        marker.color.g = 1.0
+        marker.color.b = 0.0
+
+        rospy.logerr(str(x) + ", " + str(y))
+
+        return marker
+
     def __init__(self):
         rospy.init_node('mind')
 
@@ -34,6 +62,7 @@ class mind(object):
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch = True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
+        self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
 
         rospy.spin()
 
@@ -147,6 +176,12 @@ class mind(object):
         while lastIndex > target_ind:
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
+
+            rospy.logerr(str(target_ind) + ", " + str(len(cx)))
+
+            mkr = self.create_marker(cx[target_ind], cy[target_ind])
+            self.target_pub.publish(mkr)
+
             state = self.update(state, ai, di)
 
             #time = time + dt
@@ -194,13 +229,11 @@ class mind(object):
         twist = self.odom.twist.twist #has linear and angular
                                       #should be sqrt( .x ^2 + .y ^2) for v
 
-        rospy.logerr("YOOOOOOOO")
-
         msg = VelAngle()
         msg.vel = a
         msg.angle = delta
         msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
-        self.motion_pub.publish(msg)
+        self.target_pub.publish(msg)
 
 
 

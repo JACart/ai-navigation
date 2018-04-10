@@ -29,7 +29,7 @@ plt.scatter(x,y)
 #plt.ion()
 #plt.show()
 
-li = gps_util.add_intermediate_points(l)
+li = gps_util.add_intermediate_points(l, 5.0)
 
 ax = []
 ay = []

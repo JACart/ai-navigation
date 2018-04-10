@@ -7,7 +7,7 @@ class VelAngleToTwist(object):
     def __init__(self):
         rospy.init_node('VelAngleToTwist')
         self.cmd_p = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)
-        self.vel_angle_s = rospy.Subscriber('/vel_angle', VelAngle, self.convert, queue_size = 10)
+        self.vel_angle_s = rospy.Subscriber('/nav_cmd', VelAngle, self.convert, queue_size = 10)
         self.twist_msg = Twist()
         rospy.spin()
     def convert(self, vel_angle):

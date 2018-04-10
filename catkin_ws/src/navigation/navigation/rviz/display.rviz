@@ -9,6 +9,8 @@ Panels:
         - /PointStamped1
         - /Path1
         - /Path2
+        - /Marker1
+        - /Marker1/Status1
       Splitter Ratio: 0.5
     Tree Height: 534
   - Class: rviz/Selection
@@ -119,7 +121,7 @@ Visualization Manager:
       Max Color: 255; 255; 255
       Max Intensity: 999999
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 4.48415509e-44
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -188,6 +190,14 @@ Visualization Manager:
       Topic: /points
       Unreliable: false
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /target_point
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -244,5 +254,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 19
+  X: 18
   Y: 0
