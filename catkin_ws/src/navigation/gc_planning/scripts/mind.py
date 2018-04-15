@@ -257,11 +257,9 @@ class mind(object):
 
         msg = VelAngle()
         msg.vel = a
-        msg.angle = delta
+        msg.angle = (delta*180)/math.pi
         msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
         self.motion_pub.publish(msg)
-
-
 
         state.x = pose.position.x
         state.y = pose.position.y
