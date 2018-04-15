@@ -14,7 +14,6 @@ import math
 import cubic_spline_planner #might want to move where this is
 import pure_pursuit #same as above
 import matplotlib.pyplot as plt #THIS IS TEMPORARY
-
 class mind(object):
 
     #Creates a poseStamped object from a point
@@ -25,9 +24,9 @@ class mind(object):
         stamped.pose.position = point
         return stamped
 
-    def create_marker(self, x, y):
+    def create_marker(self, x, y, frame_id):
         marker = Marker()
-        marker.header.frame_id = '/odom'
+        marker.header.frame_id = frame_id
         marker.header.stamp = rospy.Time.now()
         marker.ns = "my_namespace"
         marker.id = 0
@@ -185,11 +184,11 @@ class mind(object):
             #rospy.logerr(str(target_ind) + ", " + str(len(cx)))
 
             #publish where we want to be
-            mkr = self.create_marker(cx[target_ind], cy[target_ind])
+            mkr = self.create_marker(cx[target_ind], cy[target_ind], '/odom')
             self.target_pub.publish(mkr)
 
             #publish an arrow with our twist
-            arrow = self.create_marker(state.x, state.y)
+            arrow = self.create_marker(0, 0, '/base_link')
             arrow.type = 0 #arrow
             arrow.scale.x = 2.0
             arrow.scale.y = 1.0

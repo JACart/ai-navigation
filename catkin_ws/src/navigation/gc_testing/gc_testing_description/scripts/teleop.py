@@ -4,14 +4,15 @@ import rospy
 import readchar
 import time
 import math
-from navigation_msgs.msg import vel_angle
+from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
 
 class teleop(object):
     def __init__(self):
         rospy.init_node('teleop')
 
-        self.motion_pub = rospy.Publisher('/nav_cmd', vel_angle, queue_size=10)
+        self.msg = VelAngle()
+        self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
         self.vel_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.vel_callback, queue_size = 10)
 
         print 'Move with WSAD\nCTRL-C to exit\n'
@@ -26,32 +27,32 @@ class teleop(object):
             if (ord(key) == 3):
                 exit(0)
 
-            msg = vel_angle()
+
             #msg.vel_curr = 0 #ord(key)
-            msg.vel = 0.0
-            msg.angle = 0.0
+            #msg.vel = 0.0
+            #msg.angle = 0.0
 
             #W pressed
             if (ord(key) == 119):
-                msg.vel_curr = self.key_check(ord(key), 4.0)
-                msg.vel = 4.0
+                self.msg.vel_curr = 0.01 #self.key_check(ord(key), 4.0)
+                self.msg.vel = .4
             #A pressed
             elif (ord(key) == 97):
-                msg.vel = 1.0
-                msg.vel_curr = self.key_check(ord(key), 1.0)
-                msg.angle = -360
+                self.msg.angle = 720
             #S pressed
             elif (ord(key) == 115):
-                msg.vel_curr = self.key_check(ord(key), 0.01)
-                msg.vel = 0.01
+                self.msg.vel_curr = 0.4 #self.key_check(ord(key), 0.01)
+                self.msg.vel = 0.01
             #D pressed
             elif (ord(key) == 100):
-                msg.vel = 1.0
-                msg.vel_curr = self.key_check(ord(key), 1.0)
-                msg.angle = 360
-
-
-            self.motion_pub.publish(msg)
+                self.msg.angle = -720
+	    #X pressed -- hard stop
+            elif (ord(key) == 120):
+		self.msg.vel = 0.0
+	    #Y pressed -- stop stearing
+	    elif (ord(key) == 121):
+		self.msg.angle = 0.0
+            self.motion_pub.publish(self.msg)
             #rate.sleep()
 
             #time.sleep(0.05)

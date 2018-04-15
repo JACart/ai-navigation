@@ -1,8 +1,8 @@
 #!/usr/bin/env python 
 import rospy
 import serial
-from navigation_msgs.msg import vel_angle
-from navigation_msgs.msg import emergency_stop
+from navigation_msgs.msg import VelAngle
+from navigation_msgs.msg import EmergencyStop
 speed_port = '/dev/ttyACM0' #hardcoded depending on computer
 turn_port = ''
 
@@ -35,8 +35,8 @@ class MotorEndpoint(object):
         """
         self.speed_string = ''
         response = "No response yet"
-        self.motion_subscriber = rospy.Subscriber('/nav_cmd', vel_angle, self.motion_callback, queue_size = 10)
-        self.killswitch_subscriber = rospy.Subscriber('/emergency_stop', emergency_stop, self.kill_callback, queue_size = 10)
+        self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback, queue_size = 10)
+        self.killswitch_subscriber = rospy.Subscriber('/emergency_stop', EmergencyStop, self.kill_callback, queue_size = 10)
         rate = rospy.Rate(20)
 
         while not rospy.is_shutdown():
@@ -70,10 +70,9 @@ class MotorEndpoint(object):
         spd = self.cmd_msg.vel
         angle = self.cmd_msg.angle
         cur_spd = self.cmd_msg.vel_curr
-
+        print ("speed: " + str(spd) + " angle: " + str(angle) + "cur_spd: " + str(cur_spd))  
         msg_to_motors =  ':'+str(spd)+','+str(cur_spd)+","+ str(angle)
         self.speed_ser.write(msg_to_motors.encode())
-        rospy.loginfo("String being sent: "+ msg_to_motors)
         
         
 if __name__ == "__main__": 
