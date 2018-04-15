@@ -28,7 +28,7 @@ class mind(object):
     def create_marker(self, x, y):
         marker = Marker()
         marker.header.frame_id = '/odom'
-        marker.header.stamp = ros.time()
+        marker.header.stamp = rospy.Time.now()
         marker.ns = "my_namespace"
         marker.id = 0
         marker.type = 1 #cube
@@ -36,19 +36,23 @@ class mind(object):
         marker.pose.position.x = x
         marker.pose.position.y = y
         marker.pose.position.z = 0
+
+        #quat = tf.quaternion_from_euler(0,0,yaw)
+        #marker.pose.orientation = quat
+
         marker.pose.orientation.x = 0.0
         marker.pose.orientation.y = 0.0
         marker.pose.orientation.z = 0.0
         marker.pose.orientation.w = 1.0
-        marker.scale.x = 1
-        marker.scale.y = 0.1
-        marker.scale.z = 0.1
+        marker.scale.x = 1.0
+        marker.scale.y = 1.0
+        marker.scale.z = 1.0
         marker.color.a = 1.0
         marker.color.r = 0.0
         marker.color.g = 1.0
         marker.color.b = 0.0
 
-        rospy.logerr(str(x) + ", " + str(y))
+        #rospy.logerr(str(x) + ", " + str(y))
 
         return marker
 
@@ -63,6 +67,7 @@ class mind(object):
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
+        self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
 
         rospy.spin()
 
@@ -162,7 +167,7 @@ class mind(object):
         T = 100.0  # max simulation time
 
         # initial state
-        state = State(x=50.0, y=-80.0, yaw=0.0, v=0.0) #TODO this has to be where we start
+        state = State(x=0.0, y=0.0, yaw=0.0, v=0.0) #TODO this has to be where we start
 
         lastIndex = len(cx) - 1
         time = 0.0
@@ -177,11 +182,30 @@ class mind(object):
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
 
-            rospy.logerr(str(target_ind) + ", " + str(len(cx)))
+            #rospy.logerr(str(target_ind) + ", " + str(len(cx)))
 
+            #publish where we want to be
             mkr = self.create_marker(cx[target_ind], cy[target_ind])
             self.target_pub.publish(mkr)
 
+            #publish an arrow with our twist
+            arrow = self.create_marker(state.x, state.y)
+            arrow.type = 0 #arrow
+            arrow.scale.x = 2.0
+            arrow.scale.y = 1.0
+            arrow.scale.z = 1.0
+            arrow.color.r = 1.0
+            arrow.color.g = 0.0
+            arrow.color.b = 0.0
+            #TODO di might be in radians so that might be causing the error
+            quater = tf.quaternion_from_euler(0,0,di)
+            arrow.pose.orientation.x = quater[0]
+            arrow.pose.orientation.y = quater[1]
+            arrow.pose.orientation.z = quater[2]
+            arrow.pose.orientation.w = quater[3]
+            self.target_twist_pub.publish(arrow)
+
+            #go back to pure persuit
             state = self.update(state, ai, di)
 
             #time = time + dt
@@ -223,6 +247,8 @@ class mind(object):
         plt.grid(True)
         plt.show()'''
 
+        rospy.logerr("Done navigating")
+
     def update(self, state, a, delta):
 
         pose = self.odom.pose.pose #.position (x,y,z)
@@ -233,7 +259,7 @@ class mind(object):
         msg.vel = a
         msg.angle = delta
         msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
-        self.target_pub.publish(msg)
+        self.motion_pub.publish(msg)
 
 
 
@@ -246,6 +272,13 @@ class mind(object):
         state.yaw = angles[2]
 
         state.v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+
+        '''dt = 0.1
+        L = 2.9
+        state.x = state.x + state.v * math.cos(state.yaw) * dt
+        state.y = state.y + state.v * math.sin(state.yaw) * dt
+        state.yaw = state.yaw + state.v / L * math.tan(delta) * dt
+        state.v = state.v + a * dt'''
 
 
         return state
