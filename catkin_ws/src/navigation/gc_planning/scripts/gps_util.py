@@ -3,6 +3,7 @@
 import sys
 import tf
 import rospy
+import numpy as np
 
 import math
 
@@ -17,6 +18,10 @@ anchor_long = -78.875910
 anchor_elev = 396 #meters above sea level
 anchor_theta = 0 #angle pointing directly north
 earth_radius = 6371000 #meters
+
+M = np.array([[-0.41630714, -0.7753954 , -4.00132496],
+       [ 0.85354307, -0.4559808 , 41.511988  ],
+       [ 0.        ,  0.        ,  1.        ]])
 
 """
 Always go from GPS to XYZ as soon as you can. Then never go back. Ever. Dont even think about it.
@@ -37,23 +42,19 @@ def get_point(current_gps):
     relative_point = Point()
     current_lat = current_gps.latitude
     current_long = current_gps.longitude
-    """
-    if current_gps.altitude == NaN: #If an altitude is not provided
-        result = xy_between_points(anchor_lat, anchor_long, anchor_theta, current_lat, current_long)
-        relative_point.x = result[0]
-        relative_point.y = result[1]
-        relative_point.z = anchor_elev #elevation is assumed to be the same as the start if no elevation is provided
-    else: #If an altitude is provided
-        current_elev = current_gps.altitude
-        result = xyz_between_points(anchor_lat, anchor_long, anchor_elev, anchor_theta, current_lat, current_long, current_elev)
-        relative_point.x = result[0]
-        relative_point.y = result[1]
-        relative_point.z = result[2]
-    """
+    
     result = xy_between_points(anchor_lat, anchor_long, anchor_theta, current_lat, current_long)
+    
+    zack_point = np.array([[result[0]], [result[1]], [1]])
+    map_point = np.dot(M, zack_point)
+    relative_point.x = map_point[0,0]
+    relative_point.y = map_point[1,0]
+    return relative_point
+    """
     relative_point.x = result[0]
     relative_point.y = result[1]
     return relative_point
+    """
     
 def xyz_between_points(lat1, lng1, elev1, theta1, lat2, lng2, elev2):
     """
