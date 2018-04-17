@@ -10,7 +10,7 @@ import math
 import matplotlib.pyplot as plt
 
 k = 0.1  # look forward gain
-Lfc = 1.0  # look-ahead distance
+Lfc = 5.0  # look-ahead distance
 Kp = 1.0  # speed propotional gain
 dt = 0.1  # [s]
 L = 2.9  # [m] wheel base of vehicle

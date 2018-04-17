@@ -4,7 +4,7 @@ import rospy
 from navigation_msgs.msg import WaypointsArray, LatLongPoint, VelAngle
 from nav_msgs.msg import Path, Odometry
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Float64
 from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
@@ -59,9 +59,11 @@ class mind(object):
         rospy.init_node('mind')
 
         self.odom = Odometry()
+        self.rp_dist = -1
 
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
         self.odom_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.odom_callback, queue_size=10) 
+        self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float64, self.rp_callback, queue_size=10) 
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch = True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
@@ -72,6 +74,9 @@ class mind(object):
 
     def odom_callback(self, msg):
         self.odom = msg
+
+    def rp_callback(self, msg):
+        self.rp_dist = msg.data
 
 
     #This reads from the waypoints topic and TODO
@@ -252,6 +257,19 @@ class mind(object):
         rospy.logerr("Done navigating")
 
     def update(self, state, a, delta):
+
+        #this is looping until there is nothing infront of us
+        r = rospy.Rate(1)
+        while (self.rp_dist != -1):
+            msg = VelAngle()
+            msg.vel = 0
+            twist = self.odom.twist.twist
+            msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+            msg.angle = 0
+            self.motion_pub.publish(msg)
+            r.sleep()
+            
+
 
         pose = self.odom.pose.pose #.position (x,y,z)
         twist = self.odom.twist.twist #has linear and angular

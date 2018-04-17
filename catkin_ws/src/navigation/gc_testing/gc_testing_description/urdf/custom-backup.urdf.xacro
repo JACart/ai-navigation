@@ -7,7 +7,7 @@
         <box size="2.337 1.27 1.778"/>
       </geometry>
       <material name="silver">
-        <color rgba="0.75 0.75 0.75 .1"/>
+        <color rgba="0.75 0.75 0.75 1"/>
       </material>
     </visual>
     <collision>
