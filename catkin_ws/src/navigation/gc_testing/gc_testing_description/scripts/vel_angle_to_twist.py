@@ -12,8 +12,8 @@ class VelAngleToTwist(object):
         self.twist_msg = Twist()
         rospy.spin()
     def convert(self, vel_angle):
-	    self.twist_msg.linear.x = (vel_angle.angle/180)*math.pi
-	    self.twist_msg.linear.y = vel_angle.vel
+	    self.twist_msg.angular.z= (vel_angle.angle/180)*math.pi
+	    self.twist_msg.linear.x = vel_angle.vel
 	    self.cmd_p.publish(self.twist_msg)
 	
 if __name__ == "__main__":
