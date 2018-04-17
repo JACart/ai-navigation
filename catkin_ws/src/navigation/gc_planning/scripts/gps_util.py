@@ -19,9 +19,9 @@ anchor_elev = 396 #meters above sea level
 anchor_theta = 0 #angle pointing directly north
 earth_radius = 6371000 #meters
 
-M = np.array([[-0.41630714, -0.7753954 , -4.00132496],
-       [ 0.85354307, -0.4559808 , 41.511988  ],
-       [ 0.        ,  0.        ,  1.        ]])
+M = numpy.array([[-0.45644886, -0.77822273, -2.79976147],
+    [ 0.84299717, -0.50090785, 41.31691467],
+    [ 0.0, 0.0, 1.0]])
 
 """
 Always go from GPS to XYZ as soon as you can. Then never go back. Ever. Dont even think about it.
