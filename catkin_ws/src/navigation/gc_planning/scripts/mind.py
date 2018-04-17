@@ -76,6 +76,9 @@ class mind(object):
 
     #This reads from the waypoints topic and TODO
     def waypoints_callback(self, msg):
+        """
+        Waypoints callback does way too much right now. All of the path stuff should be handled in a helper method
+        """
 
         google_points = []
 
@@ -290,7 +293,7 @@ class State:
         self.v = v
 
 
-        #================================================ pure persuit copy/pase END ===============================================
+        #================================================ pure pursuit copy/pase END ===============================================
 
 
 if __name__ == "__main__":
