@@ -59,7 +59,8 @@ class mind(object):
         rospy.init_node('mind')
 
         self.odom = Odometry()
-        self.rp_dist = -1
+        self.rp_dist = 99999999999
+        self.stop_thresh = 5 #this is how many seconds something is away from us
 
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
         self.odom_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.odom_callback, queue_size=10) 
@@ -260,25 +261,26 @@ class mind(object):
 
         #this is looping until there is nothing infront of us
         r = rospy.Rate(1)
-        while (self.rp_dist != -1):
-            msg = VelAngle()
-            msg.vel = 0
-            twist = self.odom.twist.twist
-            msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
-            msg.angle = 0
-            self.motion_pub.publish(msg)
-            r.sleep()
-            
+        pose = self.odom.pose.pose
+        twist = self.odom.twist.twist
 
+        current_spd = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
 
-        pose = self.odom.pose.pose #.position (x,y,z)
-        twist = self.odom.twist.twist #has linear and angular
-                                      #should be sqrt( .x ^2 + .y ^2) for v
+        if (current_spd != 0):
+            while ((self.rp_dist / current_spd) <= self.stop_thresh):
+                msg = VelAngle()
+                msg.vel = 0
+
+                msg.vel_curr = current_spd
+                msg.angle = 0
+                self.motion_pub.publish(msg)
+                r.sleep()
+
 
         msg = VelAngle()
         msg.vel = a
         msg.angle = (delta*180)/math.pi
-        msg.vel_curr = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        msg.vel_curr = current_spd
         self.motion_pub.publish(msg)
 
         state.x = pose.position.x
