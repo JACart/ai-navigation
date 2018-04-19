@@ -22,4 +22,4 @@ To get the necessary ros dependencies if you have problems running the launch fi
 
 Here is the ROS node architecture:
 
-![architecture](./pics/architecture.png)
+![architecture](./pics/architecture.svg)
