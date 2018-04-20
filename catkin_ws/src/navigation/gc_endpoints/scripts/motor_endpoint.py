@@ -70,7 +70,16 @@ class MotorEndpoint(object):
         spd = self.cmd_msg.vel
         angle = self.cmd_msg.angle
         cur_spd = self.cmd_msg.vel_curr
-        print ("speed: " + str(spd) + " angle: " + str(angle) + "cur_spd: " + str(cur_spd))  
+
+
+        #TODO HERE WE NEED TO CONVERT TIRE ANGLE TO STEERING ANGLE
+
+
+        print ("speed: " + str(spd) + " angle: " + str(angle) + "cur_spd: " + str(cur_spd))
+
+
+
+
         msg_to_motors =  ':'+str(spd)+','+str(cur_spd)+","+ str(angle)
         self.speed_ser.write(msg_to_motors.encode())
         
