@@ -21,13 +21,13 @@ class MotorEndpoint(object):
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            self.speed_ser = serial.Serial(speed_port, 9600)
-        except:
-            print("Error connecting to serial port")
-            rospy.logerr("Motor_endpoint: Error connecting to serial port")
+            self.speed_ser = serial.Serial(speed_port, 19200, write_timeout=0)
+        except Exception as e:
+            print("Motor_endpoint: " + str(e))
+            rospy.logerr("Motor_endpoint: " + str(e))
             exit(0)
             
-        rospy.loginfo("Speed serial established")
+        rospy.logerr("Speed serial established")
         """
         #Connect to arduino for steering
         turn_ser = serial.Serial(turn_port, 9600)
@@ -37,7 +37,8 @@ class MotorEndpoint(object):
         response = "No response yet"
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback, queue_size = 10)
         self.killswitch_subscriber = rospy.Subscriber('/emergency_stop', EmergencyStop, self.kill_callback, queue_size = 10)
-        rate = rospy.Rate(20)
+
+        rate = rospy.Rate(5)
 
         while not rospy.is_shutdown():
             if self.cmd_msg is not None:
@@ -68,14 +69,26 @@ class MotorEndpoint(object):
 
     def send_to_motors(self):
         spd = self.cmd_msg.vel
-        angle = self.cmd_msg.angle
+
+        wheel_ang = self.cmd_msg.angle
+        if (wheel_ang > 28):
+            wheel_ang = 28
+        if (wheel_ang < -42):
+            wheel_ang = -42
+
+        angle = wheel_ang * 12
         cur_spd = self.cmd_msg.vel_curr
 
 
-        #TODO HERE WE NEED TO CONVERT TIRE ANGLE TO STEERING ANGLE
 
+        if (spd > 0):
+            spd = 2.0
+            cur_spd = 0.01
+        else:
+            #rospy.logerr("\t\tSTOPPING!: ")
+            spd = 0.0
 
-        print ("speed: " + str(spd) + " angle: " + str(angle) + "cur_spd: " + str(cur_spd))
+        print ("speed: " + str(spd) + " angle: " + str(angle) + " cur_spd: " + str(cur_spd))
 
 
 

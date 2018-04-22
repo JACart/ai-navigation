@@ -28,7 +28,7 @@ class teleop(object):
 	x = 120
 	y = 121
 	angle_max = 720
-	angle_step = 30
+	angle_step = 15
 	velstr = 'Hard stop     '
 	anglestr = 'Center wheels '
         stdscr.nodelay(True)
@@ -45,7 +45,7 @@ class teleop(object):
 		continue
             if keyval == w:
                 self.msg.vel_curr = 0.01
-                self.msg.vel = .4
+                self.msg.vel = 2.0
 		velstr = "Full throttle "
             elif keyval == a:
 		if self.msg.angle + angle_step <= angle_max:

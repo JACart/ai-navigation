@@ -4,7 +4,7 @@ import rospy
 from navigation_msgs.msg import WaypointsArray, LatLongPoint, VelAngle
 from nav_msgs.msg import Path, Odometry
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import Header, Float64
+from std_msgs.msg import Header, Float32
 from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
@@ -20,7 +20,7 @@ class mind(object):
     def create_poseStamped(self, point):
         stamped = PoseStamped()
         stamped.header = Header()
-        stamped.header.frame_id = '/odom'
+        stamped.header.frame_id = '/map'
         stamped.pose.position = point
         return stamped
 
@@ -64,7 +64,7 @@ class mind(object):
 
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray, self.waypoints_callback, queue_size=10) 
         self.odom_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.odom_callback, queue_size=10) 
-        self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float64, self.rp_callback, queue_size=10) 
+        self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float32, self.rp_callback, queue_size=10) 
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch = True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch = True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
@@ -77,7 +77,10 @@ class mind(object):
         self.odom = msg
 
     def rp_callback(self, msg):
-        self.rp_dist = msg.data
+        if (msg.data <= 0.5):
+            self.rp_dist = 99999999
+        else:
+            self.rp_dist = msg.data
 
 
     #This reads from the waypoints topic and TODO
@@ -115,7 +118,7 @@ class mind(object):
 
         extra_points = Path()
         extra_points.header = Header()
-        extra_points.header.frame_id = '/odom'
+        extra_points.header.frame_id = '/map'
 
         #Puts the x's and y's 
         for p in google_points_plus:
@@ -137,7 +140,7 @@ class mind(object):
 
         path = Path()
         path.header = Header()
-        path.header.frame_id = '/odom'
+        path.header.frame_id = '/map'
 
         for i in range(0, len(cx)):
             curve_point = Point()
@@ -166,7 +169,7 @@ class mind(object):
         #================================================ pure persuit copy/pase ===============================================
 
         k = 0.1  # look forward gain
-        Lfc = 1.0  # look-ahead distance
+        Lfc = 3.5  # look-ahead distance
         Kp = 1.0  # speed propotional gain
         dt = 0.1  # [s]
         L = 2.9  # [m] wheel base of vehicle
@@ -175,7 +178,13 @@ class mind(object):
         T = 100.0  # max simulation time
 
         # initial state
-        state = State(x=0.0, y=0.0, yaw=0.0, v=0.0) #TODO this has to be where we start
+        pose = self.odom.pose.pose
+        twist = self.odom.twist.twist
+
+        quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        angles = tf.euler_from_quaternion(quat)
+        initial_v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        state = State(x=pose.position.x, y=pose.position.y, yaw=angles[2], v=initial_v) #TODO this has to be where we start
 
         lastIndex = len(cx) - 1
         time = 0.0
@@ -193,7 +202,7 @@ class mind(object):
             #rospy.logerr(str(target_ind) + ", " + str(len(cx)))
 
             #publish where we want to be
-            mkr = self.create_marker(cx[target_ind], cy[target_ind], '/odom')
+            mkr = self.create_marker(cx[target_ind], cy[target_ind], '/map')
             self.target_pub.publish(mkr)
 
             #publish an arrow with our twist
@@ -227,14 +236,14 @@ class mind(object):
             #if show_animation:
             #f4 = plt.figure()
 
-            plt.cla()
+            '''plt.cla()
             plt.plot(cx, cy, ".r", label="course")
             plt.plot(x, y, "-b", label="trajectory")
             plt.plot(cx[target_ind], cy[target_ind], "xg", label="target")
             plt.axis("equal")
             plt.grid(True)
             plt.title("Speed[km/h]:" + str(state.v * 3.6)[:4])
-            plt.pause(0.001)
+            plt.pause(0.001)'''
 
         # Test
         assert lastIndex >= target_ind, "Cannot goal"
@@ -266,15 +275,17 @@ class mind(object):
 
         current_spd = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
 
-        if (current_spd != 0):
-            while ((self.rp_dist / current_spd) <= self.stop_thresh):
+        #rospy.logerr(str(self.rp_dist) + " " + str(current_spd))
+        '''if (current_spd != 0):
+            while (self.rp_dist <= 3):
                 msg = VelAngle()
                 msg.vel = 0
 
                 msg.vel_curr = current_spd
                 msg.angle = 0
+                rospy.logerr(str(self.rp_dist))
                 self.motion_pub.publish(msg)
-                r.sleep()
+                r.sleep()'''
 
 
         msg = VelAngle()
