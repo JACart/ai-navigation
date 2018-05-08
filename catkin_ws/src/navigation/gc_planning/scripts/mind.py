@@ -265,6 +265,12 @@ class mind(object):
         plt.show()'''
 
         rospy.logerr("Done navigating")
+        msg = VelAngle()
+        msg.vel = 0
+        msg.angle = 0
+        msg.vel_curr = 0
+        self.motion_pub.publish(msg)
+        
 
     def update(self, state, a, delta):
 

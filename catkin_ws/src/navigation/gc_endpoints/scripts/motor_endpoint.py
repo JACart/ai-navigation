@@ -76,7 +76,7 @@ class MotorEndpoint(object):
         if (wheel_ang < -42):
             wheel_ang = -42
 
-        angle = wheel_ang * 12
+        angle = wheel_ang * -12
         cur_spd = self.cmd_msg.vel_curr
 
 
@@ -87,6 +87,8 @@ class MotorEndpoint(object):
         else:
             #rospy.logerr("\t\tSTOPPING!: ")
             spd = 0.0
+
+        angle = (int) (angle)
 
         print ("speed: " + str(spd) + " angle: " + str(angle) + " cur_spd: " + str(cur_spd))
 
