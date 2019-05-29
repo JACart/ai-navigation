@@ -1,0 +1,8 @@
+prefix=/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/install
+
+Name: cart_planning
+Description: Description of cart_planning
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/install/lib 
+Requires: 

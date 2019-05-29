@@ -1,0 +1,8 @@
+prefix=/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/devel
+
+Name: cart_endpoints
+Description: Description of cart_endpoints
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/devel/lib 
+Requires: 
