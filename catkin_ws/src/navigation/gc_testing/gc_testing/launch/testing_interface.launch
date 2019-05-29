@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<launch>
-    <include file="$(find gc_testing_description)/launch/sim.launch"/>
-    <!-- this node translate to Twist from VelAngle to talk to simulation -->
-    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="vel_angle_to_twist.py"/>
-</launch>
