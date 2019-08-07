@@ -2,9 +2,10 @@
 
 import serial
 import rospy
+import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
-SPEED_PORT = '/dev/ttyACM0' #hardcoded depending on computer
+SPEED_PORT = '/dev/ttyUSB0' #hardcoded depending on computer
 TURN_PORT = ''
 
 class MotorEndpoint(object):
@@ -70,20 +71,22 @@ class MotorEndpoint(object):
         angle = wheel_ang * -12
         cur_spd = self.cmd_msg.vel_curr
 
-
-
-        if spd > 0:
-            spd = 2.0
-            cur_spd = 0.01
+        if spd == 0:
+            brake = 255
         else:
-            spd = 0.0
+            brake = 0
 
         angle = (int)(angle)
 
-        print "speed: " + str(spd) + " angle: " + str(angle) + " cur_spd: " + str(cur_spd)
+	    data = bytearray(b'\x00' * 6)
+        bitstruct.pack_into('u8u8u8u8u16', data, 0, 42, 21,
+                            spd, brake, angle)
+        self.speed_ser.write(data) 
+
+        """ print "speed: " + str(spd) + " angle: " + str(angle) + " cur_spd: " + str(cur_spd)
 
         msg_to_motors = ':' + str(spd) + ',' + str(cur_spd) + "," + str(angle)
-        self.speed_ser.write(msg_to_motors.encode())
+        self.speed_ser.write(msg_to_motors.encode()) """
 
 if __name__ == "__main__":
     try:

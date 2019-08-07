@@ -5,13 +5,16 @@ import rospy
 from navigation_msgs.msg import VelAngle
 
 class Teleop(object):
+
+    MAX_SPEED = 255
+
     def __init__(self):
         rospy.init_node('teleop')
         self.msg = VelAngle()
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
 
         self.prev_key = 1
-        self.cur_vel = 0.0
+        self.cur_vel = 0 #  (0 - 255)
         curses.wrapper(self.get_input)
 
     def get_input(self, stdscr):
@@ -41,17 +44,15 @@ class Teleop(object):
             if keyval == self.prev_key:
                 continue
             if keyval == w:
-                self.msg.vel_curr = 0.01
-                self.msg.vel = 2.0
-                velstr = "Full throttle "
+                self.cur_vel = min(self.MAX_SPEED, self.cur_vel + 10)
+                self.msg.vel_curr = self.cur_vel
             elif keyval == a:
                 if self.msg.angle + angle_step <= angle_max:
                     self.msg.angle += angle_step
                 anglestr = "Turn left     "
             elif keyval == s:
-                self.msg.vel_curr = 0.4
-                self.msg.vel = 0.01
-                velstr = "No throttle   "
+                self.cur_vel = max(0, self.cur_vel - 10)
+                self.msg.vel_curr = self.cur_vel
             elif keyval == d:
                 if self.msg.angle - angle_step >= -angle_max:
                     self.msg.angle -= angle_step
