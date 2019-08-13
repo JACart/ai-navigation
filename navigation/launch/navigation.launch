@@ -14,9 +14,17 @@
   <group>
       <include file="$(find cart_planning)/launch/planning.launch"/>
   </group>
+<<<<<<< HEAD
   <!--launch with rviz display-->
   <group if="$(arg rviz)">
       <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" 
 	output="screen" args="-d $(find navigation)/rviz/display.rviz"/>
   </group>
+=======
+  <!--launch with rviz display
+  <group if="$(arg rviz)"> -->
+      <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" 
+	output="screen" args="-d $(find navigation)/rviz/display.rviz"/>
+  </group> 
+>>>>>>> 095bd448bd72a394aceaa418d7a2d9bed057d9ea
 </launch>
