@@ -1,2 +1,0 @@
-navigation/cart_endpoints:navigation/cart_planning:navigation/cart_simulator:navigation_msgs:velodyne_lidar/velodyne_description:velodyne_lidar/velodyne_gazebo_plugins:velodyne_lidar/velodyne_simulator
--DCATKIN_DEVEL_PREFIX=/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/install -G Unix Makefiles

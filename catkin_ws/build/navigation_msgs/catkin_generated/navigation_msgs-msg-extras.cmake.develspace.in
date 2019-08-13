@@ -1,2 +1,0 @@
-set(navigation_msgs_MESSAGE_FILES "/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/src/navigation_msgs/msg/FErequest.msg;/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/src/navigation_msgs/msg/LatLongPoint.msg;/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/src/navigation_msgs/msg/WaypointsArray.msg;/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/src/navigation_msgs/msg/VelAngle.msg;/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/src/navigation_msgs/msg/EmergencyStop.msg")
-set(navigation_msgs_SERVICE_FILES "")

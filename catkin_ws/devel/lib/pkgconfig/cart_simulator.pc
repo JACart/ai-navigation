@@ -1,8 +1,0 @@
-prefix=/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/devel
-
-Name: cart_simulator
-Description: Description of cart_simulator
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/browermb/jmuautonomous/autonomous-navigation/catkin_ws/devel/lib 
-Requires: 
