@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<launch>
+    <group>
+        <node name="mind" pkg="cart_planning" type="mind.py" required="true"/>
+    </group>
+</launch>

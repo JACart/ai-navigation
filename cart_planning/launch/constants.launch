@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<launch>
+    <rosparam>
+        anchor_lat: 38.431960
+        anchor_long: -78.875910
+        anchor_elev : 396
+        anchor_theta : 0
+    </rosparam>
+</launch>
