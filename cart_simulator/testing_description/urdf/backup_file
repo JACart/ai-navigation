@@ -23,13 +23,93 @@
     </inertial>
   </link>
 
+  <joint name="front_left_caster_joint" type="continuous">
+  <!--  <limit effort="30" velocity="0.5" lower="-0.785398" upper="0.785398" />-->
+    <axis xyz="0 0 1"/>
+    <parent link="base_link"/>
+    <child link="front_left_caster"/>
+    <origin rpy="0 0 0" xyz="1.1 0.46 -0.739"/>
+  </joint>
+
+  <link name="front_left_caster">
+    <visual>
+      <geometry>
+        <box size="0.1 0.1 0.3"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.1 0.1 0.3"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.00083" iyy="0.00083" izz="0.000167"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_caster_to_caster_rod" type="fixed">
+    <parent link="front_left_caster"/>
+    <child link="front_left_caster_rod"/>
+    <origin xyz="-.3 0 0"/>
+  </joint>
+
+  <link name="front_left_caster_rod">
+    <visual>
+      <geometry>
+        <box size="0.3 0.1 0.1"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.000167" iyy="0.00083" izz="0.00083"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="front_left_wheel_joint" type="continuous">
+    <axis xyz="0 0 1"/>
+    <parent link="front_left_caster_rod"/>
+    <child link="front_left_wheel"/>
+    <origin rpy="-1.5708 0 0" xyz="0.05 0 -.15"/>
+  </joint>
+
+  <link name="front_left_wheel">
+    <visual>
+      <geometry>
+        <cylinder length=".05" radius="0.14"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length=".05" radius="0.14"/>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.1</mu>
+            <mu2>0.1</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="5.1458e-5" iyy="5.1458e-5" izz="6.125e-5"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
 
   <joint name="front_caster_joint" type="continuous">
   <!--  <limit effort="30" velocity="0.5" lower="-0.785398" upper="0.785398" />-->
     <axis xyz="0 0 1"/>
     <parent link="base_link"/>
     <child link="front_caster"/>
-    <origin rpy="0 0 0" xyz="1.1 0 -0.739"/>
+    <origin rpy="0 0 0" xyz="1.1 -0.46 -0.739"/>
   </joint>
 
   <link name="front_caster">
@@ -173,10 +253,10 @@
   </joint>
 
 
-  <!--xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+  xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
   <VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" hz="10" samples="440">
     <origin xyz="0 0 0.889" rpy="0 0 0" />
-  </VLP-16-->
+  </VLP-16>
 
 
   <gazebo>
@@ -196,7 +276,7 @@
   <gazebo>
     <plugin name="joint_state_publisher"
             filename="libgazebo_ros_joint_state_publisher.so">
-      <jointName>front_caster_joint, front_wheel_joint</jointName>
+      <jointName>front_caster_joint, front_wheel_joint, front_left_caster_joint, front_left_wheel_joint</jointName>
     </plugin>
   </gazebo>
 

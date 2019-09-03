@@ -12,7 +12,7 @@
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <arg name="physics" default="ode"/>
-  <arg name="verbose" default="false"/>
+  <arg name="verbose" default="true"/>
   <arg name="world_name" default="worlds/empty.world"/> <!-- Note: the world_name is with respect to GAZEBO_RESOURCE_PATH environmental variable -->
   <arg name="respawn_gazebo" default="false"/>
   <arg name="use_clock_frequency" default="false"/>
