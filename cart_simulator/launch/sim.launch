@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
   <!-- Load the TortoiseBot URDF model into the parameter server -->
-  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find cart_simulator)/urdf/custom-backup.urdf.xacro'" />
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find cart_simulator)/testing_description/urdf/4_point_model.urdf.xacro'" />
 
   <group>
       <!-- Start Gazebo with an empty world -->
