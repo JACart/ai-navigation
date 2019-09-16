@@ -16,7 +16,7 @@
   </group>
   <!--launch the constants on the param server -->
   <group>
-      <include file="(find cart_planning)/launch/constants.launch"/>
+      <include file="$(find cart_planning)/launch/constants.launch"/>
   </group>
   <!--launch with rviz display-->
   <group if="$(arg rviz)">

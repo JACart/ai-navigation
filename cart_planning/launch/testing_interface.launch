@@ -3,7 +3,7 @@
     <include file="$(find gc_testing_description)/launch/sim.launch"/>
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cart_testing_description)/rviz/tortoisebot.rviz" />
     <!-- this node translate to Twist from VelAngle to talk to simulation -->
-    <node name="vel_angle_to_twist" pkg="gc_testing_description" type="vel_angle_to_twist.py"/>
+    <node name="vel_angle_to_twist" pkg="cart_testing_description" type="vel_angle_to_twist.py"/>
 
 </launch>
 

@@ -41,7 +41,7 @@ def direction_between_points(lat1, lng1, lat2, lng2):
     return bearing
 def xyz_between_points(lat1, lng1, elev1, theta1, lat2, lng2, elev2):
     """
-    This is incomplete, math could be innaccurate
+    This is incomplete, math could be inaccurate
     """
     distance_flat = distance_between_points(lat1,lng1,lat2,lng2)
     angle = math.radians( (theta1+direction_between_points(lat1,lng1,lat2,lng2)) % 360 )
