@@ -5,7 +5,7 @@ import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
-SPEED_PORT = '/dev/ttyUSB0' #hardcoded depending on computer
+SPEED_PORT = '/dev/ttyACM0' #hardcoded depending on computer
 TURN_PORT = ''
 
 class MotorEndpoint(object):

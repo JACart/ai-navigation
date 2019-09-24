@@ -68,7 +68,6 @@ class Mind(object):
     Intermediate points are added for a better fitting spline
     '''
     def create_path(self):
-
         #creates 15 intermediate points
         google_points_plus = geometry_util.add_intermediate_points(self.google_points, 15.0)
 
@@ -87,8 +86,8 @@ class Mind(object):
             ay.append(p.y)
 
         self.points_pub.publish(extra_points)
-
-        cx, cy = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
+        
+        cx, cy, cyaw, ck, cs = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
 
 
         #Create path object for the cart to follow

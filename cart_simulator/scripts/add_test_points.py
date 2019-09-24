@@ -1,6 +1,7 @@
 #!/usr/bin/env python 
 
 import rospy
+import os
 from navigation_msgs.msg import WaypointsArray, LatLongPoint
 from sensor_msgs.msg import NavSatFix
 
@@ -10,7 +11,7 @@ class add_test_points(object):
 
         self.waypoint_pub = rospy.Publisher('/waypoints', WaypointsArray, queue_size=10, latch=True)
 
-        f = open ("points.txt", "r")
+        f = open (os.path.dirname(__file__)+"/points.txt", "r")
         p_array = []
         
         for line in f:
