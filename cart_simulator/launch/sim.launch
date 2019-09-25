@@ -15,5 +15,6 @@
             type="robot_state_publisher"/>
       <node name="static_transform_publisher" pkg="tf" type="static_transform_publisher" 
             args="0.0 0.0 0.0 0.0 0.0 0.0 map base_link 100"/>  
+      <node name="vel_angle_to_twist" pkg="cart_simulator" type="vel_angle_to_twist.py"/>
   </group>
 </launch>
