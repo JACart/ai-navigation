@@ -61,13 +61,32 @@ class MotorEndpoint(object):
 
     def send_to_motors(self):
         spd = self.cmd_msg.vel
-        brake = self.cmd_msg.vel_curr
-        angle = self.cmd_msg.angle
+
+        wheel_ang = self.cmd_msg.angle
+        if wheel_ang > 28:
+            wheel_ang = 28
+        if wheel_ang < -42:
+            wheel_ang = -42
+
+        angle = wheel_ang * -12
+        cur_spd = self.cmd_msg.vel_curr
+
+        if spd == 0:
+            brake = 255
+        else:
+            brake = 0
+
+        angle = (int)(angle)
 
         data = bytearray(b'\x00' * 6)
         bitstruct.pack_into('u8u8u8u8u16', data, 0, 42, 21,
                             spd, brake, angle)
         self.speed_ser.write(data) 
+
+        """ print "speed: " + str(spd) + " angle: " + str(angle) + " cur_spd: " + str(cur_spd)
+
+        msg_to_motors = ':' + str(spd) + ',' + str(cur_spd) + "," + str(angle)
+        self.speed_ser.write(msg_to_motors.encode()) """
 
 if __name__ == "__main__":
     try:

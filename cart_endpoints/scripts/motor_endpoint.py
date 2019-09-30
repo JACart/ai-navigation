@@ -27,9 +27,9 @@ class MotorEndpoint(object):
         except Exception as e:
             print "Motor_endpoint: " + str(e)
             rospy.logerr("Motor_endpoint: " + str(e))
-            exit(0)
+            #exit(0)
 
-        rospy.logerr("Speed serial established")
+        rospy.loginfo("Speed serial established")
         """
         Connect to arduino for steering
         """
@@ -60,34 +60,17 @@ class MotorEndpoint(object):
 
 
     def send_to_motors(self):
-        spd = self.cmd_msg.vel
-
-        wheel_ang = self.cmd_msg.angle
-        if wheel_ang > 28:
-            wheel_ang = 28
-        if wheel_ang < -42:
-            wheel_ang = -42
-
-        angle = wheel_ang * -12
-        cur_spd = self.cmd_msg.vel_curr
-
-        if spd == 0:
-            brake = 255
-        else:
-            brake = 0
-
-        angle = (int)(angle)
-
-        data = bytearray(b'\x00' * 6)
-        bitstruct.pack_into('u8u8u8u8u16', data, 0, 42, 21,
-                            spd, brake, angle)
+        target_speed = self.cmd_msg.vel #float64
+        current_speed = self.cmd_msg.vel_curr #float64
+        target_angle = self.cmd_msg.angle #float64
+        
+        data = (target_speed,current_speed,target_angle)
+        #data = bytearray(b'\x00' * 6)
+        rospy.loginfo(data)
+        #bitstruct.pack_into('u8u8u8u8u16', data, 0, 42, 21,
+        #                    target_speed, current_speed, target_angle)
         self.speed_ser.write(data) 
-
-        """ print "speed: " + str(spd) + " angle: " + str(angle) + " cur_spd: " + str(cur_spd)
-
-        msg_to_motors = ':' + str(spd) + ',' + str(cur_spd) + "," + str(angle)
-        self.speed_ser.write(msg_to_motors.encode()) """
-
+        #rospy.loginfo(data)
 if __name__ == "__main__":
     try:
         MotorEndpoint()
