@@ -13,6 +13,7 @@ add_message_files(
     WaypointsArray.msg
     VelAngle.msg
     EmergencyStop.msg
+    SampleData.msg
 )
  generate_messages(
    DEPENDENCIES

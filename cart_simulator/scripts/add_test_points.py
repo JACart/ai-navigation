@@ -37,6 +37,6 @@ class add_test_points(object):
 
 if __name__ == "__main__":
     try:
-	add_test_points()
+	    add_test_points()
     except rospy.ROSInterruptException:
-	pass
+	    pass
