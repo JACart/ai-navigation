@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="testing" default="false"/>
+  <!-- <arg name="rviz" default="true"/> -->
+  <!-- launch testing interface-->
+  <group>
+     <include file="$(find cart_simulator)/launch/autoware_localization.launch"/>
+  </group>
+  <!-- launch hardware interface-->
+  <group if="$(arg testing)">
+      <include file="$(find cart_endpoints)/launch/hardware_interface.launch"/>
+  </group>
+  <!--always launch planning nodes-->
+  <group>
+      <include file="$(find cart_planning)/launch/planning.launch"/>
+  </group>
+  <!--launch the constants on the param server -->
+  <group>
+      <include file="$(find cart_planning)/launch/constants.launch"/>
+  </group>
+</launch>
