@@ -11,16 +11,25 @@
   <param name="tf_roll" type="double" value="0.0"/>
   <param name="use_sim_time" type="bool" value="true"/>
   
-  <arg name="MAP_ARG" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
+  <!-- Location of Point Cloud Map file -->
+  <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
+  
+  <!-- Launch Gazebo or not, should be launched when not getting lidar
+       data from a bag file or real life 
+       (Use cart_control->navigation_localization.launch for real world
+       or bag use.)-->
+  <arg name="gazebo" default="true"/>
 
   <group>
-      <!-- Start Gazebo with an empty world
-      <include file="$(find cart_simulator)/launch/empty_world.launch"/> -->
+      <!-- Start Gazebo with an empty world -->
+      <group if="$(arg gazebo)">
+        <include file="$(find cart_simulator)/launch/empty_world.launch"/>
+      </group>
       
       <!-- Launch Autoware's Runtime Manager and setup the transforms for localization -->
       <include file="$(find runtime_manager)/launch_files/setup_tf.launch">
           <arg name="frame_id" value="base_link"/>
-          <arg name="child_frame_id" value="velodyne"/>
+          <arg name="child_frame_id" value="/base_link/velodyne"/>
       </include>
       
       <!-- Launch the map generator -->
@@ -35,7 +44,7 @@
       <!-- Expose estimated localization pose and twist messages -->
       <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">
         <arg name="topic_pose_stamped" value="/ndt_pose"/>
-        <arg name="topic_twist_stamped" value="/vehicle/twist"/>
+        <arg name="topic_twist_stamped" value="/ndt_twist"/>
       </include>
       
       <!-- Launch the NDT Matching algorithm for localization -->
@@ -49,14 +58,15 @@
             
 			<!-- Load a pointcloud map. Related Topics: /points_map -->
       <node name="pointcloud_map" pkg="map_file" type="points_map_loader"
-            args="noupdate $(arg MAP_ARG)"/>
+            args="noupdate $(arg map_arg)"/>
             
       <node name="robot_state_publisher" pkg="robot_state_publisher"
             type="robot_state_publisher"/>
      
             
-     <!--<node name="joint_state_publisher" pkg="joint_state_publisher"
-            type="joint_state_publisher"/> -->
+     <!-- Joint State Publisher -->
+     <node name="joint_state_publisher" pkg="joint_state_publisher"
+            type="joint_state_publisher"/>
             
      <node name="vel_angle_to_twist" pkg="cart_simulator" type="vel_angle_to_twist.py"/> 
       
