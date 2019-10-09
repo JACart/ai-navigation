@@ -7,7 +7,7 @@ import rospy
 from navigation_msgs.msg import WaypointsArray, VelAngle
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import Header, Float32
-from geometry_msgs.msg import PoseStamped, Point
+from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
 
@@ -23,6 +23,8 @@ class Mind(object):
         rospy.init_node('Mind')
 
         self.odom = Odometry()
+        self.gTwist = Twist()
+        self.gPose = Pose();
         self.google_points = []
         self.rp_dist = 99999999999
         self.stop_thresh = 5 #this is how many seconds an object is away
@@ -34,7 +36,8 @@ class Mind(object):
                                          self.odom_callback, queue_size=10)
         self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float32,
                                                 self.rp_callback, queue_size=10)
-
+        self.twist_sub = rospy.Subscriber('/esimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
+        self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
@@ -46,6 +49,12 @@ class Mind(object):
 
     def odom_callback(self, msg):
         self.odom = msg
+    
+    def twist_callback(self, msg):
+        self.gTwist = msg.twist
+        
+    def pose_callback(self, msg):
+        self.gPose = msg.pose
 
     def rp_callback(self, msg):
         #used to stop the vehicle if objects are within a certain distance of the cart
@@ -106,8 +115,8 @@ class Mind(object):
         target_speed = 10.0 / 3.6  # [m/s]
 
         # initial state
-        pose = self.odom.pose.pose
-        twist = self.odom.twist.twist
+        pose = self.gPose
+        twist = self.gTwist
 
         quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         angles = tf.euler_from_quaternion(quat)
@@ -171,9 +180,8 @@ class Mind(object):
     '''
     def update(self, state, a, delta):
 
-        pose = self.odom.pose.pose
-        twist = self.odom.twist.twist
-
+        pose = self.gPose
+        twist = self.gTwist
         current_spd = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
 
         msg = VelAngle()
