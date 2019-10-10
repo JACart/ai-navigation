@@ -36,7 +36,7 @@ class Mind(object):
                                          self.odom_callback, queue_size=10)
         self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float32,
                                                 self.rp_callback, queue_size=10)
-        self.twist_sub = rospy.Subscriber('/esimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
+        self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
@@ -137,7 +137,7 @@ class Mind(object):
         while last_index > target_ind:
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
-
+            
             #publish our desired position
             mkr = create_marker(cx[target_ind], cy[target_ind], '/map')
             self.target_pub.publish(mkr)
@@ -183,7 +183,7 @@ class Mind(object):
         pose = self.gPose
         twist = self.gTwist
         current_spd = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
-
+        # print '%f' % twist.linear.x
         msg = VelAngle()
         msg.vel = a
         msg.angle = (delta*180)/math.pi
