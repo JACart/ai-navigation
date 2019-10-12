@@ -87,7 +87,8 @@ class Mind(object):
         extra_points = Path()
         extra_points.header = Header()
         extra_points.header.frame_id = '/map'
-
+        
+        
         #Creates a list of the x's and y's to be used when calculating the spline
         for p in google_points_plus:
             extra_points.poses.append(create_pose_stamped(p))
@@ -109,7 +110,7 @@ class Mind(object):
             curve_point.x = cx[i]
             curve_point.y = cy[i]
             path.poses.append(create_pose_stamped(curve_point))
-
+        
         self.path_pub.publish(path)
 
         target_speed = 10.0 / 3.6  # [m/s]
