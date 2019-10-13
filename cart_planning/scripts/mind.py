@@ -174,6 +174,7 @@ class Mind(object):
         msg.angle = 0
         msg.vel_curr = 0
         self.motion_pub.publish(msg)
+        
 
 
     '''

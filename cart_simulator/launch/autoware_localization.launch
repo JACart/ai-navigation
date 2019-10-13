@@ -71,6 +71,9 @@
      <node name="vel_angle_to_twist" pkg="cart_simulator" type="vel_angle_to_twist.py"/> 
       
      <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cart_simulator)/testing_description/rviz/autoware_integration.rviz" />
+
+    <!-- Landmark to Waypoint Converter -->
+    <node name="landmarks_to_waypoints" pkg="cart_planning" type="landmarks_to_waypoints.py"/>
       
   </group>
 </launch>
