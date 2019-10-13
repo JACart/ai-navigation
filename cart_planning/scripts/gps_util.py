@@ -14,10 +14,10 @@ from geometry_msgs.msg import Pose, Point #point is able to be used for path pla
 from sensor_msgs.msg import NavSatFix #standard ros message for GPS data
 
 #current anchor is the center of the xlabs building, with direction pointing directly north
-anchor_lat = 38.431960
-anchor_long = -78.875910
+anchor_lat = 38.431940 # 38.431960
+anchor_long = -78.875802 # -78.875910
 anchor_elev = 396 #meters above sea level
-anchor_theta = -15 #angle pointing directly north, originally: 0
+anchor_theta = -13 #angle pointing directly north, originally: 0
 earth_radius = 6371000 #meters
 
 """
@@ -30,13 +30,6 @@ earth_radius = 6371000 #meters
 M = np.array([[-0.45644886, -0.77822273, -2.79976147],
     [ 0.84299717, -0.50090785, 41.31691467],
     [ 0.0, 0.0, 1.0]])
-
-'''
-M = np.array([[ -5.90959174e-06,  -6.69614528e-06,   3.84321434e+01],
- [ -8.64090998e-06,   7.66748507e-06,  -7.88761203e+01],
- [  0.00000000e+00,   0.00000000e+00,   1.00000000e+00]]
-)
-'''
 
 """
 Always go from GPS to XYZ as soon as you can. Then never go back. Ever. Dont even think about it
