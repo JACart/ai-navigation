@@ -5,7 +5,7 @@
   <param name="localizer" value="velodyne"/>
   <param name="tf_x" type="double" value="1.5"/>
   <param name="tf_y" type="double" value="0.0"/>
-  <param name="tf_z" type="double" value="2.0"/>
+  <param name="tf_z" type="double" value="1.2"/>
   <param name="tf_yaw" type="double" value="0.0"/>
   <param name="tf_pitch" type="double" value="0.0"/>
   <param name="tf_roll" type="double" value="0.0"/>

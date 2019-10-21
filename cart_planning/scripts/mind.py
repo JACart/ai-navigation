@@ -23,8 +23,13 @@ class Mind(object):
         rospy.init_node('Mind')
 
         self.odom = Odometry()
+        
+        #Our current velocity (linear x value)
         self.gTwist = Twist()
+        
+        #Our current position in local coordinates
         self.gPose = Pose();
+        
         self.google_points = []
         self.rp_dist = 99999999999
         self.stop_thresh = 5 #this is how many seconds an object is away
@@ -44,7 +49,7 @@ class Mind(object):
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
         self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
-
+        
         rospy.spin()
 
     def odom_callback(self, msg):
@@ -121,7 +126,7 @@ class Mind(object):
 
         quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         angles = tf.euler_from_quaternion(quat)
-        initial_v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        initial_v = twist.linear.x
 	    #TODO state has to be where we start
         state = State(x=pose.position.x, y=pose.position.y, yaw=angles[2], v=initial_v)
 
@@ -168,7 +173,7 @@ class Mind(object):
             v.append(state.v)
             t.append(time)
 
-        rospy.logerr("Done navigating")
+        rospy.loginfo("Done navigating")
         msg = VelAngle()
         msg.vel = 0
         msg.angle = 0
@@ -184,10 +189,9 @@ class Mind(object):
 
         pose = self.gPose
         twist = self.gTwist
-        current_spd = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
-        # print '%f' % twist.linear.x
+        current_spd = twist.linear.x
         msg = VelAngle()
-        msg.vel = a
+        msg.vel = a #Speed we want from pure pursuit controller
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd
         self.motion_pub.publish(msg)
@@ -200,7 +204,7 @@ class Mind(object):
 
         state.yaw = angles[2]
 
-        state.v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        state.v = twist.linear.x
 
         return state
 
