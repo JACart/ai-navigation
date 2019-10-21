@@ -65,10 +65,10 @@ class MotorEndpoint(object):
         target_angle = self.cmd_msg.angle #float64
         
         data = (target_speed,current_speed,target_angle)
-        #data = bytearray(b'\x00' * 6)
+        data = bytearray(b'\x00' * 6)
         rospy.loginfo(data)
-        #bitstruct.pack_into('u8u8u8u8u16', data, 0, 42, 21,
-        #                    target_speed, current_speed, target_angle)
+        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21,
+                            target_speed, current_speed, target_angle)
         self.speed_ser.write(data) 
         #rospy.loginfo(data)
 if __name__ == "__main__":

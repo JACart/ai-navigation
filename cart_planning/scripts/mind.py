@@ -7,7 +7,7 @@ import rospy
 from navigation_msgs.msg import WaypointsArray, VelAngle
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import Header, Float32
-from geometry_msgs.msg import PoseStamped, Point
+from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
 
@@ -23,6 +23,13 @@ class Mind(object):
         rospy.init_node('Mind')
 
         self.odom = Odometry()
+        
+        #Our current velocity (linear x value)
+        self.gTwist = Twist()
+        
+        #Our current position in local coordinates
+        self.gPose = Pose();
+        
         self.google_points = []
         self.rp_dist = 99999999999
         self.stop_thresh = 5 #this is how many seconds an object is away
@@ -34,18 +41,25 @@ class Mind(object):
                                          self.odom_callback, queue_size=10)
         self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float32,
                                                 self.rp_callback, queue_size=10)
-
+        self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
+        self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
         self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
-
+        
         rospy.spin()
 
     def odom_callback(self, msg):
         self.odom = msg
+    
+    def twist_callback(self, msg):
+        self.gTwist = msg.twist
+        
+    def pose_callback(self, msg):
+        self.gPose = msg.pose
 
     def rp_callback(self, msg):
         #used to stop the vehicle if objects are within a certain distance of the cart
@@ -78,7 +92,8 @@ class Mind(object):
         extra_points = Path()
         extra_points.header = Header()
         extra_points.header.frame_id = '/map'
-
+        
+        
         #Creates a list of the x's and y's to be used when calculating the spline
         for p in google_points_plus:
             extra_points.poses.append(create_pose_stamped(p))
@@ -100,18 +115,18 @@ class Mind(object):
             curve_point.x = cx[i]
             curve_point.y = cy[i]
             path.poses.append(create_pose_stamped(curve_point))
-
+        
         self.path_pub.publish(path)
 
         target_speed = 10.0 / 3.6  # [m/s]
 
         # initial state
-        pose = self.odom.pose.pose
-        twist = self.odom.twist.twist
+        pose = self.gPose
+        twist = self.gTwist
 
         quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         angles = tf.euler_from_quaternion(quat)
-        initial_v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        initial_v = twist.linear.x
 	    #TODO state has to be where we start
         state = State(x=pose.position.x, y=pose.position.y, yaw=angles[2], v=initial_v)
 
@@ -128,7 +143,7 @@ class Mind(object):
         while last_index > target_ind:
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
-
+            
             #publish our desired position
             mkr = create_marker(cx[target_ind], cy[target_ind], '/map')
             self.target_pub.publish(mkr)
@@ -158,12 +173,13 @@ class Mind(object):
             v.append(state.v)
             t.append(time)
 
-        rospy.logerr("Done navigating")
+        rospy.loginfo("Done navigating")
         msg = VelAngle()
         msg.vel = 0
         msg.angle = 0
         msg.vel_curr = 0
         self.motion_pub.publish(msg)
+        
 
 
     '''
@@ -171,13 +187,11 @@ class Mind(object):
     '''
     def update(self, state, a, delta):
 
-        pose = self.odom.pose.pose
-        twist = self.odom.twist.twist
-
-        current_spd = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
-
+        pose = self.gPose
+        twist = self.gTwist
+        current_spd = twist.linear.x
         msg = VelAngle()
-        msg.vel = a
+        msg.vel = a #Speed we want from pure pursuit controller
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd
         self.motion_pub.publish(msg)
@@ -190,7 +204,7 @@ class Mind(object):
 
         state.yaw = angles[2]
 
-        state.v = math.sqrt(twist.linear.x ** 2 + twist.linear.y ** 2)
+        state.v = twist.linear.x
 
         return state
 

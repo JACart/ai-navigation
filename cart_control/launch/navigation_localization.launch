@@ -1,10 +1,13 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="testing" default="false"/>
+  
   <!-- <arg name="rviz" default="true"/> -->
   <!-- launch testing interface-->
   <group>
-     <include file="$(find cart_simulator)/launch/autoware_localization.launch"/>
+     <include file="$(find cart_simulator)/launch/autoware_localization.launch">
+        <arg name="gazebo" value="false"/>
+     </include>
   </group>
   <!-- launch hardware interface-->
   <group if="$(arg testing)">

@@ -14,6 +14,7 @@ add_message_files(
     VelAngle.msg
     EmergencyStop.msg
     SampleData.msg
+    Landmarks.msg
 )
  generate_messages(
    DEPENDENCIES
