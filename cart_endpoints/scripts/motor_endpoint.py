@@ -47,16 +47,16 @@ class MotorEndpoint(object):
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
-
-        if self.killswitch:
-            self.speed_ser.write(":0.0,0.0,0.0".encode())
-            rospy.loginfo("Killswitch activated")
-
-        self.cmd_msg = planned_vel_angle
+        if not self.killswitch:
+            self.cmd_msg = planned_vel_angle      
+        else
+            self.cmd_msg.vel_curr = planned_vel_angle.vel_curr  
 
 
     def kill_callback(self, data):
         self.killswitch = data.emergency_stop
+        if self.killswitch:
+            self.cmd_msg.vel = -100
 
 
     def send_to_motors(self):
