@@ -9,16 +9,17 @@
   <param name="tf_yaw" type="double" value="0.0"/>
   <param name="tf_pitch" type="double" value="0.0"/>
   <param name="tf_roll" type="double" value="0.0"/>
-  <param name="use_sim_time" type="bool" value="true"/>
-  
-  <!-- Location of Point Cloud Map file -->
-  <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
-  
-  <!-- Launch Gazebo or not, should be launched when not getting lidar
+  <param name="use_sim_time" type="bool" value="false"/>
+   <!-- Launch Gazebo or not, should be launched when not getting lidar
        data from a bag file or real life 
        (Use cart_control->navigation_localization.launch for real world
        or bag use.)-->
   <arg name="gazebo" default="true"/>
+  
+  <!-- Location of Point Cloud Map file -->
+  <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
+  
+ 
 
   <group>
       <!-- Start Gazebo with an empty world -->
@@ -75,14 +76,13 @@
     <!-- Landmark to Waypoint Converter -->
     <node name="landmarks_to_waypoints" pkg="cart_planning" type="landmarks_to_waypoints.py"/>
     
-    <group unless="$(arg gazebo)">
-        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
-        <!-- Relay node -->
-        <node name="relay" pkg="topic_tools" type="relay"
-            args="/velodyne_points /points_raw"/>
+    <include unless="$(arg gazebo)" file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+    
+    <!-- Relay node, this is a temporary resource-heavy alternative to remapping the velodyne_points topic -->
+    <node unless="$(arg gazebo)" name="relay" pkg="topic_tools" type="relay"
+        args="/velodyne_points /points_raw"/>
         
-        <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
-    </group>
+         <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
     
     
       
