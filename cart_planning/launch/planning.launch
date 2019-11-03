@@ -3,5 +3,6 @@
 <launch>
     <group>
         <node name="mind" pkg="cart_planning" type="mind.py" required="true" output="screen"/>
+        <node name="global_planner" pkg="cart_planning" type="global_planner.py" required="true" output="screen"/>
     </group>
 </launch>

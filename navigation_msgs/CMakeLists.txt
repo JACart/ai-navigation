@@ -4,6 +4,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   sensor_msgs
+  geometry_msgs
   message_generation
 )
 add_message_files(
@@ -15,6 +16,7 @@ add_message_files(
     EmergencyStop.msg
     SampleData.msg
     Landmarks.msg
+    LocalPointsArray.msg
 )
  generate_messages(
    DEPENDENCIES

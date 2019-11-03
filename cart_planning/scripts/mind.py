@@ -4,9 +4,9 @@ import math
 import gps_util
 import geometry_util
 import rospy
-from navigation_msgs.msg import WaypointsArray, VelAngle
+from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray
 from nav_msgs.msg import Path, Odometry
-from std_msgs.msg import Header, Float32
+from std_msgs.msg import Header, Float32, String
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
@@ -28,8 +28,10 @@ class Mind(object):
         self.gTwist = Twist()
         
         #Our current position in local coordinates
-        self.gPose = Pose();
-        
+        self.gPose = Pose()
+
+        self.navigating = False
+
         self.google_points = []
         self.rp_dist = 99999999999
         self.stop_thresh = 5 #this is how many seconds an object is away
@@ -37,10 +39,16 @@ class Mind(object):
         #waypoints are points coming in from the map
         self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray,
                                             self.waypoints_callback, queue_size=10)
+                                            
+        self.local_sub = rospy.Subscriber('/global_path', LocalPointsArray,
+                                            self.localpoints_callback, queue_size=10)
+                                            
         self.odom_sub = rospy.Subscriber('/pose_and_speed', Odometry,
                                          self.odom_callback, queue_size=10)
+                                         
         self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float32,
                                                 self.rp_callback, queue_size=10)
+                                                
         self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
@@ -67,7 +75,14 @@ class Mind(object):
             self.rp_dist = 99999999
         else:
             self.rp_dist = msg.data
-
+    
+    def localpoints_callback(self, msg):
+        self.google_points = []
+        rospy.loginfo('Before looping')
+        for local_point in msg.localpoints:
+            self.google_points.append(local_point)
+        rospy.loginfo('Creating Mind Path')
+        self.create_path()
 
     #Converts waypoints into points in gps coordinates as opposed to the map
     def waypoints_callback(self, msg):
@@ -138,7 +153,7 @@ class Mind(object):
         v = [state.v]
         t = [0.0]
         target_ind = pure_pursuit.calc_target_index(state, cx, cy)
-
+        rospy.loginfo((str) (target_ind))
         #continue to loop while we have not hit the target
         while last_index > target_ind:
             ai = pure_pursuit.PIDControl(target_speed, state.v)
@@ -172,6 +187,7 @@ class Mind(object):
             yaw.append(state.yaw)
             v.append(state.v)
             t.append(time)
+            
 
         rospy.loginfo("Done navigating")
         msg = VelAngle()

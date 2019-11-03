@@ -6,7 +6,8 @@
   <!-- launch testing interface-->
   <group>
      <include file="$(find cart_simulator)/launch/autoware_localization.launch">
-        <arg name="gazebo" value="true"/>
+        <arg name="gazebo" value="false"/>
+        <arg name="lidar" value="false"/>
      </include>
   </group>
   <!-- launch hardware interface-->
