@@ -12,6 +12,7 @@ class bus_route_design():
 
     def find_path(self, start, goal):
         # start and goal are indexes with in list of waypoints
+        # need to be given start and goal indexes
 	    self.path_to_goal = [] # array of indexs
 	    path_found = False
 	    index = start
