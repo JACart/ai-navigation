@@ -82,7 +82,8 @@ class Mind(object):
         for local_point in msg.localpoints:
             self.google_points.append(local_point)
         rospy.loginfo('Creating Mind Path')
-        self.create_path()
+        cx, cy = self.create_path()
+        self.navigate_path(cx, cy)
 
     #Converts waypoints into points in gps coordinates as opposed to the map
     def waypoints_callback(self, msg):
@@ -132,7 +133,9 @@ class Mind(object):
             path.poses.append(create_pose_stamped(curve_point))
         
         self.path_pub.publish(path)
+        return cx, cy
 
+    def navigate_path(self, cx, cy):
         target_speed = 10.0 / 3.6  # [m/s]
 
         # initial state
@@ -187,6 +190,7 @@ class Mind(object):
             yaw.append(state.yaw)
             v.append(state.v)
             t.append(time)
+            #check if we have passed the next waypoint here?
             
 
         rospy.loginfo("Done navigating")
