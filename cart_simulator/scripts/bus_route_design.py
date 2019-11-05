@@ -4,15 +4,18 @@ class bus_route_design():
 
         self.waypoints_pub = rospy.Publish('/global_path', LocalPointsArray, queue_size=10)
         self.waypoints_sub = rospy.Subscriber('/local_points', LocalPointsArray, self.waypoints_callback, queue_size=10)
+        #self.path_request_sub = rospy.Subscriber('?', String, self.find_path_callback, queue_size=10)
     
     def waypoints_callback(self, msg):
         # Array of points that have the coordinates of each waypoints
         self.waypoint_list = msg.localpoints
         
 
-    def find_path(self, start, goal):
+    def find_path_callback(self, msg):
         # start and goal are indexes with in list of waypoints
         # need to be given start and goal indexes
+        start = msg.start
+        goal = msg.goal
 	    self.path_to_goal = [] # array of indexs
 	    path_found = False
 	    index = start
