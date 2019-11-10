@@ -16,7 +16,7 @@ add_message_files(
     EmergencyStop.msg
     SampleData.msg
     Landmarks.msg
-    StartGoalPair.msg
+    GoalWaypoint.msg
     LocalPointsArray.msg
     
 )

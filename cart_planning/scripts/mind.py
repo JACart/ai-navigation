@@ -31,7 +31,8 @@ class Mind(object):
         self.gPose = Pose()
 
         self.navigating = False
-
+        self.new_path = False
+        self.path_valid = False
         self.google_points = []
         self.rp_dist = 99999999999
         self.stop_thresh = 5 #this is how many seconds an object is away
@@ -57,7 +58,12 @@ class Mind(object):
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
         self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
-        
+        while True:
+            if self.new_path:
+                rospy.loginfo("Starting Create Path")
+                self.path_valid = True
+                self.new_path = False
+                self.create_path()
         rospy.spin()
 
     def odom_callback(self, msg):
@@ -82,7 +88,9 @@ class Mind(object):
         for local_point in msg.localpoints:
             self.google_points.append(local_point)
         rospy.loginfo('Creating Mind Path')
-        self.create_path()
+        self.path_valid = False
+        self.new_path = True
+
 
     #Converts waypoints into points in gps coordinates as opposed to the map
     def waypoints_callback(self, msg):
@@ -153,9 +161,10 @@ class Mind(object):
         v = [state.v]
         t = [0.0]
         target_ind = pure_pursuit.calc_target_index(state, cx, cy)
-        rospy.loginfo((str) (target_ind))
         #continue to loop while we have not hit the target
-        while last_index > target_ind:
+        while last_index > target_ind and self.path_valid:
+            rospy.loginfo("Distance Remaining in Path: ")
+            
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
             
