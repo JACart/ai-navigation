@@ -25,7 +25,7 @@ class bus_route_design():
 
     #Get the closest waypoint to the cart
     def pose_callback(self, msg):
-        min_cost = sys.maxint
+        min_cost = 999999999
         pointarray = self.waypoint_list
         for i in range(len(pointarray)):
             cost = self.calculate_weight(pointarray[i], msg.pose.position)

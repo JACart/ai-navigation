@@ -46,10 +46,10 @@ def PIDControl(target, current):
 
 def pure_pursuit_control(state, cx, cy, pind):
 
-    ind = calc_target_index(state, cx, cy)
+    ind = calc_target_index(state, cx, cy, pind)
 
-    if pind >= ind:
-        ind = pind
+#    if pind >= ind:
+#        ind = pind
 
     if ind < len(cx):
         tx = cx[ind]
@@ -71,13 +71,19 @@ def pure_pursuit_control(state, cx, cy, pind):
     return delta, ind
 
 
-def calc_target_index(state, cx, cy):
+def calc_target_index(state, cx, cy, pind):
 
     # search nearest point index
     dx = [state.x - icx for icx in cx]
     dy = [state.y - icy for icy in cy]
     d = [abs(math.sqrt(idx ** 2 + idy ** 2)) for (idx, idy) in zip(dx, dy)]
-    ind = d.index(min(d))
+    #max_int
+    min_cost = 9999999999    
+    for i in d:
+        if i < min_cost:
+            if d.index(i) < pind + 100 and d.index(i) > pind - 50: #this if statement helps the calculation only focus on points closely ahead or behind it, avoids jumping way ahead in the path
+                min_cost = i
+    ind = d.index(min_cost)
     L = 0.0
 
     Lf = k * state.v + Lfc
@@ -114,7 +120,7 @@ def main():
     yaw = [state.yaw]
     v = [state.v]
     t = [0.0]
-    target_ind = calc_target_index(state, cx, cy)
+    target_ind = calc_target_index(state, cx, cy, 0)
 
     while T >= time and lastIndex > target_ind:
         ai = PIDControl(target_speed, state.v)

@@ -58,13 +58,16 @@ class Mind(object):
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
         self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
-        while True:
-            if self.new_path:
+        
+        rate = rospy.Rate(5)
+
+        while not rospy.is_shutdown():
+            if self.new_path: #when a new path is recieved by the callback run create_path
                 rospy.loginfo("Starting Create Path")
                 self.path_valid = True
                 self.new_path = False
                 self.create_path()
-        rospy.spin()
+            rate.sleep()
 
     def odom_callback(self, msg):
         self.odom = msg
@@ -88,6 +91,7 @@ class Mind(object):
         for local_point in msg.localpoints:
             self.google_points.append(local_point)
         rospy.loginfo('Creating Mind Path')
+        #path_valid being set to false will end the previous navigation and new_path being true will trigger the starting of the new path
         self.path_valid = False
         self.new_path = True
 
@@ -160,11 +164,9 @@ class Mind(object):
         yaw = [state.yaw]
         v = [state.v]
         t = [0.0]
-        target_ind = pure_pursuit.calc_target_index(state, cx, cy)
+        target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
         #continue to loop while we have not hit the target
-        while last_index > target_ind and self.path_valid:
-            rospy.loginfo("Distance Remaining in Path: ")
-            
+        while last_index > target_ind and self.path_valid:            
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
             
