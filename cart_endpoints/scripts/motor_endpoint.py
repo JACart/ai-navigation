@@ -5,8 +5,7 @@ import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
-SPEED_PORT = '/dev/ttyACM0' #hardcoded depending on computer
-TURN_PORT = ''
+CART_PORT = '/dev/ttyACM0' #hardcoded depending on computer
 
 class MotorEndpoint(object):
 
@@ -23,7 +22,7 @@ class MotorEndpoint(object):
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            self.speed_ser = serial.Serial(SPEED_PORT, 19200, write_timeout=0)
+            self.speed_ser = serial.Serial(CART_PORT, 9600, write_timeout=0)
         except Exception as e:
             print "Motor_endpoint: " + str(e)
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -67,10 +66,14 @@ class MotorEndpoint(object):
         data = (target_speed,current_speed,target_angle)
         data = bytearray(b'\x00' * 6)
         rospy.loginfo(data)
-        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21,
-                            target_speed, current_speed, target_angle)
+                          #('u8u8u8', data, 0, throttle, brake, steering)
+        if target_speed < 0:
+            bitstruct.pack_into('u8u8u8', data, 0, 0, target_speed, target_angle)
+        else:
+            bitstruct.pack_into('u8u8u8', data, 0, target_speed, 0, target_angle)
         self.speed_ser.write(data) 
         #rospy.loginfo(data)
+
 if __name__ == "__main__":
     try:
         MotorEndpoint()
