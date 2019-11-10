@@ -21,12 +21,12 @@ class MotorEndpoint(object):
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
-        try:
+        '''try:
             self.speed_ser = serial.Serial(CART_PORT, 9600, write_timeout=0)
         except Exception as e:
             print "Motor_endpoint: " + str(e)
             rospy.logerr("Motor_endpoint: " + str(e))
-            #exit(0)
+            #exit(0)'''
 
         rospy.loginfo("Speed serial established")
         """
@@ -48,7 +48,7 @@ class MotorEndpoint(object):
     def motion_callback(self, planned_vel_angle):
         if not self.killswitch:
             self.cmd_msg = planned_vel_angle      
-        else
+        else:
             self.cmd_msg.vel_curr = planned_vel_angle.vel_curr  
 
 
@@ -59,10 +59,12 @@ class MotorEndpoint(object):
 
 
     def send_to_motors(self):
-        target_speed = self.cmd_msg.vel #float64
-        current_speed = self.cmd_msg.vel_curr #float64
-        target_angle = self.cmd_msg.angle #float64
-        
+        target_speed = int(self.cmd_msg.vel) #float64
+        current_speed = int(self.cmd_msg.vel_curr) #float64
+        target_angle = int(( (self.cmd_msg.angle - -70) / (70 - -70) ) * (100 - 0) + 0)
+
+        rospy.loginfo(str(target_speed) + " " + str(current_speed) + " " + str(target_angle))
+
         data = (target_speed,current_speed,target_angle)
         data = bytearray(b'\x00' * 6)
         rospy.loginfo(data)
@@ -71,7 +73,8 @@ class MotorEndpoint(object):
             bitstruct.pack_into('u8u8u8', data, 0, 0, target_speed, target_angle)
         else:
             bitstruct.pack_into('u8u8u8', data, 0, target_speed, 0, target_angle)
-        self.speed_ser.write(data) 
+
+        #self.speed_ser.write(data) 
         #rospy.loginfo(data)
 
 if __name__ == "__main__":
