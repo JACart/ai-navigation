@@ -5,7 +5,7 @@ import os
 import math
 from geometry_msgs.msg import Point, PoseStamped
 from navigation_msgs.msg import LocalPointsArray
-from std_msgs.msg import String
+from std_msgs.msg import String, Int8
 from navigation_msgs.msg import GoalWaypoint
 
 class bus_route_design():
@@ -13,6 +13,7 @@ class bus_route_design():
         rospy.init_node('bus_route_design')
 
         self.waypoints_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
+        self.current_pos_pub = rospy.Publisher('/current_position', Int8, queue_size=10)
         self.waypoints_sub = rospy.Subscriber('/local_points', LocalPointsArray, self.waypoints_callback, queue_size=10)
         self.path_request_sub = rospy.Subscriber('/path_request', GoalWaypoint, self.find_path_callback, queue_size=10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
@@ -32,6 +33,9 @@ class bus_route_design():
             if cost < min_cost:
                 self.current_waypoint = i
                 min_cost = cost
+                waypoint_msg = Int8()
+                waypoint_msg.data = i
+                self.current_pos_pub.publish(waypoint_msg)
 
     #Calculate the cost from one point to the next (distance)
     def calculate_weight(self, point1, point2):

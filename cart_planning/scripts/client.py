@@ -5,10 +5,12 @@
 import socketio
 import time
 import rospy
+import json
 # import camera
 # import destination
-from std_msgs.msg import Int32, String
+from std_msgs.msg import Int8, String
 from geometry_msgs.msg import PoseStamped
+from navigation_msgs.msg import GoalWaypoint, EmergencyStop
 
 isConnected = False
 
@@ -36,14 +38,23 @@ def send(msg, data):
 #send index + lat/lng + string
 @sio.on('destination', namespace='/cart')
 def onDestination(data):
-    rospy.loginfo(data)
-    pub.publish(data)
+    #Get JSON data
+    raw_data = json.loads(data)
+    raw_waypoint = raw_data["index"]
+
+    #Prepare goal waypoint message
+    requested_waypoint = GoalWaypoint
+    requested_waypoint.goal = raw_waypoint
+
+    #Send requested waypoint to planner
+    req_pub.publish(requested_waypoint)
 
 
 @sio.on('stop',namespace='/cart')
 def onStop(data):
-    rospy.logInfo(data)
-    pub.publish(data)
+    stop_cart = EmergencyStop()
+    stop_cart.emergency_stop = True
+    stop_pub.publish(stop_cart)
 
 @sio.event(namespace='/cart')
 def disconnect():
@@ -52,18 +63,20 @@ def disconnect():
     print('disconnected from server')
 
 def sendPositionIndex(data):
-    print(data)
-    rospy.loginfo(data)
-    send("position", data.pose.position.x)
+    send("position", data.data)
 
 def arrivedDestination(data):
 	send('arrived','','/cart')
 
 rospy.init_node('network_node')
-pub = rospy.Publisher('network_node_pub', String, queue_size=10)
-rospy.Subscriber('/ndt_pose', PoseStamped, sendPositionIndex)
+stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
+#pub = rospy.Publisher('network_node_pub', String, queue_size=10)
+rospy.Subscriber('/current_position', Int8, sendPositionIndex)
 rate = rospy.Rate(10)  # 10hz
 
+#rospy.spin()
+rospy.loginfo("Attempting connection with socketio server")
 sio.connect('http://172.30.172.30:8020', namespaces=['/cart'])
 sio.wait()
 
