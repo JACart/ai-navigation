@@ -5,7 +5,7 @@ import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
-CART_PORT = '/dev/ttyACM0' #hardcoded depending on computer
+CART_PORT = '/dev/ttyUSB0' #hardcoded depending on computer
 
 class MotorEndpoint(object):
 
@@ -21,12 +21,12 @@ class MotorEndpoint(object):
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
-        '''try:
-            self.speed_ser = serial.Serial(CART_PORT, 9600, write_timeout=0)
+        try:
+            self.speed_ser = serial.Serial(CART_PORT, 57600, write_timeout=0)
         except Exception as e:
             print "Motor_endpoint: " + str(e)
             rospy.logerr("Motor_endpoint: " + str(e))
-            #exit(0)'''
+            #exit(0)
 
         rospy.loginfo("Speed serial established")
         """
@@ -63,16 +63,17 @@ class MotorEndpoint(object):
         current_speed = int(self.cmd_msg.vel_curr) #float64
         target_angle = int(( (self.cmd_msg.angle - -70) / (70 - -70) ) * (100 - 0) + 0)
 
-        rospy.loginfo(str(target_speed) + " " + str(current_speed) + " " + str(target_angle))
+        # rospy.loginfo(str(target_speed) + " " + str(current_speed) + " " + str(target_angle))
 
         data = (target_speed,current_speed,target_angle)
-        data = bytearray(b'\x00' * 6)
-        rospy.loginfo(data)
-                          #('u8u8u8', data, 0, throttle, brake, steering)
+        data = bytearray(b'\x00' * 5)
+
+        # rospy.loginfo(data)
+        # ('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
         if target_speed < 0:
-            bitstruct.pack_into('u8u8u8', data, 0, 0, target_speed, target_angle)
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, target_speed, target_angle)
         else:
-            bitstruct.pack_into('u8u8u8', data, 0, target_speed, 0, target_angle)
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, target_speed, 0, target_angle)
 
         #self.speed_ser.write(data) 
         #rospy.loginfo(data)
