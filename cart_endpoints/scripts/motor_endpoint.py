@@ -5,12 +5,12 @@ import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
-CART_PORT = '/dev/ttyUSB0' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
 
 class MotorEndpoint(object):
 
     def __init__(self):
-        global SPEED_PORT
+        global cart_port
         self.killswitch = False
         self.current_speed = 0.0
         self.goal_speed = 0.0
@@ -22,9 +22,10 @@ class MotorEndpoint(object):
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            self.speed_ser = serial.Serial(CART_PORT, 57600, write_timeout=0)
+            rospy.loginfo("remove comments")
+            #self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
-            print "Motor_endpoint: " + str(e)
+            print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
             #exit(0)
 
@@ -46,10 +47,7 @@ class MotorEndpoint(object):
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
-        if not self.killswitch:
-            self.cmd_msg = planned_vel_angle      
-        else:
-            self.cmd_msg.vel_curr = planned_vel_angle.vel_curr  
+        self.cmd_msg = planned_vel_angle       
 
 
     def kill_callback(self, data):
@@ -61,7 +59,7 @@ class MotorEndpoint(object):
     def send_to_motors(self):
         target_speed = int(self.cmd_msg.vel) #float64
         current_speed = int(self.cmd_msg.vel_curr) #float64
-        target_angle = int(( (self.cmd_msg.angle - -70) / (70 - -70) ) * (100 - 0) + 0)
+        target_angle = int(( (self.cmd_msg.angle + 70) / 140 ) * 100)
 
         # rospy.loginfo(str(target_speed) + " " + str(current_speed) + " " + str(target_angle))
 
@@ -71,12 +69,12 @@ class MotorEndpoint(object):
         # rospy.loginfo(data)
         # ('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
         if target_speed < 0:
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, target_speed, target_angle)
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
         else:
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, target_speed, 0, target_angle)
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
 
         #self.speed_ser.write(data) 
-        #rospy.loginfo(data)
+        rospy.loginfo(data)
 
 if __name__ == "__main__":
     try:
