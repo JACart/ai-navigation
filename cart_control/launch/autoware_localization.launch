@@ -20,11 +20,9 @@
   <!-- Location of Point Cloud Map file -->
   <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
   
-    <!-- Start lidar code first to avoid issues-->
-    <group if="$(arg lidar)">
-        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/> -->
-   </group> 
-         <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
+  <group if="$(arg lidar)">
+      <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+  </group>
 
   <group>
       <!-- Start Gazebo with an empty world -->
@@ -80,12 +78,14 @@
 
     <!-- Landmark to Waypoint Converter -->
     <node name="landmarks_to_waypoints" pkg="cart_planning" type="landmarks_to_waypoints.py"/>
-        
+    
     <group if="$(arg lidar)">
         <!-- Relay node, this is a temporary alternative to remapping the velodyne_points topic -->
         <node name="relay" pkg="topic_tools" type="relay"
             args="/velodyne_points /points_raw"/>
-    </group>    
+   </group> 
+         <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
+    
     relay-20]: s
       
   </group>

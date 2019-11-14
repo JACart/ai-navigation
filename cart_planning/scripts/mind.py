@@ -166,7 +166,7 @@ class Mind(object):
         t = [0.0]
         target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
         #continue to loop while we have not hit the target
-        while last_index > target_ind and self.path_valid:            
+        while last_index > target_ind and self.path_valid and not rospy.is_shutdown():            
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
             

@@ -1,17 +1,13 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="testing" default="false"/>
-  
-  <!-- <arg name="rviz" default="true"/> -->
+  <arg name="rviz" default="true"/>
   <!-- launch testing interface-->
-  <group>
-     <include file="$(find cart_simulator)/launch/autoware_localization.launch">
-        <arg name="gazebo" value="false"/>
-        <arg name="lidar" value="false"/>
-     </include>
+  <group  if="$(arg testing)">
+     <include file="$(find cart_simulator)/launch/sim.launch"/>
   </group>
   <!-- launch hardware interface-->
-  <group if="$(arg testing)">
+  <group unless="$(arg testing)">
       <include file="$(find cart_endpoints)/launch/hardware_interface.launch"/>
   </group>
   <!--always launch planning nodes-->
@@ -21,5 +17,10 @@
   <!--launch the constants on the param server -->
   <group>
       <include file="$(find cart_planning)/launch/constants.launch"/>
+  </group>
+  <!--launch with rviz display-->
+  <group if="$(arg rviz)">
+      <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" 
+	output="screen" args="-d $(find cart_control)/rviz/display.rviz"/>
   </group>
 </launch>
