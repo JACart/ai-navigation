@@ -4,7 +4,7 @@ import math
 import gps_util
 import geometry_util
 import rospy
-from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray
+from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import Header, Float32, String
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
@@ -53,6 +53,7 @@ class Mind(object):
         self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
+        self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10)
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
@@ -199,8 +200,17 @@ class Mind(object):
             v.append(state.v)
             t.append(time)
             
-
+        #Check if we've reached the destination, if so we should let the network client know
         rospy.loginfo("Done navigating")
+        current_state = VehicleState()
+        current_state.is_navigating = False
+        if self.path_valid:
+            current_state.reached_destination = True
+            rospy.loginfo("Reached Destination")
+        else:
+            current_state.reached_destination = False
+            rospy.loginfo("Destination not reached")
+        
         msg = VelAngle()
         msg.vel = 0
         msg.angle = 0

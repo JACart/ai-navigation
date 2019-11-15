@@ -10,7 +10,7 @@ import json
 # import destination
 from std_msgs.msg import Int8, String
 from geometry_msgs.msg import PoseStamped
-from navigation_msgs.msg import GoalWaypoint, EmergencyStop
+from navigation_msgs.msg import GoalWaypoint, EmergencyStop, VehicleState
 
 isConnected = False
 
@@ -43,7 +43,8 @@ def onDestination(data):
     raw_waypoint = raw_data["index"]
 
     #Prepare goal waypoint message
-    requested_waypoint = GoalWaypoint
+    requested_waypoint = GoalWaypoint()
+    requested_waypoint.start = -1
     requested_waypoint.goal = raw_waypoint
 
     #Send requested waypoint to planner
@@ -68,11 +69,17 @@ def sendPositionIndex(data):
 def arrivedDestination(data):
 	send('arrived','','/cart')
 
+#Handles destination arrival as well as various other vehicle state changes
+def status_update(data):
+    if data.reached_destination == True:
+        send("arrived", '/cart')
+
 rospy.init_node('network_node')
 stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
 req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
 #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
 rospy.Subscriber('/current_position', Int8, sendPositionIndex)
+rospy.Subscriber('/vehicle_status', VehicleState, status_update)
 rate = rospy.Rate(10)  # 10hz
 
 #rospy.spin()

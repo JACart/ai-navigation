@@ -18,7 +18,7 @@ add_message_files(
     Landmarks.msg
     GoalWaypoint.msg
     LocalPointsArray.msg
-    
+    VehicleState.msg
 )
  generate_messages(
    DEPENDENCIES
