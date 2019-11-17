@@ -90,7 +90,7 @@ class Mind(object):
         self.google_points = []
         rospy.loginfo('Before looping')
         for local_point in msg.localpoints:
-            self.google_points.append(local_point)
+            self.google_points.append(local_point.position)
         rospy.loginfo('Creating Mind Path')
         #path_valid being set to false will end the previous navigation and new_path being true will trigger the starting of the new path
         self.path_valid = False
@@ -211,6 +211,7 @@ class Mind(object):
             current_state.reached_destination = False
             rospy.loginfo("Destination not reached")
         
+        self.vehicle_state_pub.publish(current_state)
         msg = VelAngle()
         msg.vel = 0
         msg.angle = 0

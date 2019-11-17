@@ -3,8 +3,7 @@
 <launch>
     <group>
         <node name="mind" pkg="cart_planning" type="mind.py" required="true" output="screen"/>
-        <node name="bus_route_design" pkg="cart_planning" type="bus_route_design.py" required="true" output="screen"/>
+        <node name="bus_route_nav" pkg="cart_planning" type="bus_route_nav.py" required="true" output="screen"/>
         <node name="add_local_points" pkg="cart_planning" type="add_local_points.py" required="true" output="screen"/>
-        <!--<node name="network_client" pkg="cart_planning" type="client.py" output="screen"/>-->
     </group>
 </launch>

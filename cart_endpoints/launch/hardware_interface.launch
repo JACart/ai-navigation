@@ -2,7 +2,8 @@
 <launch>
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
-        <!--node name="kill_switch" pkg="gc_endpoints" type="emergency_stop.py"/-->
-        <!--node name="server_endpoint" pkg="gc_endpoints" type="server_endpoint.py"/-->
+        <node name="network_client" pkg="cart_endpoints" type="client.py" output="screen"/>
+        <node name="speech_recognition" pkg="cart_endpoints" type="speech_recognition_trigger.py" output="screen"/>
+        <node name="pose_analysis" pkg="cart_endpoints" type="test_live_analysis_v2.py" output="screen"/>
     </group>
 </launch>

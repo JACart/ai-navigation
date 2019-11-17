@@ -1,2 +1,2 @@
 std_msgs/Header header
-geometry_msgs/Point[] localpoints
+geometry_msgs/Pose[] localpoints

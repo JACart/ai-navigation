@@ -2,7 +2,7 @@
 
 import rospy
 import os
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose, Point, Quaternion
 from navigation_msgs.msg import LocalPointsArray
 
 class add_local_points(object):
@@ -15,12 +15,17 @@ class add_local_points(object):
         p_array = []
         
         for line in f:
+            new_pose = Pose()
             new_point = Point()
+            new_qt = Quaternion()
             items = line.split(",")
             new_point.x = (float) (items[0])
             new_point.y =  (float) (items[1])
-
-            p_array.append(new_point)
+            new_qt.z = (float) (items[2])
+            
+            new_pose.position = new_point
+            new_pose.orientation = new_qt
+            p_array.append(new_pose)
 
 
         msg = LocalPointsArray()
