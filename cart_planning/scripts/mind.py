@@ -229,6 +229,8 @@ class Mind(object):
         twist = self.gTwist
         current_spd = twist.linear.x
         msg = VelAngle()
+        #rospy.loginfo("Target Speed: " + str(a))
+        #rospy.loginfo("Current Speed: " + str(current_spd))
         msg.vel = a #Speed we want from pure pursuit controller
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd

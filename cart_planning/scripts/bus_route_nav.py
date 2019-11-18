@@ -36,8 +36,7 @@ class bus_route_design():
         min_cost = 999999999
         pointarray = self.waypoint_list
         for i in range(len(pointarray)):
-            cost = self.calculate_weight(pointarray[i].position, msg.pose.position)
-            rospy.loginfo("Current Orientation: " + str((msg.pose.orientation.z + 1) * 180))            
+            cost = self.calculate_weight(pointarray[i].position, msg.pose.position)     
             if cost < min_cost and self.turn_range(pointarray[i].orientation.z, (msg.pose.orientation.z + 1) * 180) < 60:
                 self.current_waypoint = i
                 min_cost = cost
@@ -59,6 +58,8 @@ class bus_route_design():
         else:
             start = msg.start
         goal = msg.goal
+        if(start == goal):
+            return
         self.path_to_goal = [] # array of indexs
         path_found = False
         index = start

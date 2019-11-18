@@ -28,7 +28,7 @@ from openpose import pyopenpose as op
 #######################
 # Set up global variables for use in all methods.
 ##############
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 start_time = time.time()
 start_time_stamp = datetime.datetime.now()
 # Setup logging file
@@ -81,7 +81,7 @@ def onMessage(data):
 client = mqtt.Client()
 client.on_connect = onConnect
 client.on_message = onMessage
-#client.connect("localhost", 1883, 60)
+client.connect("localhost", 1883, 60)
 
 
 def sendPassengerUnsafe():

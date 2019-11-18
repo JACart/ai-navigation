@@ -2,6 +2,7 @@
 <launch>
   <arg name="testing" default="true"/>
   <arg name="lidar" default="true"/>
+  <arg name="networking" default="true"/>
   <!-- <arg name="rviz" default="true"/> -->
   <!-- launch testing interface-->
   <group>
@@ -12,7 +13,9 @@
   </group>
   <!-- launch hardware interface-->
   <group if="$(arg testing)">
-      <include file="$(find cart_endpoints)/launch/hardware_interface.launch"/>
+      <include file="$(find cart_endpoints)/launch/hardware_interface.launch">
+        <arg name="networking" value="$(arg networking)"/>
+      </include>
   </group>
   <!--always launch planning nodes-->
   <group>

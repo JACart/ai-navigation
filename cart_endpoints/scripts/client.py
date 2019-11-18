@@ -39,8 +39,8 @@ def send(msg, data):
 @sio.on('destination', namespace='/cart')
 def onDestination(data):
     #Get JSON data
-    raw_data = json.loads(data)
-    raw_waypoint = raw_data["index"]
+
+    raw_waypoint = data
 
     #Prepare goal waypoint message
     requested_waypoint = GoalWaypoint()
@@ -59,7 +59,7 @@ def onStop(data):
 
 @sio.event(namespace='/cart')
 def disconnect():
-    camera.cleanUp()
+    #camera.cleanUp()
     isConnected = False
     print('disconnected from server')
 
@@ -79,12 +79,13 @@ stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
 req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
 #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
 rospy.Subscriber('/current_position', Int8, sendPositionIndex)
-rospy.Subscriber('/vehicle_status', VehicleState, status_update)
+rospy.Subscriber('/vehicle_state', VehicleState, status_update)
 rate = rospy.Rate(10)  # 10hz
 
 #rospy.spin()
 rospy.loginfo("Attempting connection with socketio server")
 sio.connect('http://172.30.172.30:8020', namespaces=['/cart'])
-sio.wait()
+while not rospy.is_shutdown():
+    rate.sleep()
 
 
