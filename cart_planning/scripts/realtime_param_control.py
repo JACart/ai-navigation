@@ -11,7 +11,7 @@ from std_msgs.msg import Int8
 class teleop(object):
     def __init__(self):
         rospy.init_node('realtime_param_change')
-        self.param_change = rospy.Publisher('/realtime_param', Int8, queue_size=10)
+        self.param_change = rospy.Publisher('/realtime_param_change', Int8, queue_size=10)
         #self.vel_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.vel_callback, queue_size = 10)
         self.prev_key = 1
         curses.wrapper(self.get_input)

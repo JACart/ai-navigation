@@ -180,7 +180,7 @@ class Mind(object):
         #continue to loop while we have not hit the target
         while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
             target_speed = self.global_speed            
-            ai = target_speed #pure_pursuit.PIDControl(target_speed, state.v)
+            ai = target_speed#pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
             
             #publish our desired position

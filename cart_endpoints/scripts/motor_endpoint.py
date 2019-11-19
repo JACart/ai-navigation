@@ -15,6 +15,7 @@ class MotorEndpoint(object):
         self.current_speed = 0.0
         self.goal_speed = 0.0
         self.goal_angle = 0.0
+        self.new_vel = True
 
         self.cmd_msg = None
         """ Set up the node. """
@@ -47,7 +48,8 @@ class MotorEndpoint(object):
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
-        self.cmd_msg = planned_vel_angle       
+        self.cmd_msg = planned_vel_angle  
+        self.new_vel = True     
 
 
     def kill_callback(self, data):
@@ -57,23 +59,19 @@ class MotorEndpoint(object):
 
 
     def send_to_motors(self):
-        self.cmd_msg.vel *= 50
-        self.cmd_msg.vel_curr *= 50
+        if self.new_vel:
+            self.new_vel = False
+            self.cmd_msg.vel *= 50
+            self.cmd_msg.vel_curr *= 50
         if self.cmd_msg.vel > 254:
             self.cmd_msg.vel = 254
+        if self.cmd_msg.vel < -254:
+            self.cmd_msg.vel = -254
         if self.cmd_msg.vel_curr > 254:
             self.cmd_msg.vel_curr = 254
         target_speed = int(self.cmd_msg.vel) #float64
         current_speed = int(self.cmd_msg.vel_curr) #float64
         target_angle = 100 - int(( (self.cmd_msg.angle + 70) / 140 ) * 100)
-        if target_angle < 30:
-            target_angle -= 10
-            if target_angle < 0:
-                target_angle = 0
-        elif target_angle > 70:
-            target_angle += 10
-            if target_angle > 100:
-                target_angle = 100
 
         # rospy.loginfo(str(target_speed) + " " + str(current_speed) + " " + str(target_angle))
         rospy.loginfo("Endpoint Angle: " + str(target_angle))
