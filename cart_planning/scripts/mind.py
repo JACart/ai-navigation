@@ -6,7 +6,7 @@ import geometry_util
 import rospy
 from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
 from nav_msgs.msg import Path, Odometry
-from std_msgs.msg import Header, Float32, String
+from std_msgs.msg import Header, Float32, String, Int8
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
@@ -30,6 +30,11 @@ class Mind(object):
         #Our current position in local coordinates
         self.gPose = Pose()
 
+        self.meters = 10.0
+        self.seconds = 3.6
+
+        self.global_speed = self.meters / self.seconds  # [m/s]
+
         self.navigating = False
         self.new_path = False
         self.path_valid = False
@@ -52,6 +57,7 @@ class Mind(object):
                                                 
         self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
+        self.param_sub = rospy.Subscriber('realtime_param_change', Int8, self.param_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10)
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
@@ -69,6 +75,11 @@ class Mind(object):
                 self.new_path = False
                 self.create_path()
             rate.sleep()
+
+    def param_callback(self, msg):
+        self.meters += msg.data
+        self.global_speed = self.meters / self.seconds
+        rospy.loginfo("Meters/Second: " + str(self.global_speed))
 
     def odom_callback(self, msg):
         self.odom = msg
@@ -146,7 +157,7 @@ class Mind(object):
         
         self.path_pub.publish(path)
 
-        target_speed = 10.0 / 3.6  # [m/s]
+        target_speed = self.global_speed
 
         # initial state
         pose = self.gPose
@@ -167,7 +178,8 @@ class Mind(object):
         t = [0.0]
         target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
         #continue to loop while we have not hit the target
-        while last_index > target_ind and self.path_valid and not rospy.is_shutdown():            
+        while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
+            target_speed = self.global_speed            
             ai = pure_pursuit.PIDControl(target_speed, state.v)
             di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
             
