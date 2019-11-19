@@ -13,7 +13,7 @@ k = 0.1  # look forward gain
 Lfc = 3.5  # look-ahead distance
 Kp = 1.0  # speed propotional gain
 dt = 0.1  # [s]
-L = 2.9  # [m] wheel base of vehicle
+L = 1.676  # [m] wheel base of vehicle
 
 
 show_animation = True
