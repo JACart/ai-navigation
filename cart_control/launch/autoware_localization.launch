@@ -1,28 +1,30 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="gazebo" default="true"/>
-  <arg name="lidar" default="true"/>
   <!-- Load the TortoiseBot URDF model into the parameter server -->
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find cart_simulator)/testing_description/urdf/4_point_model.urdf.xacro'" />
   <param name="localizer" value="velodyne"/>
-  <param name="tf_x" type="double" value="1.5"/>
+  <param name="tf_x" type="double" value="0.0"/>
   <param name="tf_y" type="double" value="0.0"/>
-  <param name="tf_z" type="double" value="1.2"/>
+  <param name="tf_z" type="double" value="1.25"/>
   <param name="tf_yaw" type="double" value="0.0"/>
   <param name="tf_pitch" type="double" value="0.0"/>
   <param name="tf_roll" type="double" value="0.0"/>
-  <param name="use_sim_time" type="bool" value="$(arg lidar)"/>
+  <param name="use_sim_time" type="bool" value="true"/>
    <!-- Launch Gazebo or not, should be launched when not getting lidar
        data from a bag file or real life 
        (Use cart_control->navigation_localization.launch for real world
        or bag use.)-->
-
+  <arg name="gazebo" default="true"/>
+  <arg name="lidar" default="true"/>
+  
   <!-- Location of Point Cloud Map file -->
   <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
   
-  <group if="$(arg lidar)">
-      <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
-  </group>
+    <!-- Start lidar code first to avoid issues-->
+    <group if="$(arg lidar)">
+        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/> -->
+   </group> 
+         <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
 
   <group>
       <!-- Start Gazebo with an empty world -->
@@ -32,8 +34,8 @@
       
       <!-- Launch Autoware's Runtime Manager and setup the transforms for localization -->
       <include file="$(find runtime_manager)/launch_files/setup_tf.launch">
-          <arg name="frame_id" value="base_link"/>
-          <arg name="child_frame_id" value="/base_link/velodyne"/>
+          <arg name="frame_id" value="/base_link"/>
+          <arg name="child_frame_id" value="/velodyne"/>
       </include>
       
       <!-- Launch the map generator -->
@@ -78,13 +80,8 @@
 
     <!-- Landmark to Waypoint Converter -->
     <node name="landmarks_to_waypoints" pkg="cart_planning" type="landmarks_to_waypoints.py"/>
-    
-    <group if="$(arg lidar)">
-        <!-- Relay node, this is a temporary alternative to remapping the velodyne_points topic -->
-        <node name="relay" pkg="topic_tools" type="relay"
-            args="/velodyne_points /points_raw"/>
-   </group> 
-         <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
-      
-  </group>
+        
+    <!-- Relay node, this is a temporary alternative to remapping the velodyne_points topic -->
+    <node name="relay" pkg="topic_tools" type="relay" args="/velodyne_points /points_raw"/>
+</group>
 </launch>
