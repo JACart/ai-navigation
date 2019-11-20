@@ -36,15 +36,16 @@ class CartHealth(object):
             rospy.logfatal("Localizer has extremely bad health")
             if self.is_navigating:
                 rospy.logfatal("Sending Emergency Stop due to bad localization!")
-                stop_msg = EmergencyStop()
-                stop_msg.emergency_stop = True
-                self.emergency_stop_pub.publish(stop_msg)
+                self.send_stop()
                 self.is_navigating = False
 
     def speed_check(self, msg):
         if msg.twist.linear.x >= 3:
             rospy.logfatal("Overspeeding! Sending Emergency Stop message!")
-            stop_msg = EmergencyStop()
+            self.send_stop()
+
+    def send_stop(self):
+        stop_msg = EmergencyStop()
             stop_msg.emergency_stop = True
             self.emergency_stop_pub.publish(stop_msg)
 
