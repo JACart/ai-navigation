@@ -4,7 +4,7 @@ import rospy
 import os
 import math
 from geometry_msgs.msg import Point, PoseStamped
-from navigation_msgs.msg import LocalPointsArray
+from navigation_msgs.msg import LocalPointsArray, VehicleState
 from std_msgs.msg import String, Int8
 from navigation_msgs.msg import GoalWaypoint
 
@@ -17,6 +17,7 @@ class bus_route_design():
         self.waypoints_sub = rospy.Subscriber('/local_points', LocalPointsArray, self.waypoints_callback, queue_size=10)
         self.path_request_sub = rospy.Subscriber('/path_request', GoalWaypoint, self.find_path_callback, queue_size=10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
+        self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10)        
         rospy.spin()
     
     def waypoints_callback(self, msg):
@@ -59,6 +60,10 @@ class bus_route_design():
             start = msg.start
         goal = msg.goal
         if(start == goal):
+            current_state = VehicleState()
+            current_state.is_navigating = False
+            current_state.reached_destination = True
+            self.vehicle_state_pub.publish(current_state)
             return
         self.path_to_goal = [] # array of indexs
         path_found = False

@@ -18,6 +18,21 @@ notAtDestination = True
 waiting = True
 
 
+"""
+r = sr.Recognizer()
+
+with sr.Microphone() as source:    
+    try:    
+        print("test")
+        audio = r.listen(source, timeout=4, phrase_time_limit=4)
+        print("hello")
+        text = r.recognize_google(audio)
+        print("you said " + text)
+    except:
+        print("testing")
+        pass
+
+"""
 def loop():
     r = sr.Recognizer()
 

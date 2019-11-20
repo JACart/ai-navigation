@@ -9,7 +9,7 @@
   <param name="tf_yaw" type="double" value="0.0"/>
   <param name="tf_pitch" type="double" value="0.0"/>
   <param name="tf_roll" type="double" value="0.0"/>
-  <param name="use_sim_time" type="bool" value="true"/>
+  <param name="use_sim_time" type="bool" value="false"/>
    <!-- Launch Gazebo or not, should be launched when not getting lidar
        data from a bag file or real life 
        (Use cart_control->navigation_localization.launch for real world

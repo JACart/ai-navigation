@@ -12,6 +12,7 @@ class teleop(object):
     def __init__(self):
         rospy.init_node('realtime_param_change')
         self.param_change = rospy.Publisher('/realtime_param_change', Int8, queue_size=10)
+        self.a_param_change = rospy.Publisher('/realtime_a_param_change', Int8, queue_size=10)
         #self.vel_sub = rospy.Subscriber('/pose_and_speed', Odometry, self.vel_callback, queue_size = 10)
         self.prev_key = 1
         curses.wrapper(self.get_input)
@@ -30,7 +31,7 @@ class teleop(object):
     
         stdscr.nodelay(True)
         rate = rospy.Rate(10) 
-        stdscr.addstr(0,0,'W to increase target speed, s to decrease target speed')
+        stdscr.addstr(0,0,'W to increase target speed, s to decrease target speed, a for more left, d for more right')
 
         change = Int8()
 
@@ -43,8 +44,13 @@ class teleop(object):
                 change = 1
             elif keyval == s:
                 change = -1
-        
+            elif keyval == a:
+                a_change = -1
+            elif keyval == d:
+                a_change = 1
+
             self.prev_key = keyval
+            self.a_param_change.publish(a_change)
             self.param_change.publish(change)
             rate.sleep()
 
