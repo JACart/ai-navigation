@@ -46,8 +46,8 @@ class CartHealth(object):
 
     def send_stop(self):
         stop_msg = EmergencyStop()
-            stop_msg.emergency_stop = True
-            self.emergency_stop_pub.publish(stop_msg)
+        stop_msg.emergency_stop = True
+        self.emergency_stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":
     try:
