@@ -3,6 +3,7 @@
 import socket
 import rospy
 from navigation_msgs.msg import EmergencyStop, VehicleState
+from geometry_msgs.msg import TwistStamped
 from autoware_msgs.msg import NDTStat
 
 class CartHealth(object):
@@ -16,8 +17,10 @@ class CartHealth(object):
 
         self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, self.status_update)
         self.ndt_stat_sub = rospy.Subscriber('/ndt_stat', NDTStat, self.ndt_stat_cb)
-
+	
+        self.vehicle_speed_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.speed_check)
         rospy.spin()
+
     # Keep track if cart is navigating
     def status_update(self, msg):
         self.is_navigating = False
@@ -37,6 +40,13 @@ class CartHealth(object):
                 stop_msg.emergency_stop = True
                 self.emergency_stop_pub.publish(stop_msg)
                 self.is_navigating = False
+
+    def speed_check(self, msg):
+        if msg.twist.linear.x >= 3:
+            rospy.logfatal("Overspeeding! Sending Emergency Stop message!")
+            stop_msg = EmergencyStop()
+            stop_msg.emergency_stop = True
+            self.emergency_stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":
     try:

@@ -53,6 +53,9 @@ class MotorEndpoint(object):
 
 
     def kill_callback(self, data):
+        if self.cmd_msg is not None:
+            self.cmd_msg = VelAngle()
+        
         self.killswitch = data.emergency_stop
         if self.killswitch:
             self.cmd_msg.vel = -100

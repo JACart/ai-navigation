@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Running Belodyne Setup Script"
+echo "Running Velodyne Setup Script"
 
 echo "Shutting Down WiFi"
 
