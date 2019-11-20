@@ -71,8 +71,9 @@ def arrivedDestination(data):
 
 #Handles destination arrival as well as various other vehicle state changes
 def status_update(data):
-    if data.reached_destination == True:
-        send("arrived", '/cart')
+    if data.is_navigating == False:
+        if data.reached_destination == True:
+            send("arrived", '/cart')
 
 rospy.init_node('network_node')
 stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)

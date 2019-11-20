@@ -157,6 +157,10 @@ class Mind(object):
         
         self.path_pub.publish(path)
 
+        current_state = VehicleState()
+        current_state.is_navigating = True
+        self.vehicle_state_pub.publish(current_state)
+        
         target_speed = self.global_speed
 
         # initial state
