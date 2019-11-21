@@ -85,7 +85,7 @@ rate = rospy.Rate(10)  # 10hz
 
 #rospy.spin()
 rospy.loginfo("Attempting connection with socketio server")
-sio.connect('http://172.30.172.30:8020', namespaces=['/cart'])
+sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])
 while not rospy.is_shutdown():
     rate.sleep()
 

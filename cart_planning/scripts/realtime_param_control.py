@@ -34,7 +34,7 @@ class teleop(object):
         stdscr.addstr(0,0,'W to increase target speed, s to decrease target speed, a for more left, d for more right')
 
         change = Int8()
-
+        a_change = 0
         while not rospy.is_shutdown():
             keyval = stdscr.getch()
 
