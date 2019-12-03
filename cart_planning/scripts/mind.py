@@ -6,7 +6,7 @@ import geometry_util
 import rospy
 from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
 from nav_msgs.msg import Path, Odometry
-from std_msgs.msg import Header, Float32, String, Int8
+from std_msgs.msg import Header, Float32, String, Int8, Bool
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
@@ -23,7 +23,7 @@ class Mind(object):
         rospy.init_node('Mind')
 
         self.odom = Odometry()
-        
+        self.debug = False
         #Our current velocity (linear x value)
         self.gTwist = Twist()
         
@@ -32,6 +32,8 @@ class Mind(object):
 
         self.meters = 10.0
         self.seconds = 3.6
+
+        self.delay_print = 0
 
         self.global_speed = self.meters / self.seconds  # [m/s]
 
@@ -54,6 +56,7 @@ class Mind(object):
                                          
         self.rp_distance_sub = rospy.Subscriber('/rp_distance', Float32,
                                                 self.rp_callback, queue_size=10)
+        self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
                                                 
         self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
@@ -97,6 +100,10 @@ class Mind(object):
         else:
             self.rp_dist = msg.data
     
+    def debug_callback(self, msg):
+        self.debug = msg.data
+        rospy.loginfo(self.debug)
+
     def localpoints_callback(self, msg):
         self.google_points = []
         rospy.loginfo('Before looping')
@@ -245,8 +252,12 @@ class Mind(object):
         twist = self.gTwist
         current_spd = twist.linear.x
         msg = VelAngle()
-        #rospy.loginfo("Target Speed: " + str(a))
-        #rospy.loginfo("Current Speed: " + str(current_spd))
+        if self.debug:
+            self.delay_print -= 1
+            if self.delay_print <= 0:
+                self.delay_print = 50
+                rospy.loginfo("Target Speed: " + str(a))
+                rospy.loginfo("Current Speed: " + str(current_spd))
         msg.vel = a #Speed we want from pure pursuit controller
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd

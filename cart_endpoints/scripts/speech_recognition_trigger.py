@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-#Autonomous Speech Recognition
-#By Jacob Hitzges
+
 
 import pyaudio  
 import wave 
@@ -10,149 +9,116 @@ import sys
 import os.path
 import time
 from playsound import playsound
-import simpleaudio as sa
+#import simpleaudio as sa
+import vlc
+from ros_client import sendPullOver
 
 CHUNK_SIZE = 1024
 flag = False
 notAtDestination = True
 waiting = True
+started = 0
 
+ping_in_sound = vlc.MediaPlayer("ping in.mp3")
+ping_out_sound = vlc.MediaPlayer("ping out.mp3")
+emergency_sound = vlc.MediaPlayer("Emergency.mp3")
 
-"""
-r = sr.Recognizer()
-
-with sr.Microphone() as source:    
-    try:    
-        print("test")
-        audio = r.listen(source, timeout=4, phrase_time_limit=4)
-        print("hello")
-        text = r.recognize_google(audio)
-        print("you said " + text)
-    except:
-        print("testing")
-        pass
-
-"""
 def loop():
+    started = 0
+    text = "Null"
     r = sr.Recognizer()
-
     with sr.Microphone() as source:
-
-
-        try:
-        
-            audio = r.listen(source, timeout=3, phrase_time_limit=3)
-
-        except:
-            pass
-
-
         notAtDestination = True
-
-        #if (parsedData['command'] == 'arrived'):
-        #    endRide()
-
         while notAtDestination == True:
+            if started <= 0:
+                try:
+                    flag = False
+                    print("say something1")
+                    audio = r.listen(source, timeout=10, phrase_time_limit=4)
+                    print("testing")
+                    text = r.recognize_google(audio)
 
-            try:
-                flag = False
-                print("say something1")
-                audio = r.listen(source, timeout=4, phrase_time_limit=4)
+                    print("you said " + text)
 
+                    if text == "Auto cart" or text == "Auto Parts" or text == "Auto Part" or text == 'Alucard' or text == 'Olive Garden' or text == "Auto carton" or text == 'Albuquerque' or text == 'Elkhart' or text == "autocorrect":
+                        ping_in_sound.play()
+                        started = 5                
+                    else:
+                        pass
+                    print("test")
+                    pass
+                except Exception as e:
+                    print (e)
+                    ping_out_sound.play()
+                    pass
+            
+            if started > 0:
+                try:
+                    started -= 1
+                    print("Say something2")
+                    audio = r.listen(source, timeout=10, phrase_time_limit=4)
+                    text = r.recognize_google(audio)
 
-        
-                text = r.recognize_google(audio)
+                    text = text.split()
 
-                print("you said " + text)
+                    for x in range(len(text)):
 
-                if text == "Auto cart" or text == "Auto Parts" or text == "Auto Part" or text == 'Alucard' or text == 'Olive Garden' or text == "Auto carton" or text == 'Albuquerque' or text == 'Elkhart' or text == "autocorrect":
+                        if text[x] == 'terminate':
+                            started = 0
+                            print("terminated")
+                            endRide()
+                            notAtDestination = False
 
-                    playsound('ping in.mp3')
-                                   
+                        if text[x] == 'help' or text[x] == 'emergency' or text[x] == 'stroke' or text[x] == 'attack' or text[x] == 'stop':
+                            emergency_sound.play()
+                            started = 0
+                            cancel_wait = 1
+                            while cancel_wait > 0:
+                                try:
+                                    cancel_wait -= 1
+                                    print("say cancel if you want to cancel")
+                                    audioCancel = r.listen(source, timeout=10, phrase_time_limit=4)
+                                    textCancel = r.recognize_google(audioCancel)
 
-                    try:
+                                    print(textCancel)
 
-                        print("Say something2")
-                        audio = r.listen(source, timeout=4, phrase_time_limit=4)
-                        text = r.recognize_google(audio)
-                        
-                        text = text.split()
+                                    textCancel = textCancel.split()
 
-                        for x in range(len(text)):
+                                    print(textCancel)
 
-                            if text[x] == 'terminate':
+                                    for x in range(len(textCancel)):
 
-                                print("terminated")
-                                endRide()
-                                notAtDestination = False
+                                        if textCancel[x] == 'cancel':
+                                            print("canceled")
+                                            cancel_wait = 0
+                                            flag = True
+                                        else:
+                                            pass
+                                            sendPullOver()
+                                    if (flag == False):
+                                        print("Emergency")  
+                                    ping_out_sound.play()
+                                        
+
+                                except:
+                                    print ("Translation failed part 3.")
+                                    ping_out_sound.play()
                                 
-
-                            if text[x] == 'help' or text[x] == 'emergency' or text[x] == 'stroke' or text[x] == 'attack' or text[x] == 'stop':
-
-
-                                 playsound('Emergency.mp3')
                                 
-                                 
-                                 try:
-
-                                     print("say cancel if you want to cancel")
-                                     audioCancel = r.listen(source, timeout=4, phrase_time_limit=4)
-                                     textCancel = r.recognize_google(audioCancel)
-
-                                     print(textCancel)
-
-                                     textCancel = textCancel.split()
-
-                                     print(textCancel)
-
-                                     for x in range(len(textCancel)):
-
-                                         if textCancel[x] == 'cancel':
-                                             print("canceled")
-                                             flag = True
-                                         else:
-                                             pass
-                                             sendStop()
+                except:
+                    print ("Translation failed part 2.")
+                    playsound('ping out.mp3')
 
 
-                                
-                                       
-                                     
+                    if text[x] == 'stop':
+                        print("Emergency! We are stopping the cart") 
+                    else:
+                        pass
 
-                                     if (flag == False):
-                                         print("Emergency")  
-                                    
-                                     playsound('ping out.mp3')
-                                     
-
-                                 except:
-                                     playsound('ping out.mp3')
-
-
-                            if text[x] == 'stop':
-
-
-                                print("Emergency! We are stopping the cart")
-                                
-                            else:
-                                pass
-
-                   
-
-                    except:
-                        print ("Translation failed." + text)
-                        playsound('ping out.mp3')
 
 
                 
                                 
-                else:
-                    
-                    pass
-
-
-            except:
-                pass
                 
 
 
@@ -164,7 +130,7 @@ def beginRide():
     inCart = True
 
     if inCart == True:
-        playsound('enter.mp3')
+        pass#playsound('enter.mp3')
     else:
         pass
                                 
@@ -176,122 +142,6 @@ def endRide():
     notAtDestination = False
 
     if atDestination == True:
-        playsound('exit.mp3')
+        pass#playsound('exit.mp3')
     else:
         pass
-
-def sendStop():
-    data = {
-        "command": "passenger_stop",
-        "data":"passenger_stop"
-    
-
-    }
-    client.publish("/audio",json.dumps(data))
-
-def onMessage(data):
-    parsedData = json.loads(data)
-    if(parsedData['command'] == 'transitawait'):
-        playsound('enter.mp3')
-        
-        r = sr.Recognizer()
-
-        with sr.Microphone() as source:
-  
-
-            try:
-        
-                audio = r.listen(source, timeout=3, phrase_time_limit=3)
-
-                textDestination = r.recognize_google(audio)
-
-                textDestination = textDestination.split()
-
-                for x in range(len(textDestination)):
-
-                    if textDestination[x] == 'Cafeteria':
-
-                        self.sendDestC()
-
-                for x in range(len(textDestination)):
-
-                    if textDestination[x] == 'Entrance':
-
-                        sendDestE()
-                                
-                for x in range(len(textDestination)):
-
-                    if textDestination[x] == 'Clinic':
-
-                        sendDestCl
-                                
-                for x in range(len(textDestination)):
-
-                    if textDestination[x] == 'Garage':
-
-                        sendDestG()
-
-                for x in range(len(textDestination)):
-
-                    if textDestination[x] == 'labs':
-
-                        sendDestL()
-
-                
-
-            except:
-                pass        
-
-
-        
-        loop()
-
-        if (parsedData['command'] == 'arrived'):
-            endRide()
-        
-
-        
-        elif (parsedData['command'] == 'arrived'):
-            endRide()
-
-
-      
-
-
-def sendDestC():
-
-    data = {
-        "command": "passenger_Cafeteria_Speech",
-        "data": "Cafeteria"
-    }
-
-def sendDestE():
-
-    data = {
-        "command": "passenger_Entrance_Speech",
-        "data": "Entrance"
-    }
-
-def sendDestCl():
-
-    data = {
-        "command": "passenger_Clinic_Speech",
-        "data": "Clinic"
-    }
-
-def sendDestG():
-
-    data = {
-        "command": "passenger_garage_Speech",
-        "data": "garage"
-    }
-
-def sendDestL():
-
-    data = {
-        "command": "passenger_labs_Speech",
-        "data": "labs"
-    }
-
-
-        
