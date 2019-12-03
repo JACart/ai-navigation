@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="testing" default="true"/>
-  <arg name="lidar" default="true"/>
+  <arg name="lidar" default="false"/>
   <arg name="networking" default="true"/>
   <arg name="health" default="true"/>
-  <!-- <arg name="rviz" default="true"/> -->
+  <arg name="voice" default="true"/>
+
   <!-- launch testing interface-->
   <group>
      <include file="$(find cart_control)/launch/autoware_localization.launch">
@@ -17,6 +18,7 @@
       <include file="$(find cart_endpoints)/launch/hardware_interface.launch">
         <arg name="networking" value="$(arg networking)"/>
         <arg name="health" value="$(arg health)"/>
+        <arg name="voice" value="$(arg voice)"/>
       </include>
   </group>
   <!--always launch planning nodes-->

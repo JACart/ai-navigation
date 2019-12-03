@@ -10,8 +10,9 @@ import json
 # import destination
 from std_msgs.msg import Int8, String, Bool
 from geometry_msgs.msg import PoseStamped
-from navigation_msgs.msg import GoalWaypoint, EmergencyStop, VehicleState
+from navigation_msgs.msg import GoalWaypoint, VehicleState
 from speech_recognition_location import startRecognize,stopRecognize
+from sensor_msgs.msg import NavSatFix
 isConnected = False
 
 id = '1bcadd2fea88'
@@ -51,7 +52,7 @@ def sendAudio(msg):
 
 #audio call pullover
 def sendPullOver():
-   send('pull_over',id)
+    send('pull_over',id)
    
 #pose tracking send when unsafe
 def sendUnsafe():
@@ -65,29 +66,33 @@ def sendPassengerExit():
 def sendReady():
     send('passenger_ready',id)
 
+def sendLocation():
+    send('current_location',id)
+    
 @sio.on('pull_over',namespace='/cart')
 def onPullOver():
-    print("help this needs changed")
-    #do stuff for the AI
+    stop_pub.publish(True)
 
 @sio.on('resume_driving',namespace='/cart')
 def onResume():
-    print("help this needs changed")
-    #do stuff for the AI
+    stop_pub.publish(False)
 
 #send index + lat/lng + string
 @sio.on('destination', namespace='/cart')
 def onDestination(data):
     #Get JSON data
     location_speech_pub.publish(False)
-    #stopRecognize()
-   ## {latitude:123, longtidue:435}
+    
+    #{latitude:123, longtidue:435}
     raw_waypoint = data
-
+    
+    #Process the lat long into a waypoint
+    calculated_waypoint = 0
+    
     #Prepare goal waypoint message
     requested_waypoint = GoalWaypoint()
     requested_waypoint.start = -1
-    requested_waypoint.goal = raw_waypoint
+    requested_waypoint.goal = calculated_waypoint
 
     #Send requested waypoint to planner
     req_pub.publish(requested_waypoint)
@@ -95,9 +100,7 @@ def onDestination(data):
 
 @sio.on('stop',namespace='/cart')
 def onStop(data):
-    stop_cart = EmergencyStop()
-    stop_cart.emergency_stop = True
-    stop_pub.publish(stop_cart)
+    stop_pub.publish(True)
 
 @sio.event(namespace='/cart')
 def disconnect():
@@ -117,16 +120,20 @@ def status_update(data):
         if data.reached_destination == True:
             send("arrived", '/cart')
             
-def pulloverCallback(data):
-    if data:
+def pulloverCallback(msg):
+    print("Pull over callback: " + str(msg.data))
+    if msg.data == True:
+        print("TRUE")
+        stop_pub.publish(True)
         sendPullOver()
     else:
-        pass
-        #sendReady() #is this how it should work?
+        print("FALSE")
+        stop_pub.publish(False)
+        sendReady() #is this how it should work?
 
 if __name__ == "__main__":
     rospy.init_node('network_node')
-    stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+    stop_pub = rospy.Publisher('/emergency_stop', Bool, queue_size=10)
     req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
@@ -134,6 +141,7 @@ if __name__ == "__main__":
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)
     rospy.Subscriber('/pullover', Bool, pulloverCallback)
     rospy.Subscriber('/speech_text', String, sendAudio)
+    rospy.Subscriber('/gps_coordinates', NavSatFix, sendLocation)
     rate = rospy.Rate(10)  # 10hz
 
     #rospy.spin()

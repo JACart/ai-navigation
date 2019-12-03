@@ -10,7 +10,7 @@ import time
 from playsound import playsound
 import vlc
 from std_msgs.msg import Bool, String
-
+from sensor_msgs.msg import NavSatFix
 
 
 class speech_recognition_core(object):
@@ -59,11 +59,12 @@ class speech_recognition_core(object):
                 print(text)
                 #Alucard, autocorrect, autocart possible other words that need added
                 for x in range(len(text_array)):
-                    print(text_array)
                     #checks for single words like autocart and skips looking for individual words if it is found
                     if self.active <= 0:
-                        if text_array[x] == "alucard" or text_array[x] == "autocorrect" or text_array[x] == "autocart":
-                            self.active = 3
+                        if text_array[x] == "alucard" or text_array[x] == "autocorrect" or text_array[x] == "autocart" or text_array[x] == "autocar" or text_array[x] == "omega" or text_array[x] == "mega":
+                            self.ping_in_sound.stop()
+                            self.ping_in_sound.play()
+                            self.active = 2
                     #checks for two words that together form autocart
                     if self.active > 0 or text_array[x] == "auto":
                         if (self.active > 0 or len(text_array) > x+1 and (text_array[x+1] == "cart" or text_array[x+1] == "part" 
@@ -79,12 +80,14 @@ class speech_recognition_core(object):
                                 if text_array[y] == "help" or text_array[y] == "stop" or text_array[y] == "emergency":
                                     self.emergency_sound.stop()
                                     self.emergency_sound.play()
+                                    time.sleep(2)
                                     print("Emergency Issued")
-                                    self.active = 3
+                                    self.active = 2
                                     self.pullover_pub.publish(True)
                                     break
                                 if text_array[y] == "cancel":
                                     print("Emergency Canceled")
+                                    self.active = 1
                                     self.pullover_pub.publish(False)
                                     break
                                 
@@ -97,7 +100,7 @@ class speech_recognition_core(object):
                                 #stop is done first as the previous play must be ended to play again
                                 self.ping_in_sound.stop()
                                 self.ping_in_sound.play()
-                                self.active = 2
+                                self.active = 1
                             break
 
             except Exception as e:

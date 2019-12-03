@@ -2,9 +2,10 @@
 
 import socket
 import rospy
-from navigation_msgs.msg import EmergencyStop, VehicleState
+from navigation_msgs.msg import VehicleState
 from geometry_msgs.msg import TwistStamped
 from autoware_msgs.msg import NDTStat
+from std_msgs.msg import Bool
 
 class CartHealth(object):
 
@@ -13,7 +14,7 @@ class CartHealth(object):
 
         self.is_navigating = False
 
-        self.emergency_stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+        self.emergency_stop_pub = rospy.Publisher('/emergency_stop', Bool, queue_size=10)
 
         self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, self.status_update)
         self.ndt_stat_sub = rospy.Subscriber('/ndt_stat', NDTStat, self.ndt_stat_cb)
@@ -40,14 +41,12 @@ class CartHealth(object):
                 self.is_navigating = False
 
     def speed_check(self, msg):
-        if msg.twist.linear.x >= 3:
+        if msg.twist.linear.x >= 4:
             rospy.logfatal("Overspeeding! Sending Emergency Stop message!")
             self.send_stop()
 
     def send_stop(self):
-        stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = True
-        self.emergency_stop_pub.publish(stop_msg)
+        self.emergency_stop_pub.publish(True)
 
 if __name__ == "__main__":
     try:

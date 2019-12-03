@@ -8,15 +8,14 @@ class GPS_Parser(object):
     def __init__(self):
         rospy.init_node('gps_parser')
         
-        self.fix_pub = rospy.Publisher('fix', NavSatFix, queue_size = 10)
+        self.gps_pub = rospy.Publisher('/gps_coordinates', NavSatFix, queue_size = 10)
         
         self.UDP_IP = "192.168.1.201"#"192.168.3.100"
         self.UDP_PORT = 8308#8308
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('', self.UDP_PORT))
-        #self.sock.setblocking(0)
-        rospy.loginfo("Connected")
+        rospy.loginfo("GPS Connected")
         rospy.sleep(1)
         
         while not rospy.is_shutdown():
@@ -26,8 +25,8 @@ class GPS_Parser(object):
         data, addr = self.sock.recvfrom(512)
         line = data[206:278]
   
-        my_fix = NavSatFix()
-        my_fix.header.stamp = rospy.Time.now()
+        gps_coords = NavSatFix()
+        gps_coords.header.stamp = rospy.Time.now()
 
         latitude_degrees = float(line[16:18])
         latitude_minutes = float(line[18:25])
@@ -41,15 +40,15 @@ class GPS_Parser(object):
         if(line[39] == 'W'):
             longitude = -1 * longitude
 
-        my_fix.latitude = latitude
-        my_fix.longitude = longitude
-        my_fix.altitude = 0.0
+        gps_coords.latitude = latitude
+        gps_coords.longitude = longitude
+        gps_coords.altitude = 0.0
         
-        rospy.loginfo("Latitude: " + str(my_fix.latitude) + " Longitude: " + str(my_fix.longitude))
+        #rospy.loginfo("Latitude: " + str(gps_coords.latitude) + " Longitude: " + str(gps_coords.longitude))
 
         
         
-        self.fix_pub.publish(my_fix)
+        self.gps_pub.publish(gps_coords)
 
     def decimal_degrees(self, degs=0, mins=0, secs=0):
         return degs + (mins/60.0) + (secs/3600.0)

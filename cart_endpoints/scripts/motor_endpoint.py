@@ -19,6 +19,7 @@ class MotorEndpoint(object):
         self.new_vel = True
         self.debug = False
         self.angle_adjust = 0
+        self.stopping = False
         self.delay_print = 0
 
         self.cmd_msg = None
@@ -40,11 +41,12 @@ class MotorEndpoint(object):
         """
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
-        self.killswitch_subscriber = rospy.Subscriber('/emergency_stop', EmergencyStop,
-                                                      self.kill_callback, queue_size=10)
+        self.stop_subscriber = rospy.Subscriber('/emergency_stop', Bool,
+                                                      self.stop_callback, queue_size=10)
         self.param_subscriber = rospy.Subscriber('/realtime_a_param_change', Int8, self.param_callback, queue_size=10)
         
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
+        
         rate = rospy.Rate(5)
 
         while not rospy.is_shutdown():
@@ -59,13 +61,9 @@ class MotorEndpoint(object):
     def param_callback(self, msg):
         self.angle_adjust += (msg.data * 10)
 
-    def kill_callback(self, data):
-        if self.cmd_msg is not None:
-            self.cmd_msg = VelAngle()
-        
-        self.killswitch = data.emergency_stop
-        if self.killswitch:
-            self.cmd_msg.vel = -100
+    def stop_callback(self, msg):
+        print("Motor endpoint: " + str(msg.data))
+        self.stopping = msg.data
 
     def debug_callback(self, msg):
         self.debug = msg.data
@@ -101,11 +99,14 @@ class MotorEndpoint(object):
         data = (target_speed,current_speed,target_angle)
         data = bytearray(b'\x00' * 5)
 
-        # ('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
-        if target_speed < 0:
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
+        if self.stopping:
+            print("STOPPING")
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, 200, 50) #currently a flat 200 braking number
         else:
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
+            if target_speed < 0:
+                bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
+            else:
+                bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
 
         #self.speed_ser.write(data) 
 
