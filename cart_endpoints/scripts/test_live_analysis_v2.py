@@ -21,7 +21,6 @@ import cPickle as pickle
 from sklearn.ensemble import RandomForestClassifier
 import paho.mqtt.client as mqtt
 from std_msgs.msg import Int8, String, Bool
-from navigation_msgs import EmergencyStop
 import json
 
 # Add openpose to system PATH and import
@@ -153,7 +152,7 @@ def analyze():
 #Analyze passenger safety.
 # Returns np array
 def safety_check(frame):
-    filename = 'full_dataset_model.sav'
+    filename = '/home/jeffercize/catkin_ws/src/ai-navigation/cart_endpoints/scripts/full_dataset_model.sav'
     loaded_model = pickle.load(open(filename, 'rb'))
     if (len(frame.shape) == 0):
         frame = np.zeros((1,75))

@@ -50,9 +50,6 @@ def send_audio(msg):
     }
     send('audio',JSON.dumps(json))
 
-#audio call pullover
-def sendPullOver():
-    send('pull_over',id)
    
 #pose tracking send when unsafe
 def sendUnsafe():
@@ -65,7 +62,7 @@ def sendPassengerExit():
 def sendReady():
     send('passenger_ready',id)
 
-def sendLocation():
+def sendLocation(self):
     send('current_location',id)
     
 @sio.on('pull_over',namespace='/cart')
@@ -122,7 +119,7 @@ def status_update(data):
 def pullover_callback(msg):
     if msg.data == True:
         send_stop(True, 2)
-        sendPullOver()
+        sendUnsafe()
     else:
         send_stop(False, 2)
         sendReady() #is this how it should work?'

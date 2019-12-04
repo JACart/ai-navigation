@@ -28,8 +28,8 @@ class MotorEndpoint(object):
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            rospy.loginfo("remove comments")
-            #self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            #rospy.loginfo("remove comments")
+            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -113,7 +113,7 @@ class MotorEndpoint(object):
             else:
                 bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
 
-        #self.speed_ser.write(data) 
+        self.speed_ser.write(data) 
 
 
 if __name__ == "__main__":
