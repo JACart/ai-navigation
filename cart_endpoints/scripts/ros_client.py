@@ -93,6 +93,15 @@ def onCartRequest(data):
     print("sending that we arrived after getting destination")
     send("arrived", '/cart')
 
+@sio.on('cart_request', namespace='/cart')
+def onCartRequest(data):
+    lat_long = json.loads(data)
+    msg = LatLongPoint()
+    msg.latitude = lat_long.latitude
+    msg.longitude = lat_long.longitude
+    gps_request_pub.publish(msg)
+    
+
 #send index + lat/lng + string
 @sio.on('destination', namespace='/cart')
 def onDestination(msg):
