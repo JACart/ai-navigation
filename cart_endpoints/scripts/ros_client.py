@@ -81,14 +81,22 @@ def onPullOver():
 def onResume():
     send_stop(False, 1)
 
+@sio.on('cart_request', namespace='/cart')
+def onCartRequest(data):
+    lat_long = json.loads(data)
+    msg = LatLongPoint()
+    msg.latitude = lat_long.latitude
+    msg.longitude = lat_long.longitude
+    gps_request_pub.publish(msg)
+    
+
 #send index + lat/lng + string
 @sio.on('destination', namespace='/cart')
 def onDestination(data):
     #Get JSON data
     location_speech_pub.publish(False)
     
-    #{latitude:123, longtidue:435}
-    raw_waypoint = data
+    raw_waypoint = (int)data
     
     #Process the lat long into a waypoint
     calculated_waypoint = 0
@@ -161,6 +169,7 @@ if __name__ == "__main__":
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
     req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
+    gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
     #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
     rospy.Subscriber('/current_position', Int8, sendPositionIndex)
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)
