@@ -44,11 +44,11 @@ def onTransitAwait(data):
     #startRecognize(sendAudio)
 
 def send_audio(msg):
-    json = {
+    data = {
         "msg": msg,
         "id":id
     }
-    send('audio',JSON.dumps(json))
+    send('audio', json.dumps(data))
 
 #audio call pullover
 def sendPullOver():
@@ -65,8 +65,13 @@ def sendPassengerExit():
 def sendReady():
     send('passenger_ready',id)
 
-def sendLocation():
-    send('current_location',id)
+def sendLocation(msg):
+    data = {
+        'latitude': msg.latitude,
+        'longitude': msg.longitude,
+        'id': id
+    }
+    send('current_location', json.dumps(data))
     
 @sio.on('pull_over',namespace='/cart')
 def onPullOver():
