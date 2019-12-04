@@ -80,9 +80,9 @@ class speech_recognition_core(object):
                                 if text_array[y] == "help" or text_array[y] == "stop" or text_array[y] == "emergency":
                                     self.emergency_sound.stop()
                                     self.emergency_sound.play()
-                                    time.sleep(2)
+                                    time.sleep(4)
                                     print("Emergency Issued")
-                                    self.active = 2
+                                    self.active = 3
                                     self.pullover_pub.publish(True)
                                     break
                                 if text_array[y] == "cancel" or text_array[y] == "resume":

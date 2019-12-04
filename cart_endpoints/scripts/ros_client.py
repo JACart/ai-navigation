@@ -78,7 +78,7 @@ def onResume():
 def onDestination(data):
     #Get JSON data
     location_speech_pub.publish(False)
-    
+    print(data)
     #{latitude:123, longtidue:435}
     raw_waypoint = data
     
@@ -92,6 +92,8 @@ def onDestination(data):
 
     #Send requested waypoint to planner
     req_pub.publish(requested_waypoint)
+    print("sending that we arrived after getting desitnatasidasid")
+    send("arrived", '/cart')
 
 
 @sio.on('stop',namespace='/cart')
