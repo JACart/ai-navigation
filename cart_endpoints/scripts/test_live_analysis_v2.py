@@ -15,20 +15,27 @@ import os
 import time
 import datetime
 import sys
+import rospy
 import numpy as np
-import pickle
+import cPickle as pickle
 from sklearn.ensemble import RandomForestClassifier
 import paho.mqtt.client as mqtt
+from std_msgs.msg import Int8, String, Bool
+from navigation_msgs import EmergencyStop
 import json
 
 # Add openpose to system PATH and import
-sys.path.append('/home/jeffercize/catkin_ws/src/openpose/build/python');
+sys.path.append('/home/jeffercize/catkin_ws/src/openpose/build/python')
 from openpose import pyopenpose as op
 
+rospy.init_node('pose_tracker')
+rospy.loginfo("Started pose tracking node!")
+passenger_safe_pub = rospy.Publisher('/passenger_safe', Bool, queue_size=10)
+passenger_exit_pub = rospy.Publisher('/passenger_exit', Bool, queue_size=10)
 #######################
 # Set up global variables for use in all methods.
 ##############
-cam = cv2.VideoCapture(1)
+cam = cv2.VideoCapture(0)
 start_time = time.time()
 start_time_stamp = datetime.datetime.now()
 # Setup logging file
@@ -40,7 +47,7 @@ else:
 full_path = path + str(start_time_stamp.date()) + "_" + str(start_time_stamp.time())
 os.makedirs(full_path)
 
-f = open(full_path + "/log.txt", "x")
+f = open(full_path + "/log.txt", "wa")
 f.write("System booted: {}\n".format(start_time_stamp))
 
 CONFIDENCE_THRESHOLD = 15
@@ -58,56 +65,21 @@ opWrapper.configure(params)
 opWrapper.start()
 
 ######################
-# Network Client
+# ROS Topic Stuff
 ###########
 
-def onConnect():
-    print('mqtt connected')
-
-
-def onMessage(data):
-    parsedData = json.loads(data)
-    if(parsedData['command'] == 'passenger_ready'):
-        print('passenger is ready')
-        trip_live = True
-        initial_safety()
-        safety_analysis()
-        
-    elif(parsedData['command'] == 'passenger_stop'):
-        print('passenger stopped the cart')
-        trip_live = False
-        passenger_exit()
-
-client = mqtt.Client()
-client.on_connect = onConnect
-client.on_message = onMessage
-client.connect("localhost", 1883, 60)
-
-
 def sendPassengerUnsafe():
-    data = {
-        "command": "passenger_unsafe",
-        "data": "passenger_unsafe"
-    }
-    client.publish("/pose", json.dumps(data))
+    passenger_safe_pub.publish(True)
 
 
 def sendPassengerSafe():
-    data = {
-        "command": "passenger_safe",
-        "data": "passenger_safe"
-    }
-    client.publish("/pose", json.dumps(data))
+    passenger_safe_pub.publish(False)
 
 
 def sendPassengerExit():
-    data = {
-        "command": "passenger_exit",
-        "data": "passenger_exit"
-    }
-    client.publish("/pose", json.dumps(data))
+    passenger_exit_pub.publish(True)
 
-#######################################
+# #######################################
 
 
 ######################
@@ -294,6 +266,10 @@ def edit_video(img):
 def unsafe():
     sendPassengerUnsafe()
     print("PASSENGER UNSAFE")
+    
+    
+
+    
 
 ###################
 # Safety Monitoring

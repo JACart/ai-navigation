@@ -19,7 +19,7 @@ class MotorEndpoint(object):
         self.new_vel = True
         self.debug = False
         self.angle_adjust = 0
-        self.stopping = False
+        self.stopping_dictionary = {0: False, 1: False, 2: False, 3:False, 4:False}
         self.delay_print = 0
 
         self.cmd_msg = None
@@ -41,7 +41,7 @@ class MotorEndpoint(object):
         """
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
-        self.stop_subscriber = rospy.Subscriber('/emergency_stop', Bool,
+        self.stop_subscriber = rospy.Subscriber('/emergency_stop', EmergencyStop,
                                                       self.stop_callback, queue_size=10)
         self.param_subscriber = rospy.Subscriber('/realtime_a_param_change', Int8, self.param_callback, queue_size=10)
         
@@ -62,44 +62,49 @@ class MotorEndpoint(object):
         self.angle_adjust += (msg.data * 10)
 
     def stop_callback(self, msg):
-        print("Motor endpoint: " + str(msg.data))
-        self.stopping = msg.data
+        self.stopping_dictionary[msg.sender_id] = msg.emergency_stop
 
     def debug_callback(self, msg):
         self.debug = msg.data
 
 
     def send_to_motors(self):
-        if self.new_vel:
-            #self.new_vel = False #this is set to false after adjusting the new target angle below
-            self.cmd_msg.vel *= 50
-            self.cmd_msg.vel_curr *= 50
-        if self.cmd_msg.vel > 254:
-            self.cmd_msg.vel = 254
-        if self.cmd_msg.vel < -254:
-            self.cmd_msg.vel = -254
-        if self.cmd_msg.vel_curr > 254:
-            self.cmd_msg.vel_curr = 254
-        target_speed = int(self.cmd_msg.vel) #float64
-        current_speed = int(self.cmd_msg.vel_curr) #float64
-
-        target_angle = 100 - int(( (self.cmd_msg.angle + 70) / 140 ) * 100)
+        #The first time we get a new target speed and angle we must convert it
         if self.new_vel:
             self.new_vel = False
+            self.cmd_msg.vel *= 50
+            self.cmd_msg.vel_curr *= 50
+            if self.cmd_msg.vel > 254:
+                self.cmd_msg.vel = 254
+            if self.cmd_msg.vel < -254:
+                self.cmd_msg.vel = -254
+            if self.cmd_msg.vel_curr > 254:
+                self.cmd_msg.vel_curr = 254
+        target_speed = int(self.cmd_msg.vel) #float64
+        current_speed = int(self.cmd_msg.vel_curr) #float64
+        #adjust the target_angle range from (-70 <-> 70) to (0 <-> 100)
+        target_angle = 100 - int(( (self.cmd_msg.angle + 70) / 140 ) * 100)
+        #adjust the target angle additionally using a realtime adjustable testing value
+        if self.new_vel:
             if target_angle < self.angle_adjust:
                 target_angle -= (10 + int(self.angle_adjust/2))
             if target_angle > 100 - self.angle_adjust:
                 target_angle += (10 + int(self.angle_adjust/2))
+        data = (target_speed,current_speed,target_angle)
+        data = bytearray(b'\x00' * 5)
+            
+        #if debug printing is requested print speed and angle info
         if self.debug:
             self.delay_print -= 1
             if self.delay_print <= 0:
                 self.delay_print = 5
                 rospy.loginfo("Endpoint Angle: " + str(target_angle))
                 rospy.loginfo("Endpoint Speed: " + str(target_speed))
-        data = (target_speed,current_speed,target_angle)
-        data = bytearray(b'\x00' * 5)
 
-        if self.stopping:
+        for y in self.stopping_dictionary:
+            print(y, self.stopping_dictionary[y])
+        #checks if any of the stopping values are True, meaning a service is requesting to stop
+        if any(x == True for x in self.stopping_dictionary.values()):
             print("STOPPING")
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, 200, 50) #currently a flat 200 braking number
         else:

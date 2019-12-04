@@ -12,6 +12,7 @@ class bus_route_design():
     def __init__(self):
         rospy.init_node('bus_route_nav')
         self.current_waypoint = 0
+        self.waypoint_list = None
         self.waypoints_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
         self.current_pos_pub = rospy.Publisher('/current_position', Int8, queue_size=10)
         self.waypoints_sub = rospy.Subscriber('/local_points', LocalPointsArray, self.waypoints_callback, queue_size=10)
@@ -68,7 +69,8 @@ class bus_route_design():
         self.path_to_goal = [] # array of indexs
         path_found = False
         index = start
-
+        if(self.waypoint_list == None):
+            return
         while (not path_found):
             if index == goal: # reach the goal, then end.
                 self.path_to_goal.append(self.waypoint_list[goal])

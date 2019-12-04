@@ -85,7 +85,7 @@ class speech_recognition_core(object):
                                     self.active = 2
                                     self.pullover_pub.publish(True)
                                     break
-                                if text_array[y] == "cancel":
+                                if text_array[y] == "cancel" or text_array[y] == "resume":
                                     print("Emergency Canceled")
                                     self.active = 1
                                     self.pullover_pub.publish(False)

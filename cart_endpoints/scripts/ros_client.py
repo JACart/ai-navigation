@@ -10,7 +10,7 @@ import json
 # import destination
 from std_msgs.msg import Int8, String, Bool
 from geometry_msgs.msg import PoseStamped
-from navigation_msgs.msg import GoalWaypoint, VehicleState
+from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop
 from speech_recognition_location import startRecognize,stopRecognize
 from sensor_msgs.msg import NavSatFix
 isConnected = False
@@ -43,7 +43,7 @@ def onTransitAwait(data):
     location_speech_pub.publish(True)
     #startRecognize(sendAudio)
 
-def sendAudio(msg):
+def send_audio(msg):
     json = {
         "msg": msg,
         "id":id
@@ -58,7 +58,6 @@ def sendPullOver():
 def sendUnsafe():
     send('passenger_unsafe',id)
     
-
 def sendPassengerExit():
     send('passenger_exit',id)
     
@@ -71,11 +70,11 @@ def sendLocation():
     
 @sio.on('pull_over',namespace='/cart')
 def onPullOver():
-    stop_pub.publish(True)
+    send_stop(True, 1)
 
 @sio.on('resume_driving',namespace='/cart')
 def onResume():
-    stop_pub.publish(False)
+    send_stop(False, 1)
 
 #send index + lat/lng + string
 @sio.on('destination', namespace='/cart')
@@ -100,7 +99,7 @@ def onDestination(data):
 
 @sio.on('stop',namespace='/cart')
 def onStop(data):
-    stop_pub.publish(True)
+    send_stop(True, 1)
 
 @sio.event(namespace='/cart')
 def disconnect():
@@ -120,28 +119,51 @@ def status_update(data):
         if data.reached_destination == True:
             send("arrived", '/cart')
             
-def pulloverCallback(msg):
-    print("Pull over callback: " + str(msg.data))
+def pullover_callback(msg):
     if msg.data == True:
-        print("TRUE")
-        stop_pub.publish(True)
+        send_stop(True, 2)
         sendPullOver()
     else:
-        print("FALSE")
-        stop_pub.publish(False)
-        sendReady() #is this how it should work?
+        send_stop(False, 2)
+        sendReady() #is this how it should work?'
+        
+def passenger_safe_callback(msg):
+    if msg.data == True:
+        send_stop(False, 3)
+        sendReady()
+    else:
+        send_stop(True, 3)
+        sendUnsafe()
+
+def passenger_exit_callback(msg):
+    sendPassengerExit()
+    
+# sender_id is important to ensure all parties 
+# are ready to resume before releasing the stop command
+# ie both voice and pose tell us we need to stop and then
+# pose gives us the all clear but we should still be 
+# waiting for voice to also give the all clear
+# sender_id = 1 is the server, 2 is voice, 3 is pose, 4 is health monitor, 
+# 0 is for internal usage but is currently unused
+def send_stop(stop, sender_id):
+    stop_msg = EmergencyStop()
+    stop_msg.emergency_stop = stop
+    stop_msg.sender_id = sender_id
+    stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":
     rospy.init_node('network_node')
-    stop_pub = rospy.Publisher('/emergency_stop', Bool, queue_size=10)
+    stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
     req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
     rospy.Subscriber('/current_position', Int8, sendPositionIndex)
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)
-    rospy.Subscriber('/pullover', Bool, pulloverCallback)
-    rospy.Subscriber('/speech_text', String, sendAudio)
+    rospy.Subscriber('/pullover', Bool, pullover_callback)
+    rospy.Subscriber('/speech_text', String, send_audio)
     rospy.Subscriber('/gps_coordinates', NavSatFix, sendLocation)
+    rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback)
+    rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
     rate = rospy.Rate(10)  # 10hz
 
     #rospy.spin()
