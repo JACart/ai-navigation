@@ -101,11 +101,11 @@ class MotorEndpoint(object):
                 rospy.loginfo("Endpoint Angle: " + str(target_angle))
                 rospy.loginfo("Endpoint Speed: " + str(target_speed))
 
-        for y in self.stopping_dictionary:
-            print(y, self.stopping_dictionary[y])
+        #for y in self.stopping_dictionary:
+            #print(y, self.stopping_dictionary[y])
         #checks if any of the stopping values are True, meaning a service is requesting to stop
         if any(x == True for x in self.stopping_dictionary.values()):
-            print("STOPPING")
+            #print("STOPPING")
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, 200, 50) #currently a flat 200 braking number
         else:
             if target_speed < 0:

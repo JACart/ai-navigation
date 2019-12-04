@@ -29,8 +29,6 @@ class speech_recognition_core(object):
         self.location_speech_sub = rospy.Subscriber('/location_speech', Bool, self.location_speech_callback)
         
         #This loops helps to identify all avaliable microphones
-        for device_index, device_name in enumerate(sr.Microphone.list_microphone_names()):
-            print(device_name)
 
         self.m = sr.Microphone() #can set the microphone index here
         self.r = sr.Recognizer()
@@ -55,7 +53,7 @@ class speech_recognition_core(object):
                 text = text.lower()
                 text_array = text.split()
                 if self.text_passing:
-                    speech_text_pub.publish(text)
+                    self.speech_text_pub.publish(text)
                 print(text)
                 #Alucard, autocorrect, autocart possible other words that need added
                 for x in range(len(text_array)):
@@ -112,9 +110,11 @@ class speech_recognition_core(object):
                 print("Error in processing speech, typically means there was no registered english speech: " + str(e))
          
          
-    def location_speech_callback(self, data):
-        if data:
+    def location_speech_callback(self, msg):
+        print(str(msg.data))
+        if msg.data:
             #send text to server
+            print("start the text passing")
             self.text_passing = True
         else:
             self.text_passing = False

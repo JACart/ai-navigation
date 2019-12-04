@@ -3,6 +3,7 @@
     <arg name="networking" default="true"/>
     <arg name="health" default="true"/>
     <arg name="voice" default="true"/>
+    <arg name="pose" default="true"/>
 
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
@@ -16,5 +17,8 @@
     </group>
     <group if="$(arg voice)">
         <node name="speech_recognition" pkg="cart_endpoints" type="speech_recognition_core.py" output="screen"/>
+    </group>
+    <group if="$(arg pose)">
+        <node name="pose_tracking" pkg="cart_endpoints" type="test_live_analysis_v2.py" output="screen"/>
     </group>
 </launch>

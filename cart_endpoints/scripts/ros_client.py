@@ -10,7 +10,7 @@ import json
 # import destination
 from std_msgs.msg import Int8, String, Bool
 from geometry_msgs.msg import PoseStamped
-from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop
+from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop, LatLongPoint
 from speech_recognition_location import startRecognize,stopRecognize
 from sensor_msgs.msg import NavSatFix
 isConnected = False
@@ -18,7 +18,7 @@ isConnected = False
 id = '1bcadd2fea88'
 
 sio = socketio.Client()
-
+empty = True
 
 
 @sio.event(namespace='/cart')
@@ -39,16 +39,18 @@ def send(msg, data):
     sio.emit(msg, data, namespace='/cart')
 
 @sio.on('transit_await',namespace='/cart')
-def onTransitAwait(data):
+def onTransitAwait():
+    print("TransitAwait")
     location_speech_pub.publish(True)
     #startRecognize(sendAudio)
 
 def send_audio(msg):
-    json = {
-        "msg": msg,
+    print(str(msg))
+    data = {
+        "msg": msg.data,
         "id":id
     }
-    send('audio',JSON.dumps(json))
+    send('audio',json.dumps(data))
 
    
 #pose tracking send when unsafe
@@ -62,8 +64,13 @@ def sendPassengerExit():
 def sendReady():
     send('passenger_ready',id)
 
-def sendLocation(self):
-    send('current_location',id)
+def sendLocation(msg):
+    data = {
+        'latitude': msg.latitude,
+        'longitude': msg.longitude,
+        'id': id
+    }
+    send('current_location',json.dumps(data))
     
 @sio.on('pull_over',namespace='/cart')
 def onPullOver():
@@ -72,18 +79,33 @@ def onPullOver():
 @sio.on('resume_driving',namespace='/cart')
 def onResume():
     send_stop(False, 1)
+    
+@sio.on('cart_request', namespace='/cart')
+def onCartRequest(data):
+    lat_long = json.loads(data)
+    print(str(data))
+    msg = LatLongPoint()
+    msg.latitude = lat_long["latitude"]
+    msg.longitude = lat_long["longitude"]
+    gps_request_pub.publish(msg)
+    
+    #Debug information
+    print("sending that we arrived after getting destination")
+    send("arrived", '/cart')
 
 #send index + lat/lng + string
 @sio.on('destination', namespace='/cart')
-def onDestination(data):
+def onDestination(msg):
     #Get JSON data
+    
     location_speech_pub.publish(False)
-    print(data)
+    safety_constant_pub.publish(True)
+    print(msg)
     #{latitude:123, longtidue:435}
-    raw_waypoint = data
+    raw_waypoint = int(msg.data)
     
     #Process the lat long into a waypoint
-    calculated_waypoint = 0
+    calculated_waypoint = raw_waypoint
     
     #Prepare goal waypoint message
     requested_waypoint = GoalWaypoint()
@@ -92,8 +114,7 @@ def onDestination(data):
 
     #Send requested waypoint to planner
     req_pub.publish(requested_waypoint)
-    print("sending that we arrived after getting desitnatasidasid")
-    send("arrived", '/cart')
+
 
 
 @sio.on('stop',namespace='/cart')
@@ -110,13 +131,23 @@ def sendPositionIndex(data):
     send("position", data.data)
 
 def arrivedDestination(data):
-	send('arrived','','/cart')
+    safety_exit_pub.publish(True)
+    send('arrived','','/cart')
+    
+def arrivedEmptyDestination(data):
+    location_speech_pub.publish(True)
+    send('arrived','','/cart')
 
 #Handles destination arrival as well as various other vehicle state changes
 def status_update(data):
     if data.is_navigating == False:
         if data.reached_destination == True:
-            send("arrived", '/cart')
+            if empty:
+                empty = False
+                arrivedEmptyDestination()
+            else:
+                empty = True
+                arrivedDestination()
             
 def pullover_callback(msg):
     if msg.data == True:
@@ -155,6 +186,9 @@ if __name__ == "__main__":
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
     req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
+    gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
+    safety_constant_pub = rospy.Publisher('/safety_constant', Bool, queue_size=10)
+    safety_exit_pub = rospy.Publisher('/safety_exit', Bool, queue_size=10)
     #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
     rospy.Subscriber('/current_position', Int8, sendPositionIndex)
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)

@@ -22,7 +22,7 @@
   
     <!-- Start lidar code first to avoid issues-->
     <group if="$(arg lidar)">
-        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/> -->
+        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
    </group> 
          <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
 

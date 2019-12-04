@@ -5,6 +5,7 @@
   <arg name="networking" default="true"/>
   <arg name="health" default="true"/>
   <arg name="voice" default="true"/>
+  <arg name="pose" default="true"/>
 
   <!-- launch testing interface-->
   <group>
@@ -19,6 +20,7 @@
         <arg name="networking" value="$(arg networking)"/>
         <arg name="health" value="$(arg health)"/>
         <arg name="voice" value="$(arg voice)"/>
+        <arg name="pose" value="$(arg pose)"/>
       </include>
   </group>
   <!--always launch planning nodes-->

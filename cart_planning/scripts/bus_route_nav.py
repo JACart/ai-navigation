@@ -4,7 +4,7 @@ import rospy
 import os
 import math
 from geometry_msgs.msg import Point, PoseStamped
-from navigation_msgs.msg import LocalPointsArray, VehicleState
+from navigation_msgs.msg import LocalPointsArray, VehicleState, LatLongPoint
 from std_msgs.msg import String, Int8
 from navigation_msgs.msg import GoalWaypoint
 
@@ -13,14 +13,21 @@ class bus_route_design():
         rospy.init_node('bus_route_nav')
         self.current_waypoint = 0
         self.waypoint_list = None
+        self.gps_list = None
         self.waypoints_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
         self.current_pos_pub = rospy.Publisher('/current_position', Int8, queue_size=10)
         self.waypoints_sub = rospy.Subscriber('/local_points', LocalPointsArray, self.waypoints_callback, queue_size=10)
+        self.gps_sub = rospy.Subscriber('/gps_path', LocalPointsArray, self.gps_callback, queue_size=10)
         self.path_request_sub = rospy.Subscriber('/path_request', GoalWaypoint, self.find_path_callback, queue_size=10)
+        self.path_request_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
+        self.gps_request_sub = rospy.Subscriber('/gps_request', LatLongPoint, self.find_gps_callback, queue_size=10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10)        
         rospy.spin()
     
+    def gps_callback(self, msg):
+        self.gps_list = msg.localpoints
+
     def waypoints_callback(self, msg):
         # Array of points that have the coordinates of each waypoints
         self.waypoint_list = msg.localpoints
@@ -45,6 +52,22 @@ class bus_route_design():
         waypoint_msg = Int8()
         waypoint_msg.data = self.current_waypoint
         self.current_pos_pub.publish(waypoint_msg)
+
+    # Process a GPS location request
+    def find_gps_callback(self, msg):
+        min_ind = 0
+        min_cost = 9999999
+        lat_long_arr = self.gps_list
+        for i in range(len(lat_long_arr)):
+            cost = self.calculate_weight(lat_long_arr[min_ind].position, lat_long_arr[i])
+            if cost < min_cost:
+                self.min_ind = i
+                self.min_cost = cost
+        path_msg = GoalWaypoint()
+        path_msg.start = -1
+        path_msg.goal = min_ind
+
+        self.path_request_pub.publish(path_msg)
 
     #Calculate the cost from one point to the next (distance)
     def calculate_weight(self, point1, point2):
