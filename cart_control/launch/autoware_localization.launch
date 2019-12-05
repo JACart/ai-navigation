@@ -23,6 +23,7 @@
     <!-- Start lidar code first to avoid issues-->
     <group if="$(arg lidar)">
         <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+        <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
    </group> 
          <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
 
@@ -30,6 +31,10 @@
       <!-- Start Gazebo with an empty world -->
       <group if="$(arg gazebo)">
         <include file="$(find cart_simulator)/launch/empty_world.launch"/>
+          <!-- Spawn a TortoiseBot in Gazebo, taking the description from the
+               parameter server -->
+          <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+                args="-param robot_description -urdf -model tortoisebot -z 1.2" />
       </group>
       
       <!-- Launch Autoware's Runtime Manager and setup the transforms for localization -->
@@ -57,10 +62,7 @@
       <include file="$(find lidar_localizer)/launch/ndt_matching.launch"/>
       
       
-      <!-- Spawn a TortoiseBot in Gazebo, taking the description from the
-           parameter server -->
-      <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
-            args="-param robot_description -urdf -model tortoisebot -z 1.2" />
+
             
 			<!-- Load a pointcloud map. Related Topics: /points_map -->
       <node name="pointcloud_map" pkg="map_file" type="points_map_loader"

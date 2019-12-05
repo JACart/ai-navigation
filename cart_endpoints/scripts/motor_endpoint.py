@@ -21,15 +21,15 @@ class MotorEndpoint(object):
         self.angle_adjust = 0
         self.stopping_dictionary = {0: False, 1: False, 2: False, 3:False, 4:False}
         self.delay_print = 0
-
+        self.brake = 50
         self.cmd_msg = None
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            #rospy.loginfo("remove comments")
-            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            rospy.loginfo("remove comments")
+            #self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -105,15 +105,20 @@ class MotorEndpoint(object):
             #print(y, self.stopping_dictionary[y])
         #checks if any of the stopping values are True, meaning a service is requesting to stop
         if any(x == True for x in self.stopping_dictionary.values()):
-            #print("STOPPING")
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, 200, 50) #currently a flat 200 braking number
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, self.brake, 50) #currently a flat 200 braking number
+            if self.brake <= 250:
+                self.brake += 4 #how quickly the braking ramps up
         else:
+            #reset the brake force slowly incase a new stop message arises immediatly
+            if self.brake > 50:
+                self.brake -= 1
+            #if the target_speed is negative it actually represents desired braking force
             if target_speed < 0:
                 bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
             else:
                 bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
 
-        self.speed_ser.write(data) 
+        #self.speed_ser.write(data) 
 
 
 if __name__ == "__main__":

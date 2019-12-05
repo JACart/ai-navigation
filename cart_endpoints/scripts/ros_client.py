@@ -109,12 +109,12 @@ def onDestination(msg):
     
     location_speech_pub.publish(False)
     safety_constant_pub.publish(True)
-    print(msg)
+    print(msg.data)
     #{latitude:123, longtidue:435}
-    raw_waypoint = int(msg.data)
+    location_string = str(msg.data)
     
     #Process the lat long into a waypoint
-    calculated_waypoint = raw_waypoint
+    calculated_waypoint = locationFinder(location_string)
     
     #Prepare goal waypoint message
     requested_waypoint = GoalWaypoint()
@@ -124,7 +124,17 @@ def onDestination(msg):
     #Send requested waypoint to planner
     req_pub.publish(requested_waypoint)
 
-
+def locationFinder(location_string):
+    if(location_sting == "home"): #near the garage
+        return 28
+    if(location_string == "x labs"): #front of xlabs
+        return 21
+    if(location_string == "?"): #the exit from xlabs
+        return 12
+    if(location_string == "??"): #right after the intersection heading towards the exit
+        return 6
+    if(location_string == "???"): #on the straight away going away from the garage towards the front
+        return 1
 
 @sio.on('stop',namespace='/cart')
 def onStop(data):

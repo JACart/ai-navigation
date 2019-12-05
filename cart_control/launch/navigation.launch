@@ -10,7 +10,7 @@
   <!-- launch testing interface-->
   <group>
      <include file="$(find cart_control)/launch/autoware_localization.launch">
-        <arg name="gazebo" value="false"/>
+        <arg name="gazebo" value="False"/>
         <arg name="lidar" value="$(arg lidar)"/>
      </include>
   </group>
