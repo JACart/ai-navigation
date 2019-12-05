@@ -6,6 +6,7 @@
   <arg name="health" default="true"/>
   <arg name="voice" default="true"/>
   <arg name="pose" default="true"/>
+  <arg name="visualize_pose" default="false"/>
 
   <!-- launch testing interface-->
   <group>
@@ -21,6 +22,7 @@
         <arg name="health" value="$(arg health)"/>
         <arg name="voice" value="$(arg voice)"/>
         <arg name="pose" value="$(arg pose)"/>
+        <arg name="visualize_pose" value="$(arg visualize_pose)"/>
       </include>
   </group>
   <!--always launch planning nodes-->

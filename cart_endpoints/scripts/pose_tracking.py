@@ -21,6 +21,7 @@ import cPickle as pickle
 from sklearn.ensemble import RandomForestClassifier
 import paho.mqtt.client as mqtt
 from std_msgs.msg import Int8, String, Bool
+from sensor_msgs.msg import Image
 import json
 # Add openpose to system PATH and import
 sys.path.append('/home/jeffercize/catkin_ws/src/openpose/build/python')
@@ -28,8 +29,6 @@ from openpose import pyopenpose as op
 class pose_tracking(object):
     
     def __init__(self):
-        
-
         rospy.init_node('pose_tracker')
         rospy.loginfo("Started pose tracking node!")
         self.passenger_safe_pub = rospy.Publisher('/passenger_safe', Bool, queue_size=10)
@@ -37,11 +36,14 @@ class pose_tracking(object):
         self.safety_intial_sub = rospy.Subscriber('/location_speech', Bool, self.initial_safety)
         #self.safety_constant_sub = rospy.Subscriber('/safety_constant', Bool, self.safety_analysis)
         self.safety_exit_sub = rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
-        
+        self.image_raw_sub = rospy.Subscriber('/camera/image_raw', Image, self.update_image)
         #######################
         # Set up global variables for use in all methods.
         ##############
-        self.cam = cv2.VideoCapture(2)
+        #self.cam = cv2.VideoCapture(0)
+        #test1, test2 = self.cam.read()
+        #print("TEST 1: " + str(type(test1)))
+        #print("TEST 2: " + str(type(test2)))
         self.start_time = time.time()
         self.start_time_stamp = datetime.datetime.now()
         # Setup logging file
@@ -58,6 +60,8 @@ class pose_tracking(object):
 
         self.CONFIDENCE_THRESHOLD = 15
         self.trip_live = False
+        self.image_raw = None
+        self.image_ready = False
         #################
         # OpenPose Setup
         ##############
@@ -88,6 +92,12 @@ class pose_tracking(object):
 
     def sendPassengerExit(self):
         self.passenger_exit_pub.publish(True)
+        
+    def update_image(self, msg):
+        self.image_raw = np.frombuffer(msg.data, dtype=np.uint8)
+        self.image_raw.shape = (msg.height, msg.width, 3)
+        self.image_ready = True
+
 
     # #######################################
 
@@ -135,11 +145,13 @@ class pose_tracking(object):
 
     # Single step of analysis. Analyze one frame and return safety classification.
     def analyze(self):
-        ret_val, final_image = self.cam.read()
+        rate = rospy.Rate(5)
+        while self.image_ready == False and not rospy.is_shutdown():
+            rate.sleep()
+        final_image = self.image_raw
         
-
         final_image = self.edit_video(final_image)
-
+        #print(final_image)
         ###############
         # Process openpose
         ############
@@ -183,7 +195,7 @@ class pose_tracking(object):
     def initial_safety(self):
         safety_counter = 0
             
-        while safety_counter < 30:
+        while safety_counter < 30 and not rospy.is_shutdown():
             pred, frame, op_output = self.analyze()
             if pred.size > 0:
                 if pred[0] == 0:
@@ -218,9 +230,11 @@ class pose_tracking(object):
     def passenger_exit(self):
         self.trip_live = False
         exit = 0
-        while exit <= 30*4:
-            ret_val, final_image = self.cam.read()
-
+        while exit <= 30*4  and not rospy.is_shutdown():
+            rate = rospy.Rate(5)
+            while self.image_ready == False and not rospy.is_shutdown():
+                rate.sleep()
+            final_image = self.image_raw
 
             final_image = self.edit_video(final_image)
 

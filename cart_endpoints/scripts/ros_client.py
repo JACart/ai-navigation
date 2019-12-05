@@ -11,7 +11,6 @@ import json
 from std_msgs.msg import Int8, String, Bool
 from geometry_msgs.msg import PoseStamped
 from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop, LatLongPoint
-from speech_recognition_location import startRecognize,stopRecognize
 from sensor_msgs.msg import NavSatFix
 isConnected = False
 
@@ -20,19 +19,15 @@ id = '1bcadd2fea88'
 sio = socketio.Client()
 empty = True
 
-
+########################
+### Recieving Events ###
+########################
 @sio.event(namespace='/cart')
 def connect():
     print('id: ', sio.sid)
     print('connection established')
     send('connect', '23423')
-
-    
-	
     isConnected = True
-    # while isConnected:
-    #     send('video', camera.getVideo())
-    #     time.sleep(.1)
 
 
 def send(msg, data):
@@ -42,8 +37,67 @@ def send(msg, data):
 def onTransitAwait():
     print("TransitAwait")
     location_speech_pub.publish(True)
-    #startRecognize(sendAudio)
 
+    
+@sio.on('pull_over',namespace='/cart')
+def onPullOver():
+    send_stop(True, 1)
+
+@sio.on('resume_driving',namespace='/cart')
+def onResume():
+    send_stop(False, 1)
+    
+@sio.on('cart_request', namespace='/cart')
+def onCartRequest(data):
+    lat_long = json.loads(data)
+    print(str(data))
+    msg = LatLongPoint()
+    msg.latitude = lat_long["latitude"]
+    msg.longitude = lat_long["longitude"]
+    gps_request_pub.publish(msg)
+    #Debug information
+    print("sending that we arrived after getting destination")
+    send("arrived", '/cart')
+
+@sio.on('cart_request', namespace='/cart')
+def onCartRequest(data):
+    lat_long = json.loads(data)
+    msg = LatLongPoint()
+    msg.latitude = lat_long.latitude
+    msg.longitude = lat_long.longitude
+    gps_request_pub.publish(msg)
+    
+
+
+@sio.on('destination', namespace='/cart')
+def onDestination(msg):
+    location_speech_pub.publish(False)
+    safety_constant_pub.publish(True)
+    
+    print(msg.data)
+    location_string = str(msg.data)
+    #Process the string into a waypoint
+    calculated_waypoint = locationFinder(location_string)
+    #Prepare goal waypoint message
+    requested_waypoint = GoalWaypoint()
+    requested_waypoint.start = -1
+    requested_waypoint.goal = calculated_waypoint
+    #Send requested waypoint to planner
+    req_pub.publish(requested_waypoint)
+    
+@sio.on('stop',namespace='/cart')
+def onStop(data):
+    send_stop(True, 1)
+
+@sio.event(namespace='/cart')
+def disconnect():
+    #camera.cleanUp()
+    isConnected = False
+    print('disconnected from server')
+    
+######################
+### Sending Events ###
+######################
 def send_audio(msg):
     print(str(msg))
     data = {
@@ -52,7 +106,6 @@ def send_audio(msg):
     }
     send('audio',json.dumps(data))
 
-   
 #pose tracking send when unsafe
 def sendUnsafe():
     send('passenger_unsafe',id)
@@ -72,58 +125,20 @@ def sendLocation(msg):
     }
     send('current_location',json.dumps(data))
     
-@sio.on('pull_over',namespace='/cart')
-def onPullOver():
-    send_stop(True, 1)
+def sendPositionIndex(data):
+    send("position", data.data)
 
-@sio.on('resume_driving',namespace='/cart')
-def onResume():
-    send_stop(False, 1)
+def arrivedDestination(data):
+    safety_exit_pub.publish(True)
+    send('arrived','','/cart')
     
-@sio.on('cart_request', namespace='/cart')
-def onCartRequest(data):
-    lat_long = json.loads(data)
-    print(str(data))
-    msg = LatLongPoint()
-    msg.latitude = lat_long["latitude"]
-    msg.longitude = lat_long["longitude"]
-    gps_request_pub.publish(msg)
-    
-    #Debug information
-    print("sending that we arrived after getting destination")
-    send("arrived", '/cart')
+def arrivedEmptyDestination(data):
+    location_speech_pub.publish(True)
+    send('arrived','','/cart')
 
-@sio.on('cart_request', namespace='/cart')
-def onCartRequest(data):
-    lat_long = json.loads(data)
-    msg = LatLongPoint()
-    msg.latitude = lat_long.latitude
-    msg.longitude = lat_long.longitude
-    gps_request_pub.publish(msg)
-    
-
-#send index + lat/lng + string
-@sio.on('destination', namespace='/cart')
-def onDestination(msg):
-    #Get JSON data
-    
-    location_speech_pub.publish(False)
-    safety_constant_pub.publish(True)
-    print(msg.data)
-    #{latitude:123, longtidue:435}
-    location_string = str(msg.data)
-    
-    #Process the lat long into a waypoint
-    calculated_waypoint = locationFinder(location_string)
-    
-    #Prepare goal waypoint message
-    requested_waypoint = GoalWaypoint()
-    requested_waypoint.start = -1
-    requested_waypoint.goal = calculated_waypoint
-
-    #Send requested waypoint to planner
-    req_pub.publish(requested_waypoint)
-
+#######################
+### Other Functions ###
+#######################
 def locationFinder(location_string):
     if(location_sting == "home"): #near the garage
         return 28
@@ -135,27 +150,6 @@ def locationFinder(location_string):
         return 6
     if(location_string == "???"): #on the straight away going away from the garage towards the front
         return 1
-
-@sio.on('stop',namespace='/cart')
-def onStop(data):
-    send_stop(True, 1)
-
-@sio.event(namespace='/cart')
-def disconnect():
-    #camera.cleanUp()
-    isConnected = False
-    print('disconnected from server')
-
-def sendPositionIndex(data):
-    send("position", data.data)
-
-def arrivedDestination(data):
-    safety_exit_pub.publish(True)
-    send('arrived','','/cart')
-    
-def arrivedEmptyDestination(data):
-    location_speech_pub.publish(True)
-    send('arrived','','/cart')
 
 #Handles destination arrival as well as various other vehicle state changes
 def status_update(data):
@@ -200,6 +194,9 @@ def send_stop(stop, sender_id):
     stop_msg.sender_id = sender_id
     stop_pub.publish(stop_msg)
 
+#####################
+### Intialization ###
+#####################
 if __name__ == "__main__":
     rospy.init_node('network_node')
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)

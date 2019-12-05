@@ -4,6 +4,7 @@
     <arg name="health" default="true"/>
     <arg name="voice" default="true"/>
     <arg name="pose" default="true"/>
+    <arg name="visualize_pose" default="false"/>
 
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
@@ -19,5 +20,9 @@
     </group>
     <group if="$(arg pose)">
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py" output="screen"/>
+        <include file="$(find video_stream_opencv)/launch/camera.launch">
+            <arg name="video_stream_provider" value="/dev/video2" />
+            <arg name="visualize" value="$(arg visualize_pose)" />
+        </include>
     </group>
 </launch>
