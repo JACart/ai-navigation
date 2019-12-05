@@ -65,6 +65,10 @@ def onDestination(msg):
 
     print(msg.data)
     location_string = str(msg.data)
+    # Delete White Spaces
+    location_string = location_string.replace(" ", "")
+    # Lowercase Entire String
+    location_string = location_string.lower()
     #Process the string into a waypoint
     calculated_waypoint = locationFinder(location_string)
     #Prepare goal waypoint message
