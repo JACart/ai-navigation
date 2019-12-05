@@ -223,7 +223,7 @@ if __name__ == "__main__":
     rate = rospy.Rate(10)  # 10hz
 
     rospy.loginfo("Attempting connection with socketio server")
-    sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])
+    sio.connect('172.30.167.135', namespaces=['/cart'])#http://35.238.125.238:8020
     while not rospy.is_shutdown():
         rate.sleep()
 

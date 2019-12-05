@@ -112,6 +112,7 @@ class MotorEndpoint(object):
         # sender_id = 1 is the server, 2 is voice, 3 is pose, 4 is health monitor, 
         # 0 is for internal usage but is currently unused
         if any(x == True for x in self.stopping_dictionary.values()):
+            print("STOPPING WITH FORCE: " + str(self.brake))
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, self.brake, 50) #currently a flat 200 braking number
             if self.brake <= 250:
                 self.brake += 4 #how quickly the braking ramps up
