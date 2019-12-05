@@ -146,13 +146,13 @@ def sendUnsafe():
 def locationFinder(location_string):
     if(location_sting == "home"): #near the garage
         return 28
-    if(location_string == "x labs"): #front of xlabs
+    if(location_string == "xlabs"): #front of xlabs
         return 21
-    if(location_string == "?"): #the exit from xlabs
+    if(location_string == "cafeteria"): #the exit from xlabs
         return 12
-    if(location_string == "??"): #right after the intersection heading towards the exit
+    if(location_string == "clinic"): #right after the intersection heading towards the exit
         return 6
-    if(location_string == "???"): #on the straight away going away from the garage towards the front
+    if(location_string == "reccenter"): #on the straight away going away from the garage towards the front
         return 1
 
 def pullover_callback(msg):
