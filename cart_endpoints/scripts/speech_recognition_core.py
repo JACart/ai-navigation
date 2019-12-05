@@ -18,9 +18,9 @@ class speech_recognition_core(object):
     def __init__(self):
         self.active = 0
         self.text_passing = False
-        self.ping_in_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'ping_in.mp3'))
-        self.ping_out_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'ping_out.mp3'))
-        self.emergency_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'Emergency.mp3'))
+        self.ping_in_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'ping_in.mp3'))
+        self.ping_out_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'ping_out.mp3'))
+        self.emergency_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'Emergency.mp3'))
         
         rospy.init_node('speech_recognition')
         rospy.loginfo("Starting Speech Recognition Node!")
@@ -57,7 +57,7 @@ class speech_recognition_core(object):
             for x in range(len(text_array)):
                 #checks for single words like autocart and skips looking for individual words if it is found
                 if self.active <= 0:
-                    if text_array[x] == "alucard" or text_array[x] == "autocorrect" or text_array[x] == "autocart" or text_array[x] == "autocar" or text_array[x] == "omega" or text_array[x] == "mega":
+                    if text_array[x] == "alucard" or text_array[x] == "autocorrect" or text_array[x] == "autocart" or text_array[x] == "autocar":
                         self.ping_in_sound.stop()
                         self.ping_in_sound.play()
                         self.active = 2
@@ -67,7 +67,7 @@ class speech_recognition_core(object):
                         or text_array[x+1] == "parts" or text_array[x+1] == "carton" or text_array[x+1] == "kurt" or text_array[x+1] == "card")):
                         #The user can make a full request in one go or two goes, (ie "Auto cart help" or "Auto cart...'ping in'... help")
                         #self.active basically allows the speech to be recongized for one loop after saying auto cart to support this design
-                        print("Activated on: " + text)
+                        print("Processed: " + text)
                         for y in range(x, len(text_array)):
                             if text_array[y] == "indicated":
                                 #this is a temporary fix to the cart hearing the emergency message playing

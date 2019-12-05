@@ -98,11 +98,12 @@ def onTransitAwait():
 
 def arrivedDestination(data):
     safety_exit_pub.publish(True)
+    exit_sound.stop()
+    exit_sound.play()
     send('arrived','','/cart')
     
 def arrivedEmptyDestination(data):
     location_speech_pub.publish(True)
-    
     send('arrived','','/cart')
 
 def send_audio(msg):
@@ -194,7 +195,7 @@ def send_stop(stop, sender_id):
     stop_pub.publish(stop_msg)
 
 #####################
-### Intialization ###
+### Initialization ###
 #####################
 if __name__ == "__main__":
     rospy.init_node('network_node')
@@ -213,8 +214,7 @@ if __name__ == "__main__":
     rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback)
     rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
     
-    enter_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))
-    exit_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
+    exit_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
     
     rate = rospy.Rate(10)  # 10hz
 

@@ -16,6 +16,7 @@ import time
 import datetime
 import sys
 import rospy
+import vlc
 import numpy as np
 import cPickle as pickle
 from sklearn.ensemble import RandomForestClassifier
@@ -24,7 +25,7 @@ from std_msgs.msg import Int8, String, Bool
 from sensor_msgs.msg import Image
 import json
 # Add openpose to system PATH and import
-sys.path.append(os.path.join(os.getcwd(), 'catkin_ws/src/openpose/build/python', ''))
+sys.path.append(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/openpose/build/python', ''))
 from openpose import pyopenpose as op
 class pose_tracking(object):
     
@@ -37,24 +38,21 @@ class pose_tracking(object):
         #self.safety_constant_sub = rospy.Subscriber('/safety_constant', Bool, self.safety_analysis)
         self.safety_exit_sub = rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
         self.image_raw_sub = rospy.Subscriber('/camera/image_raw', Image, self.update_image)
-        #######################
-        # Set up global variables for use in all methods.
-        ##############
-        #self.cam = cv2.VideoCapture(0)
-        #test1, test2 = self.cam.read()
-        #print("TEST 1: " + str(type(test1)))
-        #print("TEST 2: " + str(type(test2)))
+        
+        ###################################################
+        # Set up global variables for use in all methods. #
+        ###################################################
         self.start_time = time.time()
         self.start_time_stamp = datetime.datetime.now()
+        
         # Setup logging file
-        self.path = os.getcwd() + "/logs/"
+        self.path = os.path.expanduser("~") + "/catkin_ws/src/ai-navigation/cart_endpoints/scripts/logs/"
         if os.path.isdir(self.path):
             pass
         else:
             os.makedirs(self.path)
         self.full_path = self.path + str(self.start_time_stamp.date()) + "_" + str(self.start_time_stamp.time())
         os.makedirs(self.full_path)
-
         self.f = open(self.full_path + "/log.txt", "wa")
         self.f.write("System booted: {}\n".format(self.start_time_stamp))
 
@@ -62,12 +60,15 @@ class pose_tracking(object):
         self.trip_live = False
         self.image_raw = None
         self.image_ready = False
-        #################
-        # OpenPose Setup
-        ##############
+        self.enter_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))
+
+        
+        ######################
+        ### OpenPose Setup ###
+        ######################
         # Custom Params (refer to include/openpose/flags.hpp for more parameters)
         self.params = dict()
-        self.params["model_folder"] = os.path.join(os.getcwd(), 'catkin_ws/src/openpose/models/', '')
+        self.params["model_folder"] = os.path.join(os.path.expanduser("~"), 'catkin_ws/src/openpose/models/', '')
 
         # Starting OpenPose
         self.opWrapper = op.WrapperPython()
@@ -75,12 +76,13 @@ class pose_tracking(object):
         self.opWrapper.start()
         self.initial_safety()
         rate = rospy.Rate(5)
+        self.enter_sound.play()
         while not rospy.is_shutdown():
             rate.sleep()
         
-    ######################
-    # ROS Topic Stuff
-    ###########
+    #######################
+    ### ROS Topic Stuff ###
+    #######################
 
     def sendPassengerUnsafe(self):
         self.passenger_safe_pub.publish(False)
@@ -132,9 +134,9 @@ class pose_tracking(object):
                 self.f.write(str(frame_analyzed) + "\n\n")
                 cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                 # Send unsafe message
-                self.unsafe()
+                self.sendPassengerUnsafe()
             else:
-                self.safe()
+                self.sendPassengerSafe()
             if cv2.waitKey(1) == 27:
                 break  # esc to quit
 
@@ -178,7 +180,7 @@ class pose_tracking(object):
     # Returns np array
     def safety_check(self, frame):
         
-        filename = os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/scripts/', 'py2.7full_dataset_model.sav')
+        filename = os.path.join(os.path.expanduser("~"), 'catkin_ws/src/ai-navigation/cart_endpoints/scripts/', 'py2.7full_dataset_model.sav')
         loaded_model = pickle.load(open(filename, 'rb'))
         if (len(frame.shape) == 0):
             frame = np.zeros((1,75))
@@ -224,6 +226,8 @@ class pose_tracking(object):
         self.f.write("Initial safety established: {}".format(datetime.datetime.now()))
         self.sendPassengerSafe()
         print("\nPASSENGER SAFE")
+        self.enter_sound.stop()
+        self.enter_sound.play()
         self.safety_analysis()
         
 
