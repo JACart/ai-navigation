@@ -5,7 +5,7 @@ import pyaudio
 import wave 
 import speech_recognition as sr
 import sys
-import os.path
+import os
 import time
 from playsound import playsound
 import vlc
@@ -18,9 +18,9 @@ class speech_recognition_core(object):
     def __init__(self):
         self.active = 0
         self.text_passing = False
-        self.ping_in_sound = vlc.MediaPlayer("/home/jeffercize/catkin_ws/src/ai-navigation/cart_endpoints/sounds/ping_in.mp3")
-        self.ping_out_sound = vlc.MediaPlayer("/home/jeffercize/catkin_ws/src/ai-navigation/cart_endpoints/sounds/ping_out.mp3")
-        self.emergency_sound = vlc.MediaPlayer("/home/jeffercize/catkin_ws/src/ai-navigation/cart_endpoints/sounds/Emergency.mp3")
+        self.ping_in_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'ping_in.mp3'))
+        self.ping_out_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'ping_out.mp3'))
+        self.emergency_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/', 'Emergency.mp3'))
         
         rospy.init_node('speech_recognition')
         rospy.loginfo("Starting Speech Recognition Node!")

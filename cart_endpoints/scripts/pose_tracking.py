@@ -24,7 +24,7 @@ from std_msgs.msg import Int8, String, Bool
 from sensor_msgs.msg import Image
 import json
 # Add openpose to system PATH and import
-sys.path.append('/home/jeffercize/catkin_ws/src/openpose/build/python')
+sys.path.append(os.path.join(os.getcwd(), 'catkin_ws/src/openpose/build/python', ''))
 from openpose import pyopenpose as op
 class pose_tracking(object):
     
@@ -67,7 +67,7 @@ class pose_tracking(object):
         ##############
         # Custom Params (refer to include/openpose/flags.hpp for more parameters)
         self.params = dict()
-        self.params["model_folder"] = "/home/jeffercize/catkin_ws/src/openpose/models/"
+        self.params["model_folder"] = os.path.join(os.getcwd(), 'catkin_ws/src/openpose/models/', '')
 
         # Starting OpenPose
         self.opWrapper = op.WrapperPython()
@@ -177,7 +177,8 @@ class pose_tracking(object):
     #Analyze passenger safety.
     # Returns np array
     def safety_check(self, frame):
-        filename = '/home/jeffercize/catkin_ws/src/ai-navigation/cart_endpoints/scripts/py2.7full_dataset_model.sav'
+        
+        filename = os.path.join(os.getcwd(), 'catkin_ws/src/ai-navigation/cart_endpoints/scripts/', 'py2.7full_dataset_model.sav')
         loaded_model = pickle.load(open(filename, 'rb'))
         if (len(frame.shape) == 0):
             frame = np.zeros((1,75))

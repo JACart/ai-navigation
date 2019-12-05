@@ -6,8 +6,8 @@ import socketio
 import time
 import rospy
 import json
-# import camera
-# import destination
+import vlc
+import os
 from std_msgs.msg import Int8, String, Bool
 from geometry_msgs.msg import PoseStamped
 from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop, LatLongPoint
@@ -28,24 +28,15 @@ def connect():
     print('connection established')
     send('connect', '23423')
     isConnected = True
-
+    
+@sio.event(namespace='/cart')
+def disconnect():
+    #camera.cleanUp()
+    isConnected = False
+    print('disconnected from server')
 
 def send(msg, data):
     sio.emit(msg, data, namespace='/cart')
-
-@sio.on('transit_await',namespace='/cart')
-def onTransitAwait():
-    print("TransitAwait")
-    location_speech_pub.publish(True)
-
-    
-@sio.on('pull_over',namespace='/cart')
-def onPullOver():
-    send_stop(True, 1)
-
-@sio.on('resume_driving',namespace='/cart')
-def onResume():
-    send_stop(False, 1)
     
 @sio.on('cart_request', namespace='/cart')
 def onCartRequest(data):
@@ -66,14 +57,12 @@ def onCartRequest(data):
     msg.latitude = lat_long.latitude
     msg.longitude = lat_long.longitude
     gps_request_pub.publish(msg)
-    
-
 
 @sio.on('destination', namespace='/cart')
 def onDestination(msg):
     location_speech_pub.publish(False)
     safety_constant_pub.publish(True)
-    
+
     print(msg.data)
     location_string = str(msg.data)
     #Process the string into a waypoint
@@ -84,20 +73,38 @@ def onDestination(msg):
     requested_waypoint.goal = calculated_waypoint
     #Send requested waypoint to planner
     req_pub.publish(requested_waypoint)
+
+@sio.on('pull_over',namespace='/cart')
+def onPullOver():
+    send_stop(True, 1)
+
+@sio.on('resume_driving',namespace='/cart')
+def onResume():
+    send_stop(False, 1)
     
 @sio.on('stop',namespace='/cart')
 def onStop(data):
     send_stop(True, 1)
+    
+@sio.on('transit_await',namespace='/cart')
+def onTransitAwait():
+    print("TransitAwait")
+    location_speech_pub.publish(True)
 
-@sio.event(namespace='/cart')
-def disconnect():
-    #camera.cleanUp()
-    isConnected = False
-    print('disconnected from server')
     
 ######################
 ### Sending Events ###
 ######################
+
+def arrivedDestination(data):
+    safety_exit_pub.publish(True)
+    send('arrived','','/cart')
+    
+def arrivedEmptyDestination(data):
+    location_speech_pub.publish(True)
+    
+    send('arrived','','/cart')
+
 def send_audio(msg):
     print(str(msg))
     data = {
@@ -105,18 +112,7 @@ def send_audio(msg):
         "id":id
     }
     send('audio',json.dumps(data))
-
-#pose tracking send when unsafe
-def sendUnsafe():
-    send('passenger_unsafe',id)
     
-def sendPassengerExit():
-    send('passenger_exit',id)
-    
-#pose tracking send when ready, AI start driving
-def sendReady():
-    send('passenger_ready',id)
-
 def sendLocation(msg):
     data = {
         'latitude': msg.latitude,
@@ -125,16 +121,19 @@ def sendLocation(msg):
     }
     send('current_location',json.dumps(data))
     
+def sendPassengerExit():
+    send('passenger_exit',id)
+
 def sendPositionIndex(data):
     send("position", data.data)
 
-def arrivedDestination(data):
-    safety_exit_pub.publish(True)
-    send('arrived','','/cart')
-    
-def arrivedEmptyDestination(data):
-    location_speech_pub.publish(True)
-    send('arrived','','/cart')
+#pose tracking send when ready, AI start driving
+def sendReady():
+    send('passenger_ready',id)
+
+#pose tracking send when unsafe
+def sendUnsafe():
+    send('passenger_unsafe',id)
 
 #######################
 ### Other Functions ###
@@ -151,17 +150,6 @@ def locationFinder(location_string):
     if(location_string == "???"): #on the straight away going away from the garage towards the front
         return 1
 
-#Handles destination arrival as well as various other vehicle state changes
-def status_update(data):
-    if data.is_navigating == False:
-        if data.reached_destination == True:
-            if empty:
-                empty = False
-                arrivedEmptyDestination()
-            else:
-                empty = True
-                arrivedDestination()
-            
 def pullover_callback(msg):
     if msg.data == True:
         send_stop(True, 2)
@@ -169,7 +157,7 @@ def pullover_callback(msg):
     else:
         send_stop(False, 2)
         sendReady() #is this how it should work?'
-        
+
 def passenger_safe_callback(msg):
     if msg.data == True:
         send_stop(False, 3)
@@ -180,7 +168,18 @@ def passenger_safe_callback(msg):
 
 def passenger_exit_callback(msg):
     sendPassengerExit()
-    
+
+#Handles destination arrival as well as various other vehicle state changes
+def status_update(data):
+    if data.is_navigating == False:
+        if data.reached_destination == True:
+            if empty:
+                empty = False
+                arrivedEmptyDestination()
+            else:
+                empty = True
+                arrivedDestination()
+                
 # sender_id is important to ensure all parties 
 # are ready to resume before releasing the stop command
 # ie both voice and pose tell us we need to stop and then
@@ -205,7 +204,7 @@ if __name__ == "__main__":
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
     safety_constant_pub = rospy.Publisher('/safety_constant', Bool, queue_size=10)
     safety_exit_pub = rospy.Publisher('/safety_exit', Bool, queue_size=10)
-    #pub = rospy.Publisher('network_node_pub', String, queue_size=10)
+
     rospy.Subscriber('/current_position', Int8, sendPositionIndex)
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)
     rospy.Subscriber('/pullover', Bool, pullover_callback)
@@ -213,9 +212,12 @@ if __name__ == "__main__":
     rospy.Subscriber('/gps_coordinates', NavSatFix, sendLocation)
     rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback)
     rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
+    
+    enter_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))
+    exit_sound = vlc.MediaPlayer(os.path.join(os.getcwd(), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
+    
     rate = rospy.Rate(10)  # 10hz
 
-    #rospy.spin()
     rospy.loginfo("Attempting connection with socketio server")
     sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])
     while not rospy.is_shutdown():
