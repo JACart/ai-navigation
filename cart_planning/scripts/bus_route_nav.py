@@ -103,14 +103,14 @@ class bus_route_design():
                 self.path_to_goal.append(self.waypoint_list[index])
                 index = 0 # go back to the beginning
                 continue
-            elif index == 20: # Intersection go left or right.
+            elif index == 23: # Intersection go left or right.
                 self.path_to_goal.append(self.waypoint_list[index])
-                if goal > 4 and goal < 20:
+                if goal > 5 and goal < 23:
+                    index = 6
+                elif goal == 5:
                     index = 5
-                elif goal == 4:
-                    index = 4                
                 else:
-				    index = 21
+				    index = 24
                 continue
             self.path_to_goal.append(self.waypoint_list[index]) # just following bus route numerically
             if index == goal:

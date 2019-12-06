@@ -28,8 +28,8 @@ class MotorEndpoint(object):
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            rospy.loginfo("remove comments")
-            #self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            #rospy.loginfo("remove comments")
+            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -72,7 +72,7 @@ class MotorEndpoint(object):
         #The first time we get a new target speed and angle we must convert it
         
         if self.new_vel:
-            print("Angle: " + str(self.cmd_msg.angle))
+            #print("Angle: " + str(self.cmd_msg.angle))
             self.new_vel = False
             self.cmd_msg.vel *= 50
             self.cmd_msg.vel_curr *= 50
@@ -118,10 +118,10 @@ class MotorEndpoint(object):
         # sender_id = 1 is the server, 2 is voice, 3 is pose, 4 is health monitor, 
         # 0 is for internal usage but is currently unused
         if any(x == True for x in self.stopping_dictionary.values()):
-            print("STOPPING WITH FORCE: " + str(self.brake))
+            #print("STOPPING WITH FORCE: " + str(self.brake))
             #bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, self.brake, 50) #currently a flat 200 braking number
             target_speed = (int(-self.brake))
-            if self.brake <= 150:
+            if self.brake <= 250:
                 self.brake += 4 #how quickly the braking ramps up
         else:
             #reset the brake force slowly incase a new stop message arises immediatly
@@ -133,9 +133,9 @@ class MotorEndpoint(object):
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
         else:
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
-        print("Speed: " + str(target_speed) + "  Target Angle: " + str(target_angle))
-        #self.speed_ser.write(data) 
-        print(data)
+        #print("Speed: " + str(target_speed) + "  Target Angle: " + str(target_angle))
+        self.speed_ser.write(data) 
+        rospy.loginfo(str(bitstruct.unpack_from('u8u8u8u8u8', data)))
 
 if __name__ == "__main__":
     try:
