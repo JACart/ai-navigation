@@ -61,8 +61,8 @@ class bus_route_design():
         for i in range(len(lat_long_arr)):
             cost = self.calculate_weight(lat_long_arr[min_ind].position, lat_long_arr[i].position)
             if cost < min_cost:
-                self.min_ind = i
-                self.min_cost = cost
+                min_ind = i
+                min_cost = cost
         path_msg = GoalWaypoint()
         path_msg.start = -1
         path_msg.goal = min_ind
