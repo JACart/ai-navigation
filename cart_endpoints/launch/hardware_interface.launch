@@ -19,7 +19,7 @@
         <node name="speech_recognition" pkg="cart_endpoints" type="speech_recognition_core.py" output="screen"/>
     </group>
     <group if="$(arg pose)">
-        <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py" output="screen"/>
+        <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
         <include file="$(find video_stream_opencv)/launch/camera.launch">
             <arg name="video_stream_provider" value="/dev/video2" />
             <arg name="visualize" value="$(arg visualize_pose)" />

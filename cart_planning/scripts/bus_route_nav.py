@@ -59,7 +59,7 @@ class bus_route_design():
         min_cost = 9999999
         lat_long_arr = self.gps_list
         for i in range(len(lat_long_arr)):
-            cost = self.calculate_weight(lat_long_arr[min_ind].position, lat_long_arr[i])
+            cost = self.calculate_weight(lat_long_arr[min_ind].position, lat_long_arr[i].position)
             if cost < min_cost:
                 self.min_ind = i
                 self.min_cost = cost

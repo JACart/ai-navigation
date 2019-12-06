@@ -21,12 +21,12 @@ empty = True
 
 ########################
 ### Recieving Events ###
-########################
+########################f
 @sio.event(namespace='/cart')
 def connect():
     print('id: ', sio.sid)
     print('connection established')
-    send('connect', '23423')
+    send('connect', id)
     isConnected = True
     
 @sio.event(namespace='/cart')
@@ -45,26 +45,27 @@ def onCartRequest(data):
     msg = LatLongPoint()
     msg.latitude = lat_long["latitude"]
     msg.longitude = lat_long["longitude"]
-    gps_request_pub.publish(msg)
+    req_pub.publish(-1,21)
+    #gps_request_pub.publish(msg)
     #Debug information
-    print("sending that we arrived after getting destination")
-    send("arrived", '/cart')
+    #print("sending that we arrived after getting destination")
+    #send("arrived", '/cart')
 
-@sio.on('cart_request', namespace='/cart')
-def onCartRequest(data):
-    lat_long = json.loads(data)
-    msg = LatLongPoint()
-    msg.latitude = lat_long.latitude
-    msg.longitude = lat_long.longitude
-    gps_request_pub.publish(msg)
+# @sio.on('cart_request', namespace='/cart')
+# def onCartRequest(data):
+#     lat_long = json.loads(data)
+#     msg = LatLongPoint()
+#     msg.latitude = lat_long["latitude"]
+#     msg.longitude = lat_long["longitude"]
+#     gps_request_pub.publish(msg)
 
 @sio.on('destination', namespace='/cart')
 def onDestination(msg):
     location_speech_pub.publish(False)
     safety_constant_pub.publish(True)
 
-    print(msg.data)
-    location_string = str(msg.data)
+    print("RECIEVED GOAL: " + str(msg))
+    location_string = str(msg)
     # Delete White Spaces
     location_string = location_string.replace(" ", "")
     # Lowercase Entire String
@@ -100,18 +101,18 @@ def onTransitAwait():
 ### Sending Events ###
 ######################
 
-def arrivedDestination(data):
+def arrivedDestination():
     safety_exit_pub.publish(True)
     exit_sound.stop()
     exit_sound.play()
-    send('arrived','','/cart')
+    send('arrived','/cart')
     
-def arrivedEmptyDestination(data):
+def arrivedEmptyDestination():
     location_speech_pub.publish(True)
-    send('arrived','','/cart')
+    send('arrived','/cart')
 
 def send_audio(msg):
-    print(str(msg))
+    #print("PAssing Text step 2")
     data = {
         "msg": msg.data,
         "id":id
@@ -144,7 +145,7 @@ def sendUnsafe():
 ### Other Functions ###
 #######################
 def locationFinder(location_string):
-    if(location_sting == "home"): #near the garage
+    if(location_string == "home"): #near the garage
         return 28
     if(location_string == "xlabs"): #front of xlabs
         return 21
@@ -154,6 +155,7 @@ def locationFinder(location_string):
         return 6
     if(location_string == "reccenter"): #on the straight away going away from the garage towards the front
         return 1
+    return 28
 
 def pullover_callback(msg):
     if msg.data == True:
@@ -176,6 +178,7 @@ def passenger_exit_callback(msg):
 
 #Handles destination arrival as well as various other vehicle state changes
 def status_update(data):
+    global empty
     if data.is_navigating == False:
         if data.reached_destination == True:
             if empty:
@@ -219,11 +222,10 @@ if __name__ == "__main__":
     rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
     
     exit_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
-    
     rate = rospy.Rate(10)  # 10hz
 
     rospy.loginfo("Attempting connection with socketio server")
-    sio.connect('172.30.167.135', namespaces=['/cart'])#http://35.238.125.238:8020
+    sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
     while not rospy.is_shutdown():
         rate.sleep()
 

@@ -9,13 +9,15 @@
   <param name="tf_yaw" type="double" value="0.0"/>
   <param name="tf_pitch" type="double" value="0.0"/>
   <param name="tf_roll" type="double" value="0.0"/>
-  <param name="use_sim_time" type="bool" value="false"/>
+
    <!-- Launch Gazebo or not, should be launched when not getting lidar
        data from a bag file or real life 
        (Use cart_control->navigation_localization.launch for real world
        or bag use.)-->
   <arg name="gazebo" default="true"/>
   <arg name="lidar" default="true"/>
+  <arg name="use_sim_time" default="true"/>
+  <param name="use_sim_time" type="bool" value="$(arg use_sim_time)"/>
   
   <!-- Location of Point Cloud Map file -->
   <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>

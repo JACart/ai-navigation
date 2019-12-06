@@ -34,8 +34,8 @@ class pose_tracking(object):
         rospy.loginfo("Started pose tracking node!")
         self.passenger_safe_pub = rospy.Publisher('/passenger_safe', Bool, queue_size=10)
         self.passenger_exit_pub = rospy.Publisher('/passenger_exit', Bool, queue_size=10)
-        self.safety_intial_sub = rospy.Subscriber('/location_speech', Bool, self.initial_safety)
-        #self.safety_constant_sub = rospy.Subscriber('/safety_constant', Bool, self.safety_analysis)
+        #self.safety_intial_sub = rospy.Subscriber('/location_speech', Bool, self.initial_safety)
+        self.safety_constant_sub = rospy.Subscriber('/safety_constant', Bool, self.initial_safety)
         self.safety_exit_sub = rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
         self.image_raw_sub = rospy.Subscriber('/camera/image_raw', Image, self.update_image)
         
@@ -44,6 +44,7 @@ class pose_tracking(object):
         ###################################################
         self.start_time = time.time()
         self.start_time_stamp = datetime.datetime.now()
+        self.passenger_unsafe = False
         
         # Setup logging file
         self.path = os.path.expanduser("~") + "/catkin_ws/src/ai-navigation/cart_endpoints/scripts/logs/"
@@ -74,9 +75,8 @@ class pose_tracking(object):
         self.opWrapper = op.WrapperPython()
         self.opWrapper.configure(self.params)
         self.opWrapper.start()
-        self.initial_safety()
+        #self.initial_safety()
         rate = rospy.Rate(5)
-        self.enter_sound.play()
         while not rospy.is_shutdown():
             rate.sleep()
         
@@ -134,9 +134,13 @@ class pose_tracking(object):
                 self.f.write(str(frame_analyzed) + "\n\n")
                 cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                 # Send unsafe message
-                self.sendPassengerUnsafe()
+                if self.passenger_unsafe == False:
+                    self.sendPassengerUnsafe()
+                    self.passenger_unsafe = True
             else:
-                self.sendPassengerSafe()
+                if self.passenger_unsafe == True:
+                    self.passenger_unsafe = False
+                    self.sendPassengerSafe()
             if cv2.waitKey(1) == 27:
                 break  # esc to quit
 
@@ -195,8 +199,12 @@ class pose_tracking(object):
 
     # Method called at the beginning of the trip to make sure the passenger is safely in the vehicle.
     # Once passenger safety is determined, a signal will be sent to start the trip.
-    def initial_safety(self):
+    def initial_safety(self, data):
         safety_counter = 0
+        # Send unsafe message
+        if self.passenger_unsafe == False:
+            self.sendPassengerUnsafe()
+            self.passenger_unsafe = True
             
         while safety_counter < 30 and not rospy.is_shutdown():
             pred, frame, op_output = self.analyze()
@@ -221,10 +229,11 @@ class pose_tracking(object):
                 break  # esc to quit
             
             # Visualize safety counter
-            sys.stdout.write("\r counter: [ {} ] \t".format(safety_counter))
+            #sys.stdout.write("\r counter: [ {} ] \t".format(safety_counter))
         
         self.f.write("Initial safety established: {}".format(datetime.datetime.now()))
         self.sendPassengerSafe()
+        self.passenger_unsafe = False
         print("\nPASSENGER SAFE")
         self.enter_sound.stop()
         self.enter_sound.play()
@@ -232,7 +241,7 @@ class pose_tracking(object):
         
 
     # Method called at the end of the trip to ensure the passenger exits the vehicle safely.
-    def passenger_exit(self):
+    def passenger_exit(self, data):
         self.trip_live = False
         exit = 0
         while exit <= 30*4  and not rospy.is_shutdown():
@@ -275,7 +284,7 @@ class pose_tracking(object):
                 break  # esc to quit
 
             # Visualize exit counter
-            sys.stdout.write("\r counter: [ {} ] \t".format(exit))
+            #sys.stdout.write("\r counter: [ {} ] \t".format(exit))
         cv2.destroyAllWindows()
 
         
@@ -291,9 +300,26 @@ class pose_tracking(object):
     def edit_video(self, img):
         # Edit video
         h,w = img.shape[:2]
-        cropped = img[:, :int(w/2)]
+        
+        # Crop image and get the image width and height  
+        cropped = img[0:h, 0:672]  
+        croppedh, croppedw = cropped.shape[:2]
+
+        # Setup transform matices
+        T1 = np.float32([[1, 0, 195], [0, 1, 0]])
+        T2 = np.float32([[1, 0, -195], [0, 1, 0]])
+        T3 = np.float32([[1, 0, -150], [0, 1, 0]])
+        T4 = np.float32([[1, 0, 150], [0, 1, 0]])
+
+        # Flip image
         final_image = cv2.flip(cropped, -1)
-        return final_image
+        # Apply transforms
+        translation1 = cv2.warpAffine(final_image, T1, (croppedw, croppedh))
+        translation2 = cv2.warpAffine(translation1, T2, (croppedw, croppedh))
+        translation3 = cv2.warpAffine(translation2, T3, (croppedw, croppedh))
+        translation4 = cv2.warpAffine(translation3, T4, (croppedw, croppedh))
+
+        return translation4
 
     # Method called when passenger is unsafe.
     # Sends signal to monitoring/UI

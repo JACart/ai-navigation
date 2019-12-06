@@ -21,15 +21,15 @@ class MotorEndpoint(object):
         self.angle_adjust = 0
         self.stopping_dictionary = {0: False, 1: False, 2: False, 3:False, 4:False}
         self.delay_print = 0
-        self.brake = 50
+        self.brake = int(50)
         self.cmd_msg = None
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            #rospy.loginfo("remove comments")
-            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            rospy.loginfo("remove comments")
+            #self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -70,7 +70,9 @@ class MotorEndpoint(object):
 
     def send_to_motors(self):
         #The first time we get a new target speed and angle we must convert it
+        
         if self.new_vel:
+            print("Angle: " + str(self.cmd_msg.angle))
             self.new_vel = False
             self.cmd_msg.vel *= 50
             self.cmd_msg.vel_curr *= 50
@@ -82,8 +84,12 @@ class MotorEndpoint(object):
                 self.cmd_msg.vel_curr = 254
         target_speed = int(self.cmd_msg.vel) #float64
         current_speed = int(self.cmd_msg.vel_curr) #float64
-        #adjust the target_angle range from (-70 <-> 70) to (0 <-> 100)
-        target_angle = 100 - int(( (self.cmd_msg.angle + 70) / 140 ) * 100)
+        #adjust the target_angle range from (-45 <-> 45) to (0 <-> 100)
+        if(self.cmd_msg.angle < -45):
+            self.cmd_msg.angle = -45
+        if(self.cmd_msg.angle > 45):
+            self.cmd_msg.angle = 45
+        target_angle = 100 - int(( (self.cmd_msg.angle + 45) / 90 ) * 100)
         #adjust the target angle additionally using a realtime adjustable testing value
         if self.new_vel:
             if target_angle < self.angle_adjust:
@@ -102,7 +108,7 @@ class MotorEndpoint(object):
                 rospy.loginfo("Endpoint Speed: " + str(target_speed))
 
         #for y in self.stopping_dictionary:
-            #print(y, self.stopping_dictionary[y])
+        #   print(y, self.stopping_dictionary[y])
             
         # sender_id is important to ensure all parties 
         # are ready to resume before releasing the stop command
@@ -113,21 +119,23 @@ class MotorEndpoint(object):
         # 0 is for internal usage but is currently unused
         if any(x == True for x in self.stopping_dictionary.values()):
             print("STOPPING WITH FORCE: " + str(self.brake))
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, self.brake, 50) #currently a flat 200 braking number
-            if self.brake <= 250:
+            #bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, self.brake, 50) #currently a flat 200 braking number
+            target_speed = (int(-self.brake))
+            if self.brake <= 150:
                 self.brake += 4 #how quickly the braking ramps up
         else:
             #reset the brake force slowly incase a new stop message arises immediatly
             if self.brake > 50:
                 self.brake -= 1
-            #if the target_speed is negative it actually represents desired braking force
-            if target_speed < 0:
-                bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
-            else:
-                bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
-
-        self.speed_ser.write(data) 
-
+        #if the target_speed is negative it actually represents desired braking force
+        
+        if target_speed < 0:
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
+        else:
+            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
+        print("Speed: " + str(target_speed) + "  Target Angle: " + str(target_angle))
+        #self.speed_ser.write(data) 
+        print(data)
 
 if __name__ == "__main__":
     try:

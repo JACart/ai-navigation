@@ -51,6 +51,7 @@ class speech_recognition_core(object):
             text = text.lower()
             text_array = text.split()
             if self.text_passing:
+                #print("PAssing Text step 1")
                 self.speech_text_pub.publish(text)
             print(text)
             #Alucard, autocorrect, autocart possible other words that need added
@@ -67,7 +68,7 @@ class speech_recognition_core(object):
                         or text_array[x+1] == "parts" or text_array[x+1] == "carton" or text_array[x+1] == "kurt" or text_array[x+1] == "card")):
                         #The user can make a full request in one go or two goes, (ie "Auto cart help" or "Auto cart...'ping in'... help")
                         #self.active basically allows the speech to be recongized for one loop after saying auto cart to support this design
-                        print("Processed: " + text)
+                        #print("Processed: " + text)
                         for y in range(x, len(text_array)):
                             if text_array[y] == "indicated":
                                 #this is a temporary fix to the cart hearing the emergency message playing
@@ -79,7 +80,7 @@ class speech_recognition_core(object):
                             if text_array[y] == "help" or text_array[y] == "stop" or text_array[y] == "emergency":
                                 self.emergency_sound.stop()
                                 self.emergency_sound.play()
-                                time.sleep(4)
+                                #time.sleep(4)
                                 print("Emergency Issued")
                                 self.active = 3
                                 self.pullover_pub.publish(True)
