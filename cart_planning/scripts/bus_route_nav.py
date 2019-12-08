@@ -59,6 +59,7 @@ class bus_route_design():
         min_cost = 9999999
         lat_long_arr = self.gps_list
         for i in range(len(lat_long_arr)):
+            rospy.loginfo("Latitude: " + str(lat_long_arr[min_ind].position.x) + " Longitude: " + str(lat_long_arr[i].position.y))
             cost = self.calculate_weight(lat_long_arr[min_ind].position, lat_long_arr[i].position)
             if cost < min_cost:
                 min_ind = i
