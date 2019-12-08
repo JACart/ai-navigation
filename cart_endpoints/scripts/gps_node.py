@@ -25,7 +25,7 @@ class GPS_Parser(object):
         
         while not rospy.is_shutdown():
             if self.static_position is not None:
-                rospy.logerr('Static Position is not None')
+                # rospy.logerr('Static Position is not None')
                 if self.distance_formula(self.static_position, self.current_position):
                     rospy.logerr('Polling Location')
                     self.get_and_pub_packet()
