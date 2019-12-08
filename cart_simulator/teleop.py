@@ -63,7 +63,7 @@ class teleop(object):
                     self.msg.angle -= angle_step
                     anglestr = "Turn right    "
             elif keyval == x:
-                self.msg.vel = 0.0
+                self.msg.vel = -1.0
                 velstr = "Hard stop     "
             elif keyval == y:
                 self.msg.angle = 0.0
