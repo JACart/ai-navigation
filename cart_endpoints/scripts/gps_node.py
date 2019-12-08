@@ -1,27 +1,42 @@
 #!/usr/bin/env python
 import socket
 import rospy
+import math
 from sensor_msgs.msg import NavSatFix
+from geometry_msgs.msg import PoseStamped
 
 class GPS_Parser(object):
     
     def __init__(self):
         rospy.init_node('gps_parser')
-        
+
+        self.static_position = None
+
         self.gps_pub = rospy.Publisher('/gps_coordinates', NavSatFix, queue_size = 10)
-        
+        self.loc_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.location_callback)
+
         self.UDP_IP = "192.168.1.201"#"192.168.3.100"
         self.UDP_PORT = 8308#8308
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('', self.UDP_PORT))
         rospy.loginfo("GPS Connected")
-        r = rospy.Rate(3)
+        r = rospy.Rate(10)
         
         while not rospy.is_shutdown():
-            self.get_and_pub_packet()
+            if self.static_position is not None:
+                rospy.logerr('Static Position is not None')
+                if self.distance_formula(self.static_position, self.current_position):
+                    rospy.logerr('Polling Location')
+                    self.get_and_pub_packet()
+                    self.static_position = None
             r.sleep()
-        
+
+    def location_callback(self, msg):
+        self.current_position = msg.pose.position
+        if self.static_position is None:
+            self.static_position = self.current_position
+
     def get_and_pub_packet(self):
         latitude_total = 0
         longitude_total = 0
@@ -53,11 +68,18 @@ class GPS_Parser(object):
         gps_coords.latitude = latitude_total / poll_size
         gps_coords.longitude = longitude_total / poll_size
         gps_coords.altitude = 0.0
-        
+        rospy.logerr('GPS: ' + str(gps_coords.latitude) + " " + str(gps_coords.longitude))
+
         self.gps_pub.publish(gps_coords)
 
     def decimal_degrees(self, degs=0, mins=0, secs=0):
         return degs + (mins/60.0) + (secs/3600.0)
+
+    def distance_formula(self, start, end):
+        dX = (end.x - start.x)**2
+        dY = (end.y - start.y)**2
+
+        return math.sqrt(dX + dY) >= 2
 
 if __name__ == "__main__":
     GPS_Parser()
