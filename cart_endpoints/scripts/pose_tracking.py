@@ -19,10 +19,12 @@ import rospy
 import vlc
 import numpy as np
 import cPickle as pickle
+from cv_bridge import CvBridge
 from sklearn.ensemble import RandomForestClassifier
 import paho.mqtt.client as mqtt
 from std_msgs.msg import Int8, String, Bool
 from sensor_msgs.msg import Image
+from rospy.numpy_msg import numpy_msg
 import json
 # Add openpose to system PATH and import
 sys.path.append(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/openpose/build/python', ''))
@@ -35,9 +37,9 @@ class pose_tracking(object):
         self.passenger_safe_pub = rospy.Publisher('/passenger_safe', Bool, queue_size=10)
         self.passenger_exit_pub = rospy.Publisher('/passenger_exit', Bool, queue_size=10)
         #self.safety_intial_sub = rospy.Subscriber('/location_speech', Bool, self.initial_safety)
-        self.safety_constant_sub = rospy.Subscriber('/safety_constant', Bool, self.initial_safety)
-        self.safety_exit_sub = rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
-        self.image_raw_sub = rospy.Subscriber('/camera/image_raw', Image, self.update_image)
+        rospy.Subscriber('/safety_constant', Bool, self.initial_safety)
+        rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
+        rospy.Subscriber('/camera/image_raw', Image, self.update_image)
         
         ###################################################
         # Set up global variables for use in all methods. #
@@ -61,7 +63,6 @@ class pose_tracking(object):
         self.trip_live = False
         self.image_raw = None
         self.image_ready = False
-        self.enter_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))
 
         
         ######################
@@ -75,13 +76,13 @@ class pose_tracking(object):
         self.opWrapper = op.WrapperPython()
         self.opWrapper.configure(self.params)
         self.opWrapper.start()
-        #self.initial_safety()
+        #self.initial_safety(None)
         rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             rate.sleep()
         
     #######################
-    ### ROS Topic Stuff ###
+    ### ROS Topic Stuff ###F
     #######################
 
     def sendPassengerUnsafe(self):
@@ -96,6 +97,8 @@ class pose_tracking(object):
         self.passenger_exit_pub.publish(True)
         
     def update_image(self, msg):
+        self.bridge = CvBridge()
+        #self.image_raw = self.bridge.imgmsg_to_cv2(msg)
         self.image_raw = np.frombuffer(msg.data, dtype=np.uint8)
         self.image_raw.shape = (msg.height, msg.width, 3)
         self.image_ready = True
@@ -135,17 +138,19 @@ class pose_tracking(object):
                 cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                 # Send unsafe message
                 if self.passenger_unsafe == False:
+                    rospy.loginfo("PASSANEGER UNSAFE")
                     self.sendPassengerUnsafe()
                     self.passenger_unsafe = True
             else:
                 if self.passenger_unsafe == True:
+                    rospy.loginfo("PASSANEGER SAFE")
                     self.passenger_unsafe = False
                     self.sendPassengerSafe()
             if cv2.waitKey(1) == 27:
                 break  # esc to quit
 
             # Visualize confidence changes
-            sys.stdout.write("\r confidence level: [ {} ] \t".format(confidence))
+            #rospy.loginfo("\r confidence level: [ {} ] \t".format(confidence))
         cv2.destroyAllWindows()
         
 
@@ -229,70 +234,78 @@ class pose_tracking(object):
                 break  # esc to quit
             
             # Visualize safety counter
-            #sys.stdout.write("\r counter: [ {} ] \t".format(safety_counter))
+            #rospy.loginfo("\r counter: [ {} ] \t".format(safety_counter))
         
         self.f.write("Initial safety established: {}".format(datetime.datetime.now()))
+        print("\nPASSENGER SAFE")
         self.sendPassengerSafe()
         self.passenger_unsafe = False
-        print("\nPASSENGER SAFE")
-        self.enter_sound.stop()
-        self.enter_sound.play()
         self.safety_analysis()
         
 
     # Method called at the end of the trip to ensure the passenger exits the vehicle safely.
     def passenger_exit(self, data):
+        # print("HELP ASDPASD OJASDJASLDKJASLDK JALSKDJ ALSKJ DLASKJD LKASJ DLAKSJ DLKAJD LKJD SLAKJS LKDJs")
         self.trip_live = False
-        exit = 0
-        while exit <= 30*4  and not rospy.is_shutdown():
-            rate = rospy.Rate(5)
-            while self.image_ready == False and not rospy.is_shutdown():
-                rate.sleep()
-            final_image = self.image_raw
+        # exit = 0
+        # while exit <= 30*4  and not rospy.is_shutdown():
+        #     print("LOOKING FOR EXIT" + str(exit))
+        #     rate = rospy.Rate(5)
+        #     while self.image_ready == False and not rospy.is_shutdown():
+        #         rate.sleep()
+        #     final_image = self.image_raw
 
-            final_image = self.edit_video(final_image)
+        #     final_image = self.edit_video(final_image)
 
-            ###############
-            # Process openpose
-            ############
-            # Process image
-            datum = op.Datum()
-            datum.cvInputData = final_image
-            self.opWrapper.emplaceAndPop([datum])
+        #     ###############
+        #     # Process openpose
+        #     ############
+        #     # Process image
+        #     print("process image")
+        #     datum = op.Datum()
+        #     datum.cvInputData = final_image
+        #     self.opWrapper.emplaceAndPop([datum])
 
-            cv2.imshow("Frame", datum.cvOutputData)
+        #     # cv2.imshow("Frame", datum.cvOutputData)
 
-            # If no person is detected in the frame then update exit counter
-            # If a person is detected, check their position to see if they are clear of the cart.
-            if (datum.poseKeypoints.ndim > 0): 
-                people = datum.poseKeypoints.size/75
-                index = 0
-                while index < people:
-                    # Check sides of cart to make sure people are clear. 
-                    if datum.poseKeypoints[index,1,0] < 50 or datum.poseKeypoints[index,1,0] > 600:
-                        exit+=1
-                    else:
-                        if exit <= 0: 
-                            exit = 0 
-                        else:
-                            exit -= 1
-                    index+=1
-            else:
-                exit+=1
+        #     # If no person is detected in the frame then update exit counter
+        #     # If a person is detected, check their position to see if they are clear of the cart.
+        #     print("calculate image")
+        #     if (datum.poseKeypoints.ndim > 0): 
+        #         people = datum.poseKeypoints.size/75
+        #         index = 0
+        #         print("starting loop")
+        #         while index < people:
+        #             # Check sides of cart to make sure people are clear. 
+        #             if datum.poseKeypoints[index,1,0] < 50 or datum.poseKeypoints[index,1,0] > 600:
+        #                 print(str(exit))
+        #                 exit+=1
+        #             else:
+        #                 if exit <= 0: 
+        #                     exit = 0 
+        #                 else:
+        #                     exit -= 1
+        #             print("index up")
+        #             index+=1
+        #     else:
+        #         print("exit++")
+        #         exit+=1
 
-            if cv2.waitKey(1) == 27:
-                break  # esc to quit
+        #     if cv2.waitKey(1) == 27:
+        #         break  # esc to quit
 
-            # Visualize exit counter
-            #sys.stdout.write("\r counter: [ {} ] \t".format(exit))
-        cv2.destroyAllWindows()
+        #     # Visualize exit counter
+        #     #rospy.loginfo("\r counter: [ {} ] \t".format(exit))
+        # print("PASSENGER SAFELY EXITED")  
+
+        # cv2.destroyAllWindows()
 
         
-        print("PASSENGER SAFELY EXITED")  
-        cur_time = time.time()
+        # cur_time = time.time()
         
-        self.f.write("Trip ended successfully.\n")
-        self.f.write("Trip time: {} sec\n".format(round((cur_time - self.start_time), 2)))    
+        # self.f.write("Trip ended successfully.\n")
+        # self.f.write("Trip time: {} sec\n".format(round((cur_time - self.start_time), 2)))  
+        time.sleep(10)  
         self.sendPassengerExit()
 
 

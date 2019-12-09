@@ -29,8 +29,8 @@ class MotorEndpoint(object):
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            rospy.loginfo("remove comments")
-            #self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            #rospy.loginfo("remove comments")
+            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -115,10 +115,9 @@ class MotorEndpoint(object):
         # waiting for voice to also give the all clear
         # sender_id = 1 is the server, 2 is voice, 3 is pose, 4 is health monitor, 
         # 0 is for internal usage but is currently unused
+        #for x in self.stopping_dictionary.values():
+        #   print x
         if any(x == True for x in self.stopping_dictionary.values()):
-            #print("STOPPING WITH FORCE: " + str(self.brake))
-            #bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, self.brake, 50) #currently a flat 200 braking number
-
             target_speed = (int(-self.brake))
             if(self.drove_since_braking == True):
                 self.braking_duration = 3
@@ -139,7 +138,7 @@ class MotorEndpoint(object):
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
         else:
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
-        #self.speed_ser.write(data) 
+        self.speed_ser.write(data) 
         #rospy.loginfo(str(bitstruct.unpack_from('u8u8u8u8u8', data)))
 
 if __name__ == "__main__":

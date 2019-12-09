@@ -22,7 +22,6 @@ class GPS_Parser(object):
         self.sock.bind(('', self.UDP_PORT))
         rospy.loginfo("GPS Connected")
         r = rospy.Rate(10)
-        
         while not rospy.is_shutdown():
             if self.static_position is not None:
                 # rospy.logerr('Static Position is not None')
@@ -42,7 +41,10 @@ class GPS_Parser(object):
         longitude_total = 0
         poll_size = 10
         for x in xrange(poll_size):
+            data = bytes(0.0)
             data, addr = self.sock.recvfrom(512)
+            #print(data)
+            #print(len(data))
             line = data[206:278]
       
             gps_coords = NavSatFix()

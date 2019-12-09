@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="testing" default="true"/>
-  <arg name="lidar" default="false"/>
+  <arg name="lidar" default="true"/>
   <arg name="networking" default="true"/>
-  <arg name="health" default="true"/>
+  <arg name="health" default="false"/>
   <arg name="voice" default="true"/>
   <arg name="pose" default="true"/>
   <arg name="visualize_pose" default="false"/>
-  <arg name="use_sim_time" default="true"/>
+  <arg name="use_sim_time" default="false"/>
 
   <!-- launch testing interface-->
   <group if="$(arg lidar)">

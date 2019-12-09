@@ -43,7 +43,6 @@ Panels:
         - /TF1
         - /TF1/Frames1
         - /Marker1
-        - /Marker1/Status1
       Splitter Ratio: 0.5
     Tree Height: 510
 Preferences:
@@ -80,8 +79,6 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        base_link/velodyne:
-          Value: true
         front_left_caster:
           Value: true
         front_left_caster_rod:
@@ -114,12 +111,7 @@ Visualization Manager:
       Tree:
         world:
           map:
-            base_link:
-              base_footprint:
-                {}
-              velodyne_base_link:
-                velodyne:
-                  {}
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 0.05000000074505806
@@ -171,9 +163,9 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
         Grid: true
         Look Ahead Point: true
+        Marker: true
         Points Map: true
         Points Raw: true
         Raw Waypoints: true
@@ -338,7 +330,7 @@ Visualization Manager:
       Marker Topic: /target_point
       Name: Look Ahead Point
       Namespaces:
-        my_namespace: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -385,23 +377,23 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 44.17089080810547
+      Distance: 106.29950714111328
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -6.262289047241211
-        Y: -1.5339813232421875
-        Z: 4.217806816101074
+        X: 11.048028945922852
+        Y: 18.55389976501465
+        Z: 6.268290042877197
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 1.22979736328125
-      Target Frame: base_link
+      Target Frame: map
       Value: Orbit (rviz)
       Yaw: 2.649996042251587
     Saved: ~
