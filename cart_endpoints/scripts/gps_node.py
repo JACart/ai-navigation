@@ -22,6 +22,7 @@ class GPS_Parser(object):
         self.sock.bind(('', self.UDP_PORT))
         rospy.loginfo("GPS Connected")
         r = rospy.Rate(10)
+        r.sleep()
         while not rospy.is_shutdown():
             if self.static_position is not None:
                 # rospy.logerr('Static Position is not None')
