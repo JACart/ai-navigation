@@ -6,6 +6,7 @@
   <arg name="health" default="false"/>
   <arg name="voice" default="true"/>
   <arg name="pose" default="true"/>
+  <arg name="obstacle_detection" default="true"/>
   <arg name="visualize_pose" default="false"/>
   <arg name="use_sim_time" default="false"/>
 
@@ -32,6 +33,7 @@
         <arg name="voice" value="$(arg voice)"/>
         <arg name="pose" value="$(arg pose)"/>
         <arg name="visualize_pose" value="$(arg visualize_pose)"/>
+        <arg name="obstacle_detection" value="$(arg obstacle_detection)"/>
       </include>
   </group>
   <!--always launch planning nodes-->

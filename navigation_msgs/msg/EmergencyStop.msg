@@ -1,3 +1,3 @@
 std_msgs/Header header
 bool emergency_stop
-int8 sender_id
+int32 sender_id

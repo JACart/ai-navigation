@@ -19,6 +19,8 @@ add_message_files(
     GoalWaypoint.msg
     LocalPointsArray.msg
     VehicleState.msg
+	Obstacle.msg
+	ObstacleArray.msg
 )
  generate_messages(
    DEPENDENCIES

@@ -32,7 +32,7 @@
       <origin xyz=".1 -.1 -0.66" rpy="0 0 1.57" />
       <geometry>
         <!-- <box size="2.337 1.27 1.778"/> -->
-        <mesh filename="file:///home/channathan/catkin_ws/src/ai-navigation/golf_cart/meshes/golf_cart_blender.dae" scale="1.25 1.25 1.25"/>
+        <mesh filename="file:///home/jeffercize/catkin_ws/src/ai-navigation/golf_cart/meshes/golf_cart_blender.dae" scale="1.25 1.25 1.25"/>
       </geometry>
       <material name="silver">
         <color rgba="0.75 0.75 0.75 1"/>
@@ -307,6 +307,32 @@
     <origin rpy="-1.5708 0 0" xyz="-1.1685 0.5 -0.889"/>
   </joint>
 
+  <!--Begin RPLidar URDF Config-->
+  <joint name="laser" type="fixed">
+    <origin xyz="1.2 0 -0.5" rpy = "0 0 3.14159"/>
+    <parent link="base_link"/>
+    <child link="base_laser_link"/>
+  </joint>
+
+  <link name="base_laser_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+      </material>
+    </visual>
+    <intertial>
+      <mass value="0.000001"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+      iyy="0.0001" iyz="0.0"
+      izz="0.0001"/>
+    </intertial>
+  </link>
+
+  <!--End RPLidar stuff - Credit: Elaine Wu of SeeedBlog-->
 
   <!-- Velodyne lidar plugin, located on the golf cart roof -->
   <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>

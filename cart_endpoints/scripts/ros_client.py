@@ -102,8 +102,6 @@ def onStop(data):
 @sio.on('transit_await',namespace='/cart')
 def onTransitAwait():
     print("TransitAwait")
-    enter_sound.stop()
-    enter_sound.play()
     time.sleep(4)
     location_speech_pub.publish(True)
     
@@ -122,6 +120,8 @@ def arrivedDestination():
     
 def arrivedEmptyDestination():
     print("arrived empty")
+    enter_sound.stop()
+    enter_sound.play()
     #location_speech_pub.publish(True)
     send('arrived','/cart')
 
@@ -206,7 +206,7 @@ def status_update(data):
     global empty
     if data.is_navigating == False:
         if data.reached_destination == True:
-            if empty:
+            if empty == True:
                 empty = False
                 arrivedEmptyDestination()
             else:

@@ -5,7 +5,7 @@ import cv2
 import time
 import base64
 # start the video
-cap = cv2.VideoCapture(4)
+cap = cv2.VideoCapture(0)
 
 
 def rescale_frame(frame, percent=75):
