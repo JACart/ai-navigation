@@ -21,7 +21,6 @@ import numpy as np
 import cPickle as pickle
 from cv_bridge import CvBridge
 from sklearn.ensemble import RandomForestClassifier
-import paho.mqtt.client as mqtt
 from std_msgs.msg import Int8, String, Bool
 from sensor_msgs.msg import Image
 from rospy.numpy_msg import numpy_msg
@@ -36,7 +35,6 @@ class pose_tracking(object):
         rospy.loginfo("Started pose tracking node!")
         self.passenger_safe_pub = rospy.Publisher('/passenger_safe', Bool, queue_size=10)
         self.passenger_exit_pub = rospy.Publisher('/passenger_exit', Bool, queue_size=10)
-        #self.safety_intial_sub = rospy.Subscriber('/location_speech', Bool, self.initial_safety)
         rospy.Subscriber('/safety_constant', Bool, self.initial_safety)
         rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
         rospy.Subscriber('/camera/image_raw', Image, self.update_image)
@@ -129,21 +127,19 @@ class pose_tracking(object):
 
             # Check confidence against threshold and call unsafe method if necessary.
             if confidence >= self.CONFIDENCE_THRESHOLD:
-                cur_time = time.time()
-                cur_time = round(cur_time - self.start_time,2)
-                # log OpenPose keypoints for current frame.
-                self.f.write("Unsafe situation detected.\nTimestamp: \n{}sec\n".format(cur_time))
-                self.f.write("OpenPose frame keypoint data:\n")
-                self.f.write(str(frame_analyzed) + "\n\n")
-                cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                 # Send unsafe message
                 if self.passenger_unsafe == False:
-                    rospy.loginfo("PASSANEGER UNSAFE")
+                    cur_time = time.time()
+                    cur_time = round(cur_time - self.start_time,2)
+                    # log OpenPose keypoints for current frame.
+                    self.f.write("Unsafe situation detected.\nTimestamp: \n{}sec\n".format(cur_time))
+                    self.f.write("OpenPose frame keypoint data:\n")
+                    self.f.write(str(frame_analyzed) + "\n\n")
+                    cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                     self.sendPassengerUnsafe()
                     self.passenger_unsafe = True
             else:
                 if self.passenger_unsafe == True:
-                    rospy.loginfo("PASSANEGER SAFE")
                     self.passenger_unsafe = False
                     self.sendPassengerSafe()
             if cv2.waitKey(1) == 27:
@@ -245,7 +241,6 @@ class pose_tracking(object):
 
     # Method called at the end of the trip to ensure the passenger exits the vehicle safely.
     def passenger_exit(self, data):
-        # print("HELP ASDPASD OJASDJASLDKJASLDK JALSKDJ ALSKJ DLASKJD LKASJ DLAKSJ DLKAJD LKJD SLAKJS LKDJs")
         self.trip_live = False
         # exit = 0
         # while exit <= 30*4  and not rospy.is_shutdown():
@@ -305,7 +300,9 @@ class pose_tracking(object):
         
         # self.f.write("Trip ended successfully.\n")
         # self.f.write("Trip time: {} sec\n".format(round((cur_time - self.start_time), 2)))  
-        time.sleep(10)  
+        rospy.loginfo("Sleeping while waiting for exit")
+        time.sleep(5)  
+        rospy.loginfo("Done Sleeping Sending Exit")
         self.sendPassengerExit()
 
 
@@ -337,10 +334,11 @@ class pose_tracking(object):
     # Method called when passenger is unsafe.
     # Sends signal to monitoring/UI
     def unsafe(self):
+        rospy.loginfo("PASSANEGER UNSAFE")
         self.sendPassengerUnsafe()
-        print("PASSENGER UNSAFE")
         
     def safe(self):
+        rospy.loginfo("PASSANEGER SAFE")
         self.sendPassengerSafe()
         
         

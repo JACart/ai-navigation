@@ -7,7 +7,6 @@ import speech_recognition as sr
 import sys
 import os
 import time
-from playsound import playsound
 import vlc
 from std_msgs.msg import Bool, String
 from sensor_msgs.msg import NavSatFix
