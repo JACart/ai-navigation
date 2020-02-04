@@ -1,4 +1,0 @@
-System booted: 2019-12-08 23:33:50.686520
-Trip ended successfully.
-Trip time: 113.98 sec
-Initial safety established: 2019-12-08 23:35:44.672003

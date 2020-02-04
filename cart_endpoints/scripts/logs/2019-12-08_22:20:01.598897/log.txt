@@ -1,3 +1,0 @@
-System booted: 2019-12-08 22:20:01.598897
-Trip ended successfully.
-Trip time: 332.11 sec

@@ -1,2 +1,0 @@
-System booted: 2019-12-05 13:35:27.462998
-Initial safety established: 2019-12-05 13:35:46.125766
