@@ -10,7 +10,7 @@ import networkx as nx
 from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8, Bool, Header
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, Point
 from visualization_msgs.msg import Marker
 
 class PathCreation(object):
@@ -42,15 +42,14 @@ class PathCreation(object):
     def point_callback(self, msg):
         if self.point_mode is "Add":
             rospy.loginfo("Adding node: " + str(self.node_count))
+            node_name = 'Node:' + str(self.node_count)
             node_x = msg.point.x
             node_y = msg.point.y
-            self.global_graph.add_node(self.node_count, 
-                                       name="Node:"+str(self.node_count),
-                                       pos=(node_x, node_y))
+            self.global_graph.add_node(self.node_count, name=node_name, pos=[node_x, node_y])
             
             
             #Connect previous node to current node
-            if self.last_node >= 1 and self.auto_connect:
+            if self.last_node >= 0 and self.auto_connect:
                 x1 = self.global_graph.node[self.last_node]['pos'][0]
                 y1 = self.global_graph.node[self.last_node]['pos'][1]
                 x2 = self.global_graph.node[self.node_count]['pos'][0]
@@ -106,7 +105,7 @@ class PathCreation(object):
             self.prev_key = keyval
             rate.sleep()
             
-    def dis(x1, y1, x2, y2):
+    def dis(self, x1, y1, x2, y2):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
     
     def display_rviz(self, frame):
@@ -126,18 +125,58 @@ class PathCreation(object):
             marker.type = Marker.CUBE
             marker.action = 0
             marker.color.r = 0.0
-            marker.color.g = 0.0
-            marker.color.b = 1.0
-            marker.color.a = 0.2
+            marker.color.g = 1.0
+            marker.color.b = 0.0
+            marker.color.a = 1.0
             marker.lifetime = rospy.Duration.from_sec(0.1)
 
             marker.pose.position.x = x
             marker.pose.position.y = y
             marker.pose.position.z = 0
 
-            marker.scale.x = 0.3
+            marker.scale.x = 0.2
+            marker.scale.y = 0.2
+            marker.scale.z = 0.2
+
+            self.display_pub.publish(marker)
+            i += 1
+            
+        for edge in display_graph.edges:
+            first_node = display_graph.node[edge[0]]
+            second_node = display_graph.node[edge[1]]
+            
+            points = []
+            
+            first_point = Point()
+            first_point.x = first_node['pos'][0]
+            first_point.y = first_node['pos'][1]
+            
+            second_point = Point()
+            second_point.x = second_node['pos'][0]
+            second_point.y = second_node['pos'][1]
+            
+            points.append(first_point)
+            points.append(second_point)
+            
+            marker = Marker()
+            marker.header = Header()
+            marker.header.frame_id = frame
+
+            marker.ns = "Path_NS"
+            marker.id = i
+            marker.type = Marker.ARROW
+            marker.action = 0
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.color.a = 1.0
+            marker.lifetime = rospy.Duration.from_sec(0.1)
+
+            marker.points = points
+
+            marker.scale.x = 0.1
             marker.scale.y = 0.3
-            marker.scale.z = 0.3
+            marker.scale.z = 0
 
             self.display_pub.publish(marker)
             i += 1
