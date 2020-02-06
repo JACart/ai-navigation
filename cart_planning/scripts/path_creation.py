@@ -6,6 +6,7 @@ import time
 import math
 import copy
 import networkx as nx
+import datetime
 
 from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
@@ -137,10 +138,11 @@ class PathCreation(object):
         s = 115
         c = 99
         r = 114
+        g = 103
     
         stdscr.nodelay(True)
         rate = rospy.Rate(60) 
-        stdscr.addstr(0,0,' A - Add a new point to the current path\n R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n C - Connect two points\n W - toggle auto-connecting nodes\n')
+        stdscr.addstr(0,0,' A - Add a new point to the current path\n R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n C - Connect two points\n W - toggle auto-connecting nodes\nG - Save the graph(Will be named the current time)')
 
         while not rospy.is_shutdown():
             if self.display_graph is not None:
@@ -161,6 +163,11 @@ class PathCreation(object):
                 self.point_mode = "Connect"
             elif keyval == r:
                 self.point_mode = "Remove"
+            elif keyval == g:
+                rospy.loginfo("Saving graph")
+                g_name = "Graph: " + str(datetime.datetime.now())
+                nx.write_gml(self.global_graph, g_name)
+                rospy.loginfo("Graph saved as: " + g_name)
             
             self.prev_key = keyval
             rate.sleep()
