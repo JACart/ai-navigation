@@ -55,7 +55,7 @@ class pose_tracking(object):
         self.full_path = self.path + str(self.start_time_stamp.date()) + "_" + str(self.start_time_stamp.time())
         os.makedirs(self.full_path)
         self.f = open(self.full_path + "/log.txt", "wa")
-        self.f.write("System booted: {}\n".format(self.start_time_stamp))
+        #self.f.write("System booted: {}\n".format(self.start_time_stamp))
 
         self.CONFIDENCE_THRESHOLD = 15
         self.trip_live = False

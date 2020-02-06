@@ -32,8 +32,12 @@ class PathCreation(object):
         self.selected_node = None
         self.node_count = 0
         
-        #When adding new nodes, auto-connect previous node to new node
+        # When adding new nodes, auto-connect previous node to new node
         self.auto_connect = True
+        
+        # For node selection 
+        self.first_selection = None
+        self.second_selection = None
         
         self.display_graph = None
         
@@ -49,9 +53,10 @@ class PathCreation(object):
             self.add_point(node_x, node_y)  
         elif self.point_mode is "Remove":
             self.remove_point(node_x, node_y)
-        elif self.point_mode is "Select":
-            rospy.loginfo("Selecting point")
-            
+        elif self.point_mode is "Connect":
+            self.connect_point(node_x, node_y)
+        
+        #Prevent display function from handling outdated graph attributes
         self.display_graph = copy.deepcopy(self.global_graph)
 
     def add_point(self, x, y):
@@ -61,17 +66,7 @@ class PathCreation(object):
             
         #Connect previous node to current node
         if self.last_node >= 0 and self.auto_connect:
-            pos_tuple_last = self.global_graph.node[self.last_node]['pos']
-            pos_tuple_curr = self.global_graph.node[self.node_count]['pos']
-            x1 = pos_tuple_last[0]
-            y1 = pos_tuple_last[1]
-            x2 = pos_tuple_curr[0]
-            y2 = pos_tuple_curr[1]
-            
-            # Weight/Distance between last node and current node
-            cost = self.dis(x1, y1, x2, y2)
-            
-            self.global_graph.add_edge(self.last_node, self.node_count, weight=cost)
+            self.add_weighted_edge(self.last_node, self.node_count)
         
         self.last_node = self.node_count
         self.node_count += 1
@@ -79,6 +74,44 @@ class PathCreation(object):
     def remove_point(self, x, y):
         # TODO checking for empty graph here
         # Find the closest node to where the user clicked
+        min_node = get_closest_node(x, y)
+        
+        self.node_count -= 1
+        self.last_node -= 1
+        self.global_graph.remove_node(min_node)
+            
+    def add_weighted_edge(self, first_node, second_node):
+        pos_tuple_last = self.global_graph.node[first_node]['pos']
+        pos_tuple_curr = self.global_graph.node[second_node]['pos']
+        
+        x1 = pos_tuple_last[0]
+        y1 = pos_tuple_last[1]
+        x2 = pos_tuple_curr[0]
+        y2 = pos_tuple_curr[1]
+        
+        # Weight/Distance between last node and current node
+        cost = self.dis(x1, y1, x2, y2)
+        
+        self.global_graph.add_edge(first_node, second_node, weight=cost)
+            
+    # Select two points to connect
+    def connect_point(self, x, y):
+        if self.first_selection == None:
+            self.first_selection = self.get_closest_node(x, y)
+        else:
+            # Grab the second selection and begin connecting the two nodes
+            self.second_selection = self.get_closest_node(x, y)
+            
+            self.add_weighted_edge(self.first_selection, self.second_selection)
+            
+            # Reset first and second selections
+            self.first_selection = None
+            self.second_selection = None
+            
+            self.point_mode = "Add"
+            
+    def get_closest_node(self, x, y):
+        # Find closest node to passed point
         min_dist = 99999
         min_node = None
         for node in self.global_graph.nodes:
@@ -93,15 +126,7 @@ class PathCreation(object):
                 min_dist = dist
                 print(str(min_node))
         
-        self.node_count -= 1
-        self.last_node -= 1
-        self.global_graph.remove_node(min_node)
-            
-            
-    
-    def get_closest_node(self, PointStamped):
-        # Find closest node to passed point
-        rospy.loginfo("Get closest point")
+        return min_node
     
     def get_input(self, stdscr):
         curses.use_default_colors()
