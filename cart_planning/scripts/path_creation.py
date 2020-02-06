@@ -35,40 +35,70 @@ class PathCreation(object):
         #When adding new nodes, auto-connect previous node to new node
         self.auto_connect = True
         
+        self.display_graph = None
+        
         curses.wrapper(self.get_input)
         
         
         
     def point_callback(self, msg):
+        node_x = msg.point.x
+        node_y = msg.point.y
+        
         if self.point_mode is "Add":
-            rospy.loginfo("Adding node: " + str(self.node_count))
-            node_name = 'Node:' + str(self.node_count)
-            node_x = msg.point.x
-            node_y = msg.point.y
-            self.global_graph.add_node(self.node_count, name=node_name, pos=[node_x, node_y])
-            
-            
-            #Connect previous node to current node
-            if self.last_node >= 0 and self.auto_connect:
-                x1 = self.global_graph.node[self.last_node]['pos'][0]
-                y1 = self.global_graph.node[self.last_node]['pos'][1]
-                x2 = self.global_graph.node[self.node_count]['pos'][0]
-                y2 = self.global_graph.node[self.node_count]['pos'][1]
-                
-                # Weight/Distance between last node and current node
-                cost = self.dis(x1, y1, x2, y2)
-                
-                self.global_graph.add_edge(self.last_node, self.node_count, weight=cost)
-            
-            self.last_node = self.node_count
-            self.node_count += 1
-            
-            
+            self.add_point(node_x, node_y)  
         elif self.point_mode is "Remove":
-            rospy.loginfo("Removing point")
-        else:
+            self.remove_point(node_x, node_y)
+        elif self.point_mode is "Select":
             rospy.loginfo("Selecting point")
+            
+        self.display_graph = copy.deepcopy(self.global_graph)
 
+    def add_point(self, x, y):
+        node_name = 'Node:' + str(self.node_count)
+        self.global_graph.add_node(self.node_count, name=node_name, pos=[x, y])
+            
+            
+        #Connect previous node to current node
+        if self.last_node >= 0 and self.auto_connect:
+            pos_tuple_last = self.global_graph.node[self.last_node]['pos']
+            pos_tuple_curr = self.global_graph.node[self.node_count]['pos']
+            x1 = pos_tuple_last[0]
+            y1 = pos_tuple_last[1]
+            x2 = pos_tuple_curr[0]
+            y2 = pos_tuple_curr[1]
+            
+            # Weight/Distance between last node and current node
+            cost = self.dis(x1, y1, x2, y2)
+            
+            self.global_graph.add_edge(self.last_node, self.node_count, weight=cost)
+        
+        self.last_node = self.node_count
+        self.node_count += 1
+        
+    def remove_point(self, x, y):
+        # TODO checking for empty graph here
+        # Find the closest node to where the user clicked
+        min_dist = 99999
+        min_node = None
+        for node in self.global_graph.nodes:
+            # Position of each node in the graph
+            node_posx = self.global_graph.node[node]['pos'][0]
+            node_posy = self.global_graph.node[node]['pos'][1]
+            
+            dist = self.dis(node_posx, node_posy, x, y)
+            print(str(dist))
+            if dist < min_dist:
+                min_node = node
+                min_dist = dist
+                print(str(min_node))
+        
+        self.node_count -= 1
+        self.last_node -= 1
+        self.global_graph.remove_node(min_node)
+            
+            
+    
     def get_closest_node(self, PointStamped):
         # Find closest node to passed point
         rospy.loginfo("Get closest point")
@@ -80,16 +110,17 @@ class PathCreation(object):
         w = 119
         a = 97
         s = 115
-        d = 100
-        x = 120
-        y = 121
+        c = 99
+        r = 114
     
         stdscr.nodelay(True)
         rate = rospy.Rate(60) 
-        stdscr.addstr(0,0,'S to select a point that already exists, A to add a new point to the current path, R to remove most recent point\n C to connect two points. W to toggle auto-connecting nodes')
+        stdscr.addstr(0,0,' A - Add a new point to the current path\n R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n C - Connect two points\n W - toggle auto-connecting nodes\n')
 
         while not rospy.is_shutdown():
-            self.display_rviz("/map")
+            if self.display_graph is not None:
+                self.display_rviz("/map")
+            
             keyval = stdscr.getch()
 
             if keyval == self.prev_key:
@@ -101,6 +132,10 @@ class PathCreation(object):
             elif keyval == w:
                 self.auto_connect = not (self.auto_connect)
                 print( 'Auto-Conncect: ' + str(self.auto_connect))
+            elif keyval == c:
+                self.point_mode = "Connect"
+            elif keyval == r:
+                self.point_mode = "Remove"
             
             self.prev_key = keyval
             rate.sleep()
@@ -109,12 +144,12 @@ class PathCreation(object):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
     
     def display_rviz(self, frame):
-        display_graph = copy.deepcopy(self.global_graph)
+        local_display = self.display_graph
         
         i = 0
-        for node in display_graph.nodes:
-            x = display_graph.node[node]['pos'][0]
-            y = display_graph.node[node]['pos'][1]
+        for node in local_display.nodes:
+            x = local_display.node[node]['pos'][0]
+            y = local_display.node[node]['pos'][1]
             
             marker = Marker()
             marker.header = Header()
@@ -134,16 +169,16 @@ class PathCreation(object):
             marker.pose.position.y = y
             marker.pose.position.z = 0
 
-            marker.scale.x = 0.2
-            marker.scale.y = 0.2
-            marker.scale.z = 0.2
+            marker.scale.x = 0.8
+            marker.scale.y = 0.8
+            marker.scale.z = 0.8
 
             self.display_pub.publish(marker)
             i += 1
             
-        for edge in display_graph.edges:
-            first_node = display_graph.node[edge[0]]
-            second_node = display_graph.node[edge[1]]
+        for edge in local_display.edges:
+            first_node = local_display.node[edge[0]]
+            second_node = local_display.node[edge[1]]
             
             points = []
             
@@ -174,8 +209,8 @@ class PathCreation(object):
 
             marker.points = points
 
-            marker.scale.x = 0.1
-            marker.scale.y = 0.3
+            marker.scale.x = 0.3
+            marker.scale.y = 0.6
             marker.scale.z = 0
 
             self.display_pub.publish(marker)
