@@ -17,9 +17,9 @@ from visualization_msgs.msg import Marker
 class PathCreation(object):
     def __init__(self):
         rospy.init_node('path_creation_tool')
-        self.param_change = rospy.Publisher('/realtime_param_change', Int8, queue_size=10)
+        '''self.param_change = rospy.Publisher('/realtime_param_change', Int8, queue_size=10)
         self.a_param_change = rospy.Publisher('/realtime_a_param_change', Int8, queue_size=10)
-        self.debug_change = rospy.Publisher('/realtime_debug_change', Bool, queue_size=10)
+        self.debug_change = rospy.Publisher('/realtime_debug_change', Bool, queue_size=10)'''
         self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
         
         self.point_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)

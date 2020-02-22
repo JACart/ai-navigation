@@ -3,11 +3,14 @@
 import rospy
 import os
 import math
+import gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
 from geometry_msgs.msg import Pose, Point, PoseStamped
 from navigation_msgs.msg import LocalPointsArray
-from std_msgs.msg import String
+from visualization_msgs.msg import Marker
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import String, Header
 
 class global_planner(object):
     def __init__(self):
@@ -26,13 +29,17 @@ class global_planner(object):
         #The points on the map
         self.local_array = None
         
-        self.location_req = rospy.Subscriber('/gps_request', String, self.request_callback, queue_size=10)
+        # self.location_req = rospy.Subscriber('/gps_request', String, self.request_callback, queue_size=10)
 
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size=10)
 
         self.path_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
         
         self.dest_req_sub = rospy.Subscriber('/destination_request', Point, self.request_callback, queue_size=10)
+        
+        # This is here temporarily to test GPS_Util
+        self.lat_long_req = rospy.Subscriber('/gps_request_test', NavSatFix, self.gps_request_cb, queue_size=10)
+        self. display_pub = rospy.Publisher('/display_gps', Marker, queue_size=10)
         rospy.spin()
     
     # Load the graph file as the global graph
@@ -95,6 +102,35 @@ class global_planner(object):
     def cur_cart_pos(self):
         return self.get_closest_node(msg.pose.position.x, msg.pose.position.y)
 
+    def gps_request_cb(self, msg):
+        local_point = gps_util.get_point(msg)
+        
+        marker = Marker()
+        marker.header = Header()
+        marker.header.frame_id = "/map"
+        
+        marker.ns = "GPS_NS"
+        marker.id = 0
+        marker.type = marker.CUBE
+        marker.action = 0
+        
+        marker.color.r = 0.0
+        marker.color.g = 1.0
+        marker.color.b = 0.0
+        marker.color.a = 1.0
+        
+        marker.lifetime = rospy.Duration.from_sec(10)
+        
+        marker.pose.position.x = local_point.x
+        marker.pose.position.y = local_point.y
+        marker.pose.position.z = 0.0
+        
+        marker.scale.x = 0.8
+        marker.scale.y = 0.8
+        marker.scale.z = 0.8
+        
+        self.display_pub.publish(marker)
+        
 
 if __name__ == "__main__":
     try:
