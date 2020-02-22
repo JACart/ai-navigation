@@ -165,7 +165,7 @@ class PathCreation(object):
                 self.point_mode = "Remove"
             elif keyval == g:
                 rospy.loginfo("Saving graph")
-                g_name = "Graph: " + str(datetime.datetime.now())
+                g_name = "Graph: " + str(datetime.datetime.now()) + ".gml"
                 nx.write_gml(self.global_graph, g_name)
                 rospy.loginfo("Graph saved as: " + g_name)
             
