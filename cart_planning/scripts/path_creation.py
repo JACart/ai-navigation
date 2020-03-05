@@ -11,21 +11,27 @@ import datetime
 from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8, Bool, Header
-from geometry_msgs.msg import PointStamped, Point
+from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from visualization_msgs.msg import Marker
 
 class PathCreation(object):
     def __init__(self):
         rospy.init_node('path_creation_tool')
-        '''self.param_change = rospy.Publisher('/realtime_param_change', Int8, queue_size=10)
-        self.a_param_change = rospy.Publisher('/realtime_a_param_change', Int8, queue_size=10)
-        self.debug_change = rospy.Publisher('/realtime_debug_change', Bool, queue_size=10)'''
         self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
         
+        # Listen for cart position changes
+        self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size=10)
+        
+        # Listen for RViz clicks
         self.point_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
         
         self.point_mode = "Add" # Select, Add, Remove, Connect ...a point
         
+        # Auto-build the map
+        self.auto_build = False
+        
+        # Most recent cart position
+        self.recent_pos = None
         self.prev_key = 1
         
         self.global_graph = nx.DiGraph()
@@ -42,6 +48,18 @@ class PathCreation(object):
         
         self.display_graph = None
         
+        # How many meters between points when auto-build map is toggled on
+        self.AUTO_POINT_GAP = 2
+        
+        #Enter edit mode, disable auto-tools
+        if len(sys.argv) > 1:
+            self.auto_connect = False
+            self.auto_build = False
+            file_name = sys.argv[1]
+            print("Loading: " + file_name)
+            self.global_graph = nx.read_gml(file_name)
+            self.display_graph = self.global_graph
+            print("Loaded, keep in mind auto-connect, auto-build, should remain toggled off lest you want to unleash the kraken.\n (Basically don't press b or c)\n")
         curses.wrapper(self.get_input)
         
         
@@ -59,6 +77,21 @@ class PathCreation(object):
         
         #Prevent display function from handling outdated graph attributes
         self.display_graph = copy.deepcopy(self.global_graph)
+    
+    # Recent cart position update
+    def pose_callback(self, msg):
+        current_pos = PointStamped()
+        current_pos.point.x = msg.pose.position.x
+        current_pos.point.y = msg.pose.position.y
+        
+        if self.recent_pos is None:
+            self.recent_pos = current_pos
+        
+        # Place a new point down every specified amount of meters
+        if self.dis(self.recent_pos.point.x, self.recent_pos.point.y, current_pos.point.x, current_pos.point.y) > self.AUTO_POINT_GAP:
+            self.recent_pos = current_pos
+            self.point_callback(current_pos)
+        
 
     def add_point(self, x, y):
         node_name = 'Node:' + str(self.node_count)
@@ -109,7 +142,6 @@ class PathCreation(object):
             self.first_selection = None
             self.second_selection = None
             
-            self.point_mode = "Add"
             
     def get_closest_node(self, x, y):
         # Find closest node to passed point
@@ -120,12 +152,11 @@ class PathCreation(object):
             node_posx = self.global_graph.node[node]['pos'][0]
             node_posy = self.global_graph.node[node]['pos'][1]
             
+            # Get the distance between the current node and
             dist = self.dis(node_posx, node_posy, x, y)
-            print(str(dist))
             if dist < min_dist:
                 min_node = node
                 min_dist = dist
-                print(str(min_node))
         
         return min_node
     
@@ -136,13 +167,19 @@ class PathCreation(object):
         w = 119
         a = 97
         s = 115
+        b = 98
         c = 99
         r = 114
         g = 103
     
         stdscr.nodelay(True)
         rate = rospy.Rate(60) 
-        stdscr.addstr(0,0,' A - Add a new point to the current path\n R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n C - Connect two points\n W - toggle auto-connecting nodes\nG - Save the graph(Will be named the current time)')
+        stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
+                      R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
+                      C - Connect two points\n 
+                      W - toggle auto-connecting nodes\n 
+                      G - Save the graph(Will be named the current time)\n
+                      B - Drive the cart around and auto-build a map""")
 
         while not rospy.is_shutdown():
             if self.display_graph is not None:
@@ -158,7 +195,7 @@ class PathCreation(object):
                 self.point_mode = "Add"
             elif keyval == w:
                 self.auto_connect = not (self.auto_connect)
-                print( 'Auto-Conncect: ' + str(self.auto_connect))
+                print( 'Auto-Connect: ' + str(self.auto_connect) + "\n")
             elif keyval == c:
                 self.point_mode = "Connect"
             elif keyval == r:
@@ -168,6 +205,11 @@ class PathCreation(object):
                 g_name = "Graph: " + str(datetime.datetime.now()) + ".gml"
                 nx.write_gml(self.global_graph, g_name)
                 rospy.loginfo("Graph saved as: " + g_name)
+            elif keyval == b:
+                self.auto_build = not (self.auto_build)
+                print("Map auto-build set to: " + str(self.auto_build) + "\n")
+                
+            print("Current Point Mode: " + self.point_mode + "\n")
             
             self.prev_key = keyval
             rate.sleep()
@@ -177,7 +219,6 @@ class PathCreation(object):
     
     def display_rviz(self, frame):
         local_display = self.display_graph
-        
         i = 0
         for node in local_display.nodes:
             x = local_display.node[node]['pos'][0]
@@ -195,15 +236,15 @@ class PathCreation(object):
             marker.color.g = 1.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.1)
+            marker.lifetime = rospy.Duration.from_sec(0.3)
 
             marker.pose.position.x = x
             marker.pose.position.y = y
             marker.pose.position.z = 0
 
-            marker.scale.x = 0.8
-            marker.scale.y = 0.8
-            marker.scale.z = 0.8
+            marker.scale.x = 0.6
+            marker.scale.y = 0.6
+            marker.scale.z = 0.6
 
             self.display_pub.publish(marker)
             i += 1

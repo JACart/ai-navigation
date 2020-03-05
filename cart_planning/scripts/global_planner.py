@@ -4,9 +4,10 @@ import rospy
 import os
 import math
 import gps_util
+import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
-from geometry_msgs.msg import Pose, Point, PoseStamped
+from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped
 from navigation_msgs.msg import LocalPointsArray
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import NavSatFix
@@ -16,6 +17,8 @@ class global_planner(object):
     def __init__(self):
         rospy.init_node('global_planner')
 
+        self.anchor_lat = 38.432150 
+        self.anchor_long = -78.876106
         
         #Create a new directional graph
         self.global_graph = nx.DiGraph()
@@ -31,15 +34,22 @@ class global_planner(object):
         
         # self.location_req = rospy.Subscriber('/gps_request', String, self.request_callback, queue_size=10)
 
+        # Listen for cart position changes
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size=10)
-
-        self.path_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
         
+        # Listen for standard destination requests
         self.dest_req_sub = rospy.Subscriber('/destination_request', Point, self.request_callback, queue_size=10)
+        
+        # Clicked destination requests, accepted from RViz clicked points, disabled when building maps
+        # self.click_req_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
         
         # This is here temporarily to test GPS_Util
         self.lat_long_req = rospy.Subscriber('/gps_request_test', NavSatFix, self.gps_request_cb, queue_size=10)
-        self. display_pub = rospy.Publisher('/display_gps', Marker, queue_size=10)
+        
+        self.display_pub = rospy.Publisher('/display_gps', Marker, queue_size=10)
+        
+        # Publish the path to the destination
+        self.path_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
         rospy.spin()
     
     # Load the graph file as the global graph
@@ -49,6 +59,7 @@ class global_planner(object):
     #If we receive a request for a destination
     def request_callback(self, msg):
         
+        # Make a destination request when we don't know where the cart is at yet
         if self.current_pos is None:
             self.current_pos = PoseStamped()
             self.current_pos.pose.position.x = 0
@@ -98,13 +109,21 @@ class global_planner(object):
     #Get the closest waypoint to the cart
     def pose_callback(self, msg):
         self.current_pos = msg
+        
+    # We've received a clicked point from RViz, process it as a destination request
+    def point_callback(self, msg):
+        self.request_callback(msg.point)
     
     def cur_cart_pos(self):
         return self.get_closest_node(msg.pose.position.x, msg.pose.position.y)
 
     def gps_request_cb(self, msg):
+        # local_point = gps_util.get_point(msg)
+        local_point = Point()
+        point_angle = gps_util.direction_between_coordinates(self.anchor_lat, self.anchor_long, 38.432264, -78.876032)
+        print(point_angle)
         local_point = gps_util.get_point(msg)
-        
+        # x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)
         marker = Marker()
         marker.header = Header()
         marker.header.frame_id = "/map"

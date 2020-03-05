@@ -43,7 +43,7 @@ class teleop(object):
             if keyval == self.prev_key:
                 continue
             if keyval == w:
-                change = 1
+                change = .01
             elif keyval == s:
                 change = -1
             elif keyval == a:
