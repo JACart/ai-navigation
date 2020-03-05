@@ -54,7 +54,7 @@ class pose_tracking(object):
             os.makedirs(self.path)
         self.full_path = self.path + str(self.start_time_stamp.date()) + "_" + str(self.start_time_stamp.time())
         os.makedirs(self.full_path)
-        self.f = open(self.full_path + "/log.txt", "wa")
+        #self.f = open(self.full_path + "/log.txt", "wa")
         #self.f.write("System booted: {}\n".format(self.start_time_stamp))
 
         self.CONFIDENCE_THRESHOLD = 15
@@ -132,9 +132,9 @@ class pose_tracking(object):
                     cur_time = time.time()
                     cur_time = round(cur_time - self.start_time,2)
                     # log OpenPose keypoints for current frame.
-                    self.f.write("Unsafe situation detected.\nTimestamp: \n{}sec\n".format(cur_time))
-                    self.f.write("OpenPose frame keypoint data:\n")
-                    self.f.write(str(frame_analyzed) + "\n\n")
+                    #self.f.write("Unsafe situation detected.\nTimestamp: \n{}sec\n".format(cur_time))
+                    #self.f.write("OpenPose frame keypoint data:\n")
+                    #self.f.write(str(frame_analyzed) + "\n\n")
                     cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                     self.sendPassengerUnsafe()
                     self.passenger_unsafe = True
@@ -232,7 +232,7 @@ class pose_tracking(object):
             # Visualize safety counter
             #rospy.loginfo("\r counter: [ {} ] \t".format(safety_counter))
         
-        self.f.write("Initial safety established: {}".format(datetime.datetime.now()))
+        #self.f.write("Initial safety established: {}".format(datetime.datetime.now()))
         print("\nPASSENGER SAFE")
         self.sendPassengerSafe()
         self.passenger_unsafe = False
