@@ -1,32 +1,42 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="testing" default="true"/>
-  <arg name="lidar" default="true"/>
+  <!-- General launch profiles -->
+  <arg name = "realtime" default="false"/>
+  <arg name = "simulator" default="false"/>
+  <arg name = "replay" default="false"/>
+
+
+  <!-- Fine tune customization -->
+  <arg name="endpoints" default="false"/>
   <arg name="networking" default="true"/>
   <arg name="health" default="false"/>
   <arg name="voice" default="true"/>
   <arg name="pose" default="true"/>
   <arg name="obstacle_detection" default="true"/>
   <arg name="visualize_pose" default="false"/>
-  <arg name="use_sim_time" default="false"/>
 
-  <!-- launch testing interface-->
-  <group if="$(arg lidar)">
-     <include file="$(find cart_control)/launch/autoware_localization.launch">
-        <arg name="gazebo" value="False"/>
-        <arg name="lidar" value="True"/>
-        <arg name="use_sim_time" value="False"/>
-     </include>
+  <group if="$(arg realtime)">
+    <include file="$(find cart_control)/launch/autoware_localization.launch"/>
   </group>
-  <group if="$(arg use_sim_time)">
-     <include file="$(find cart_control)/launch/autoware_localization.launch">
-        <arg name="gazebo" value="False"/>
-        <arg name="lidar" value="False"/>
-        <arg name="use_sim_time" value="True"/>
-     </include>
+
+  <group if="$(arg simulator)">
+    <include file="$(find cart_control)/launch/autoware_localization.launch">
+      <arg name="gazebo" value="true"/>
+      <arg name="lidar" value="false"/>
+      <arg name="use_sim_time" value="true"/>
+    </include>
   </group>
+
+  <group if="$(arg replay)">
+    <include file="$(find cart_control)/launch/autoware_localization.launch">
+      <arg name="gazebo" value="false"/>
+      <arg name="lidar" value="false"/>
+      <arg name="use_sim_time" value = "true"/>
+    </include>
+  </group>
+
   <!-- launch hardware interface-->
-  <group if="$(arg testing)">
+  <group if="$(arg endpoints)">
       <include file="$(find cart_endpoints)/launch/hardware_interface.launch">
         <arg name="networking" value="$(arg networking)"/>
         <arg name="health" value="$(arg health)"/>
@@ -36,10 +46,12 @@
         <arg name="obstacle_detection" value="$(arg obstacle_detection)"/>
       </include>
   </group>
+
   <!--always launch planning nodes-->
   <group>
       <include file="$(find cart_planning)/launch/planning.launch"/>
   </group>
+
   <!--launch the constants on the param server -->
   <group>
       <include file="$(find cart_planning)/launch/constants.launch"/>

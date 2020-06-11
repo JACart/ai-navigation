@@ -2,9 +2,13 @@
 
 <launch>
     <rosparam>
+        <!-- GPS Util Params -->
         anchor_lat: 38.431960
         anchor_long: -78.875910
         anchor_elev : 396
         anchor_theta : 0
+
+        <!-- Global Planner graph file parameter -->
+        graph_file : "/home/jeffercize/catkin_ws/src/ai-navigation/XLabsGraphV1.gml"
     </rosparam>
 </launch>

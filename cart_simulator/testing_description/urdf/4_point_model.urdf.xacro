@@ -32,7 +32,7 @@
       <origin xyz=".1 -.1 -0.66" rpy="0 0 1.57" />
       <geometry>
         <!-- <box size="2.337 1.27 1.778"/> -->
-        <mesh filename="file:///home/jeffercize/catkin_ws/src/ai-navigation/golf_cart/meshes/golf_cart_blender.dae" scale="1.25 1.25 1.25"/>
+        <mesh filename="file:///home/browermb/catkin_ws/src/ai-navigation/golf_cart/meshes/golf_cart_blender.dae" scale="1.25 1.25 1.25"/>
       </geometry>
       <material name="silver">
         <color rgba="0.75 0.75 0.75 1"/>

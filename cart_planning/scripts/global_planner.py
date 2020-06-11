@@ -24,7 +24,8 @@ class global_planner(object):
         self.global_graph = nx.DiGraph()
         
         # TODO Set file pathing through ROS param server
-        self.load_file("/home/jeffercize/catkin_ws/src/ai-navigation/XLabsGraphV1.gml")
+        file_name = rospy.get_param('graph_file')
+        self.load_file(file_name)
         
         #Current waypoint of cart
         self.current_pos = None
@@ -54,7 +55,10 @@ class global_planner(object):
     
     # Load the graph file as the global graph
     def load_file(self, file_name):
-        self.global_graph = nx.read_gml(file_name)
+        try:
+            self.global_graph = nx.read_gml(file_name)
+        except:
+            rospy.logerr("Unable to launch graph file pointed to in the constants file in .../cart_planning/launch")
     
     #If we receive a request for a destination
     def request_callback(self, msg):

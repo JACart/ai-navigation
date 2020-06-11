@@ -25,22 +25,27 @@ class PathCreation(object):
         # Listen for RViz clicks
         self.point_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
         
+        # Modes
         self.point_mode = "Add" # Select, Add, Remove, Connect ...a point
+        self.road_type = "one_way" # One way single lane road (one_way), Two way single lane road (two_way), Two Lane road opposing directions(two_lane)
         
         # Auto-build the map
         self.auto_build = False
+
+        # When adding new nodes, auto-connect previous node to new node
+        self.auto_connect = True
         
         # Most recent cart position
         self.recent_pos = None
+
+        # Debounce for keyboard input
         self.prev_key = 1
-        
+
+        # Keep track of global stae of graph(e.g. most recently placed node)
         self.global_graph = nx.DiGraph()
         self.last_node = None
         self.selected_node = None
         self.node_count = 0
-        
-        # When adding new nodes, auto-connect previous node to new node
-        self.auto_connect = True
         
         # For node selection 
         self.first_selection = None
@@ -51,7 +56,7 @@ class PathCreation(object):
         # How many meters between points when auto-build map is toggled on
         self.AUTO_POINT_GAP = 2
         
-        #Enter edit mode, disable auto-tools
+        #Enter edit mode if there is an existing file provided as an argument, disable auto-tools
         if len(sys.argv) > 1:
             self.auto_connect = False
             self.auto_build = False
@@ -63,7 +68,7 @@ class PathCreation(object):
         curses.wrapper(self.get_input)
         
         
-        
+    # Upon receiving a clicked point from RViz, or being called from another method process the point
     def point_callback(self, msg):
         node_x = msg.point.x
         node_y = msg.point.y
@@ -78,7 +83,7 @@ class PathCreation(object):
         #Prevent display function from handling outdated graph attributes
         self.display_graph = copy.deepcopy(self.global_graph)
     
-    # Recent cart position update
+    # On receipt of new cart position, check spacing between current point and last
     def pose_callback(self, msg):
         current_pos = PointStamped()
         current_pos.point.x = msg.pose.position.x
@@ -92,17 +97,28 @@ class PathCreation(object):
             self.recent_pos = current_pos
             self.point_callback(current_pos)
         
-
+    # Add point to the graph
     def add_point(self, x, y):
-        node_name = 'Node:' + str(self.node_count)
-        self.global_graph.add_node(self.node_count, name=node_name, pos=[x, y])
+        # Create a rightside node representing right lane, also plays role of being the center in a one lane secnario
+        node_name_r = 'R_Node:' + str(self.node_count)
+        self.global_graph.add_node(node_name_r, pos=[x, y])
+        
+        node_name_l = 'L_Node' + str(self.node_count)
+        #self.global_graph.add_node()
             
             
         #Connect previous node to current node
-        if self.last_node >= 0 and self.auto_connect:
-            self.add_weighted_edge(self.last_node, self.node_count)
+        if self.node_count > 0 and self.auto_connect:
+            self.add_weighted_edge(self.last_node_right, node_name_r)
+            # Create cycle between last and current node if this road is a one lane two way
+            if self.road_type == "two_way":
+                self.add_weighted_edge(self.node_count, self.last_node_right)
+            elif self.road_type == "two_lane":
+                #self.global_graph.add_node(self.node_name_l, pos=[])
+                print("Two Laner")
+                
         
-        self.last_node = self.node_count
+        self.last_node_right = node_name_r
         self.node_count += 1
         
     def remove_point(self, x, y):
@@ -111,7 +127,6 @@ class PathCreation(object):
         min_node = get_closest_node(x, y)
         
         self.node_count -= 1
-        self.last_node -= 1
         self.global_graph.remove_node(min_node)
             
     def add_weighted_edge(self, first_node, second_node):
@@ -181,7 +196,7 @@ class PathCreation(object):
                       G - Save the graph(Will be named the current time)\n
                       B - Drive the cart around and auto-build a map""")
 
-        while not rospy.is_shutdown():
+        while 1:
             if self.display_graph is not None:
                 self.display_rviz("/map")
             
