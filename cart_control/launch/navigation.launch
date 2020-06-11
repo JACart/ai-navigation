@@ -15,10 +15,12 @@
   <arg name="obstacle_detection" default="true"/>
   <arg name="visualize_pose" default="false"/>
 
+  <!-- Configuration for real-world driving -->
   <group if="$(arg realtime)">
     <include file="$(find cart_control)/launch/autoware_localization.launch"/>
   </group>
 
+  <!-- Configuration for running simulator -->
   <group if="$(arg simulator)">
     <include file="$(find cart_control)/launch/autoware_localization.launch">
       <arg name="gazebo" value="true"/>
@@ -27,6 +29,7 @@
     </include>
   </group>
 
+  <!-- Configuraton for replay of bag files -->
   <group if="$(arg replay)">
     <include file="$(find cart_control)/launch/autoware_localization.launch">
       <arg name="gazebo" value="false"/>

@@ -42,7 +42,7 @@ class global_planner(object):
         self.dest_req_sub = rospy.Subscriber('/destination_request', Point, self.request_callback, queue_size=10)
         
         # Clicked destination requests, accepted from RViz clicked points, disabled when building maps
-        # self.click_req_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
+        self.click_req_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
         
         # This is here temporarily to test GPS_Util
         self.lat_long_req = rospy.Subscriber('/gps_request_test', NavSatFix, self.gps_request_cb, queue_size=10)
