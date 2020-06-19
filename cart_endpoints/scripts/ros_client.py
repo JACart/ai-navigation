@@ -48,11 +48,11 @@ def send(msg, data):
 @sio.on('cart_request', namespace='/cart')
 def onCartRequest(data):
     lat_long = json.loads(data)
-    print(str(data))
+    print("Latitude/Long received: " + str(data))
     msg = LatLongPoint()
     msg.latitude = lat_long["latitude"]
     msg.longitude = lat_long["longitude"]
-    req_pub.publish(-1,21)
+    gps_request_pub.publish(msg)
     #print("REQUEST: " + str(msg))
     #gps_request_pub.publish(msg)
     #Debug information
@@ -80,23 +80,22 @@ def onDestination(msg):
     location_string = location_string.lower()
     #Process the string into a waypoint
     calculated_waypoint = locationFinder(location_string)
-    #Prepare goal waypoint message
-    requested_waypoint = GoalWaypoint()
-    requested_waypoint.start = -1
-    requested_waypoint.goal = calculated_waypoint
     #Send requested waypoint to planner
-    req_pub.publish(requested_waypoint)
+    req_pub.publish(calculated_waypoint)
 
 @sio.on('pull_over',namespace='/cart')
 def onPullOver():
+    print("Recieved Pull Over")
     send_stop(True, 1)
 
 @sio.on('resume_driving',namespace='/cart')
 def onResume():
+    prnt("Received a resume signal")
     send_stop(False, 1)
     
 @sio.on('stop',namespace='/cart')
 def onStop(data):
+    print("Received a stop signal")
     send_stop(True, 1)
     
 @sio.on('transit_await',namespace='/cart')
@@ -168,6 +167,7 @@ def sendUnsafe():
 ### Other Functions ###
 #######################
 def locationFinder(location_string):
+    print("Finding location, string: " + str(location_string))
     if(location_string == "home"): #near the garage
         return 28
     if(location_string == "xlabs"): #front of xlabs
@@ -247,7 +247,7 @@ def send_stop(stop, sender_id):
 if __name__ == "__main__":
     rospy.init_node('network_node')
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
-    req_pub = rospy.Publisher('/path_request', GoalWaypoint, queue_size=10)
+    req_pub = rospy.Publisher('/destination_request', GoalWaypoint, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
     safety_constant_pub = rospy.Publisher('/safety_constant', Bool, queue_size=10)
@@ -270,5 +270,4 @@ if __name__ == "__main__":
     sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
     while not rospy.is_shutdown():
         rate.sleep()
-
 

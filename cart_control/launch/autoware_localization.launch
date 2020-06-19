@@ -20,7 +20,7 @@
   <param name="use_sim_time" type="bool" value="$(arg use_sim_time)"/>
   
   <!-- Location of Point Cloud Map file -->
-  <arg name="map_arg" default="$(env HOME)/AVData/08-08pcdOfLot.pcd"/>
+  <arg name="map_arg" default="$(env HOME)/AVData/speedBoiMap.pcd"/>
   
     <!-- Start lidar code first to avoid issues-->
     <group if="$(arg lidar)">
@@ -62,9 +62,6 @@
       
       <!-- Launch the NDT Matching algorithm for localization -->
       <include file="$(find lidar_localizer)/launch/ndt_matching.launch"/>
-      
-      
-
             
 			<!-- Load a pointcloud map. Related Topics: /points_map -->
       <node name="pointcloud_map" pkg="map_file" type="points_map_loader"
@@ -87,5 +84,8 @@
         
     <!-- Relay node, this is a temporary alternative to remapping the velodyne_points topic -->
     <node name="relay" pkg="topic_tools" type="relay" args="/velodyne_points /points_raw"/>
+
+    <!-- Throttle position messages so nodes that need positional updates dont't call to often -->
+    <node name="throttle" pkg="topic_tools" type="throttle" args="messages /ndt_pose 60.0 /limited_pose"/>
 </group>
 </launch>
