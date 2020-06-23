@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<launch>
+<arg name = "bagname" default="mapping.bag"/>
+<!-- IMU NODE -->
+<include file="$(find phidgets_imu)/launch/imu.launch" >
+</include>
+
+<!-- VELODYNE NODE -->
+<include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" >
+</include>
+
+<!-- Echo Velodyne to filtered -->
+<node name="points_to_filtered" pkg="topic_tools" type="relay" args="velodyne_points filtered_points" />
+
+<node pkg="rosbag" type="record" name="$(arg bagname)" output="screen" args="-a"/>
+</launch>
