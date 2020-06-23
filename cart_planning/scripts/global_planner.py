@@ -200,6 +200,8 @@ class global_planner(object):
 
     def gps_request_cb(self, msg):
         local_point = Point()
+        
+        #the anchor point is the 0, 0 in our map
         y, x = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433795, -78.862290)
         x = -(x)
         
