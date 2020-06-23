@@ -207,9 +207,6 @@ class global_planner(object):
         local_point.y = y
         self.calc_nav(local_point)
 
-        #print("X: " + str(x))
-        #print("Y: " + str(y))
-        # x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)
         marker = Marker()
         marker.header = Header()
         marker.header.frame_id = "/map"

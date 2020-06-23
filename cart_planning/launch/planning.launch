@@ -4,11 +4,6 @@
     <group>
         <node name="mind" pkg="cart_planning" type="mind.py" required="true" output="screen"/>
 
-        <!-- Old point load/nav system-->
-        <!--
-            <node name="bus_route_nav" pkg="cart_planning" type="bus_route_nav.py" required="true" output="screen"/>
-            <node name="add_local_points" pkg="cart_planning" type="add_local_points.py" required="true" output="screen"/>-->
-
         <!-- New Navigation system -->
         <node name="global_planner" pkg="cart_planning" type="global_planner.py" required="true" output="screen"/>
     </group>
