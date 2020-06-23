@@ -1,25 +1,9 @@
 # Autonomous-Navigation
-*Zack Allen Nicholas Weiland Jordan Domsky Alex Martin*
-
 Autonomous golf cart planning and simulation built on ROS kinetic 
 
-Cd into planning_navigation and then compile the workspace by running:
+This repository contains code for an autonomous "taxi system" for the elderly.
+It contains code to generate and follow a path given a source and destination.
+It contains the code necessary to communicate with the networking team for the user interface
+as well as the voice recognition and pose tracking.
 
-	catkin_make
-
-Get ros to recognize the package
-
-	source $(pwd)/devel/setup.bash
-
-To make ros recognize the package every time you open a new terminal window, 
-add the previous command to your bashrc file:
-
-	echo source $(pwd)/devel/setup.bash >> ~/.bashrc
-
-To get the necessary ros dependencies if you have problems running the launch files:
-  
-	rosdep install --from-paths src --ignore-src
-
-Here is the ROS node architecture:
-
-![architecture](./pics/architecture.png)
+For full instructions on how to operate the system view the wiki at: https://git.cs.jmu.edu/av-xlabs-19/robotics/ai-navigation/wikis/home 
