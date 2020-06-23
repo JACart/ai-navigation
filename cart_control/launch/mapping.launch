@@ -10,7 +10,7 @@
 </include>
 
 <!-- Echo Velodyne to filtered -->
-<node name="points_to_filtered" pkg="topic_tools" type="relay" args="velodyne_points filtered_points" />
+<node name="points_to_filtered" pkg="topic_tools" type="relay" args="velodyne_points points_raw" />
 
 <node pkg="rosbag" type="record" name="$(arg bagname)" output="screen" args="-a"/>
 </launch>
