@@ -101,7 +101,7 @@ class global_planner(object):
         destination_point = self.get_closest_node(point.x, point.y)
 
         # Remove our previous node to prevent searching directly behind cart
-        self.display_rviz("/map")
+        
         name = None
         position = None
         status = None
@@ -115,7 +115,7 @@ class global_planner(object):
             in_edges = copy.deepcopy(self.global_graph.in_edges(self.prev_cart_node, data=True))
             out_edges = copy.deepcopy(self.global_graph.out_edges(self.prev_cart_node, data=True))
             self.global_graph.remove_node(self.prev_cart_node)
-        self.display_rviz("/map")
+        
         # Find shortest path from our current position to the destination node
         nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
         
@@ -132,7 +132,7 @@ class global_planner(object):
                 rospy.loginfo("Out edge: u,v " + str(u) + "," + str(v))
                 self.global_graph.add_edge(name, v, weight=data['weight'])
 
-        self.display_rviz("/map")
+        
         # Set all nodes back to a state of not being a part of the previous/current path
         for node in self.global_graph:
             self.global_graph.node[node]['active'] = False
@@ -190,7 +190,6 @@ class global_planner(object):
     def pose_callback(self, msg):
         self.current_pos = msg
         self.current_cart_node = self.get_closest_node(msg.pose.position.x, msg.pose.position.y, cart_trans=True)
-        self.display_rviz("/map")
 
     # We've received a clicked point from RViz, calculate a path to it
     def point_callback(self, msg):
@@ -200,13 +199,14 @@ class global_planner(object):
         return self.get_closest_node(msg.pose.position.x, msg.pose.position.y)
 
     def gps_request_cb(self, msg):
-        # local_point = gps_util.get_point(msg)
-        #local_point = Point()
-        #point_angle = gps_util.direction_between_coordinates(self.anchor_lat, self.anchor_long, 38.432264, -78.876032)
-        #print(point_angle)
-        #local_point = gps_util.get_point(msg)
+        local_point = Point()
         y, x = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433795, -78.862290)
         x = -(x)
+        
+        local_point.x = x
+        local_point.y = y
+        self.calc_nav(local_point)
+
         #print("X: " + str(x))
         #print("Y: " + str(y))
         # x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)

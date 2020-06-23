@@ -247,7 +247,7 @@ def send_stop(stop, sender_id):
 if __name__ == "__main__":
     rospy.init_node('network_node')
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
-    req_pub = rospy.Publisher('/destination_request', GoalWaypoint, queue_size=10)
+    req_pub = rospy.Publisher('/destination_request', String, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
     safety_constant_pub = rospy.Publisher('/safety_constant', Bool, queue_size=10)

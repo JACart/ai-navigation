@@ -139,6 +139,8 @@ class Mind(object):
         extra_points.header = Header()
         extra_points.header.frame_id = '/map'
         
+        last_index = 0
+        target_ind = 0
         
         #Creates a list of the x's and y's to be used when calculating the spline
         for p in google_points_plus:
@@ -147,81 +149,84 @@ class Mind(object):
             ay.append(p.y)
 
         self.points_pub.publish(extra_points)
-        
-        cx, cy, cyaw, ck, cs = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
 
+        if len(ax) > 2:
+            cx, cy, cyaw, ck, cs = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
+            #Create path object for the cart to follow
+            path = Path()
+            path.header = Header()
+            path.header.frame_id = '/map'
 
-        #Create path object for the cart to follow
-        path = Path()
-        path.header = Header()
-        path.header.frame_id = '/map'
-
-        for i in range(0, len(cx)):
-            curve_point = Point()
-            curve_point.x = cx[i]
-            curve_point.y = cy[i]
-            path.poses.append(create_pose_stamped(curve_point))
-        
-        self.path_pub.publish(path)
-
-        current_state = VehicleState()
-        current_state.is_navigating = True
-        self.vehicle_state_pub.publish(current_state)
-        
-        target_speed = self.global_speed
-
-        # initial state
-        pose = self.gPose
-        twist = self.gTwist
-
-        quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
-        angles = tf.euler_from_quaternion(quat)
-        initial_v = twist.linear.x
-	    #TODO state has to be where we start
-        state = State(x=pose.position.x, y=pose.position.y, yaw=angles[2], v=initial_v)
-
-        last_index = len(cx) - 1
-        time = 0.0
-        x = [state.x]
-        y = [state.y]
-        yaw = [state.yaw]
-        v = [state.v]
-        t = [0.0]
-        target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
-        #continue to loop while we have not hit the target
-        while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
-            target_speed = self.global_speed            
-            ai = target_speed#pure_pursuit.PIDControl(target_speed, state.v)
-            di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
+            for i in range(0, len(cx)):
+                curve_point = Point()
+                curve_point.x = cx[i]
+                curve_point.y = cy[i]
+                path.poses.append(create_pose_stamped(curve_point))
             
-            #publish our desired position
-            mkr = create_marker(cx[target_ind], cy[target_ind], '/map')
-            self.target_pub.publish(mkr)
+            self.path_pub.publish(path)
 
-            #publish an arrow with our twist
-            arrow = create_marker(0, 0, '/base_link')
-            arrow.type = 0 #arrow
-            arrow.scale.x = 2.0
-            arrow.scale.y = 1.0
-            arrow.scale.z = 1.0
-            arrow.color.r = 1.0
-            arrow.color.g = 0.0
-            arrow.color.b = 0.0
+            current_state = VehicleState()
+            current_state.is_navigating = True
+            self.vehicle_state_pub.publish(current_state)
+            
+            target_speed = self.global_speed
 
-            quater = tf.quaternion_from_euler(0, 0, di)
-            arrow.pose.orientation.x = quater[0]
-            arrow.pose.orientation.y = quater[1]
-            arrow.pose.orientation.z = quater[2]
-            arrow.pose.orientation.w = quater[3]
-            self.target_twist_pub.publish(arrow)
+            # initial state
+            pose = self.gPose
+            twist = self.gTwist
 
-            state = self.update(state, ai, di)
+            quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+            angles = tf.euler_from_quaternion(quat)
+            initial_v = twist.linear.x
+            #TODO state has to be where we start
+            state = State(x=pose.position.x, y=pose.position.y, yaw=angles[2], v=initial_v)
 
-            x.append(state.x)
-            y.append(state.y)
-            yaw.append(state.yaw)
-            v.append(state.v)
-            t.append(time)
+            last_index = len(cx) - 1
+            time = 0.0
+            x = [state.x]
+            y = [state.y]
+            yaw = [state.yaw]
+            v = [state.v]
+            t = [0.0]
+            target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
+
+             #continue to loop while we have not hit the target
+            while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
+                target_speed = self.global_speed            
+                ai = target_speed#pure_pursuit.PIDControl(target_speed, state.v)
+                di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
+                
+                #publish our desired position
+                mkr = create_marker(cx[target_ind], cy[target_ind], '/map')
+                self.target_pub.publish(mkr)
+
+                #publish an arrow with our twist
+                arrow = create_marker(0, 0, '/base_link')
+                arrow.type = 0 #arrow
+                arrow.scale.x = 2.0
+                arrow.scale.y = 1.0
+                arrow.scale.z = 1.0
+                arrow.color.r = 1.0
+                arrow.color.g = 0.0
+                arrow.color.b = 0.0
+
+                quater = tf.quaternion_from_euler(0, 0, di)
+                arrow.pose.orientation.x = quater[0]
+                arrow.pose.orientation.y = quater[1]
+                arrow.pose.orientation.z = quater[2]
+                arrow.pose.orientation.w = quater[3]
+                self.target_twist_pub.publish(arrow)
+
+                state = self.update(state, ai, di)
+
+                x.append(state.x)
+                y.append(state.y)
+                yaw.append(state.yaw)
+                v.append(state.v)
+                t.append(time)
+        else:
+            self.path_valid = False
+            rospy.logwarn("It appears the cart is already at the destination")
             
         #Check if we've reached the destination, if so we should let the network client know
         rospy.loginfo("Done navigating")
@@ -232,7 +237,7 @@ class Mind(object):
             rospy.loginfo("Reached Destination")
         else:
             current_state.reached_destination = False
-            rospy.loginfo("Destination not reached")
+            rospy.loginfo("Destination not reached. There may be no path to get to the destination or the cart is already there.")
         
         self.vehicle_state_pub.publish(current_state)
         msg = VelAngle()

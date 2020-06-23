@@ -42,7 +42,7 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /Obstacle Marker1
-        - /Graph Marker1
+        - /Marker1
       Splitter Ratio: 0.5
     Tree Height: 504
 Toolbars:
@@ -135,7 +135,7 @@ Visualization Manager:
         Grid: true
         LaserScan: true
         Look Ahead Point: true
-        Marker: true
+        Obstacle Marker: true
         Points Map: true
         Points Raw: true
         Raw Waypoints: true
@@ -356,8 +356,8 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /path_display
-      Name: Graph Marker
+      Marker Topic: /display_gps
+      Name: Marker
       Namespaces:
         {}
       Queue Size: 100
@@ -387,7 +387,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 30.7864208
+      Distance: 71.2472916
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
