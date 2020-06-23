@@ -118,7 +118,10 @@ def direction_between_coordinates(lat1, lng1, lat2, lng2):
     return bearing
     
     
-#Every method below here is a geometry util that should go in a separate file. These are used for Pure Pursuit
+"""
+TODO
+Every method below here is a geometry util that should go in a separate file. 
+These are used for Pure Pursuit"""
     
 def xy_angle_between_points(point1, point2):
     distx = point2.x - point1.x
