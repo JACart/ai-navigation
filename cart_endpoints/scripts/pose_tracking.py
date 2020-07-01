@@ -54,8 +54,6 @@ class pose_tracking(object):
             os.makedirs(self.path)
         self.full_path = self.path + str(self.start_time_stamp.date()) + "_" + str(self.start_time_stamp.time())
         os.makedirs(self.full_path)
-        #self.f = open(self.full_path + "/log.txt", "wa")
-        #self.f.write("System booted: {}\n".format(self.start_time_stamp))
 
         self.CONFIDENCE_THRESHOLD = 15
         self.trip_live = False
@@ -96,7 +94,6 @@ class pose_tracking(object):
         
     def update_image(self, msg):
         self.bridge = CvBridge()
-        #self.image_raw = self.bridge.imgmsg_to_cv2(msg)
         self.image_raw = np.frombuffer(msg.data, dtype=np.uint8)
         self.image_raw.shape = (msg.height, msg.width, 3)
         self.image_ready = True
@@ -131,10 +128,6 @@ class pose_tracking(object):
                 if self.passenger_unsafe == False:
                     cur_time = time.time()
                     cur_time = round(cur_time - self.start_time,2)
-                    # log OpenPose keypoints for current frame.
-                    #self.f.write("Unsafe situation detected.\nTimestamp: \n{}sec\n".format(cur_time))
-                    #self.f.write("OpenPose frame keypoint data:\n")
-                    #self.f.write(str(frame_analyzed) + "\n\n")
                     cv2.imwrite(self.full_path + "/frame%.2f.jpg" % cur_time, op_output)
                     self.sendPassengerUnsafe()
                     self.passenger_unsafe = True
@@ -145,8 +138,6 @@ class pose_tracking(object):
             if cv2.waitKey(1) == 27:
                 break  # esc to quit
 
-            # Visualize confidence changes
-            #rospy.loginfo("\r confidence level: [ {} ] \t".format(confidence))
         cv2.destroyAllWindows()
         
 
@@ -158,7 +149,6 @@ class pose_tracking(object):
         final_image = self.image_raw
         
         final_image = self.edit_video(final_image)
-        #print(final_image)
         ###############
         # Process openpose
         ############
@@ -229,10 +219,7 @@ class pose_tracking(object):
             if cv2.waitKey(1) == 27:
                 break  # esc to quit
             
-            # Visualize safety counter
-            #rospy.loginfo("\r counter: [ {} ] \t".format(safety_counter))
         
-        #self.f.write("Initial safety established: {}".format(datetime.datetime.now()))
         print("\nPASSENGER SAFE")
         self.sendPassengerSafe()
         self.passenger_unsafe = False

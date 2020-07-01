@@ -19,7 +19,6 @@ from rospy.numpy_msg import numpy_msg
 isConnected = False
 
 
-
 class Network_Node(object):
     id = '1bcadd2fea88'
 
@@ -188,20 +187,24 @@ class Network_Node(object):
 
             
     def pullover_callback(self, msg):
-        if msg.data == True:
-            send_stop(True, 2)
-            sendUnsafe()
+        if msg.data:
+            stop_msg = EmergencyStop()
+            stop_msg.emergency_stop = True
+            stop_msg.sender_id = 2
+            stop_pub.publish(stop_msg)
+            send_unsafe()
         else:
-            send_stop(False, 2)
-            sendReady() #is this how it should work?'
+            send_ready() #is this how it should work?'
 
     def passenger_safe_callback(self, msg):
-        if msg.data == True:
-            send_stop(False, 3)
-            sendReady()
+        if msg.data:
+            send_ready()
         else:
-            send_stop(True, 3)
-            sendUnsafe()
+            stop_msg = EmergencyStop()
+            stop_msg.emergency_stop = True
+            stop_msg.sender_id = 2
+            stop_pub.publish(stop_msg)
+            send_unsafe()
 
     def passenger_exit_callback(self, msg):
         sendPassengerExit()
@@ -255,7 +258,7 @@ class Network_Node(object):
     # waiting for voice to also give the all clear
     # sender_id = 1 is the server, 2 is voice, 3 is pose, 4 is health monitor, 
     # 0 is for internal usage but is currently unused
-    def send_stop(self, stop, sender_id):
+    def send_stop(self, sender_id):
         stop_msg = EmergencyStop()
         stop_msg.emergency_stop = stop
         stop_msg.sender_id = sender_id
