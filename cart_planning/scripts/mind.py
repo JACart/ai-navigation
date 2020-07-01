@@ -232,12 +232,11 @@ class Mind(object):
         rospy.loginfo("Done navigating")
         current_state = VehicleState()
         current_state.is_navigating = False
+        current_state.reached_destination = True
         if self.path_valid:
-            current_state.reached_destination = True
             rospy.loginfo("Reached Destination")
         else:
-            current_state.reached_destination = False
-            rospy.loginfo("Destination not reached. There may be no path to get to the destination or the cart is already there.")
+            rospy.loginfo("Already at destination, or there may be no path to get to the destination or navigation was interrupted.")
         
         self.vehicle_state_pub.publish(current_state)
         msg = VelAngle()
