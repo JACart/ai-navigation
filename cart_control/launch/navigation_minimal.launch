@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- Fine tune customization -->
+  <arg name="endpoints" default="true"/>
+  <arg name="networking" default="true"/>
+  <arg name="health" default="false"/>
+  <arg name="voice" default="false"/>
+  <arg name="pose" default="false"/>
+  <arg name="obstacle_detection" default="false"/>
+  <arg name="visualize_pose" default="false"/>
+
+ 
+  <include file="$(find cart_control)/launch/autoware_localization.launch"/>
+  
+
+  <!-- launch hardware interface-->
+  <group if="$(arg endpoints)">
+      <include file="$(find cart_endpoints)/launch/hardware_interface.launch">
+        <arg name="networking" value="$(arg networking)"/>
+        <arg name="health" value="$(arg health)"/>
+        <arg name="voice" value="$(arg voice)"/>
+        <arg name="pose" value="$(arg pose)"/>
+        <arg name="visualize_pose" value="$(arg visualize_pose)"/>
+        <arg name="obstacle_detection" value="$(arg obstacle_detection)"/>
+      </include>
+  </group>
+
+  <!--always launch planning nodes-->
+  <group>
+      <include file="$(find cart_planning)/launch/planning.launch"/>
+  </group>
+
+  <!--launch the constants on the param server -->
+  <group>
+      <include file="$(find cart_planning)/launch/constants.launch"/>
+  </group>
+</launch>
