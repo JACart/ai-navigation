@@ -79,13 +79,13 @@ class LocalPlanner(object):
                         stop_msg.emergency_stop = True
                         stop_msg.sender_id = 6
                         self.stop_pub.publish(stop_msg)
-                        rospy.logerr("COLLISION DETECTED")
+                        rospy.loginfo("COLLISION DETECTED")
                     else:
                         stop_msg = EmergencyStop()
                         stop_msg.emergency_stop = False
                         stop_msg.sender_id = 6
                         self.stop_pub.publish(stop_msg)
-                        rospy.logerr("No Collision")
+                        rospy.loginfo("No Collision")
                     
             r.sleep()
 

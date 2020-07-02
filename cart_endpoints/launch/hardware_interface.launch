@@ -24,7 +24,7 @@
     </group>
     <include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>
     <group if="$(arg obstacle_detection)">
-        <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
+        <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="sisualize_pose)" />creen"/>
         <node name="local_planner" pkg="cart_endpoints" type="local_planner.py" output="screen"/>
     </group>
     <include file="$(find video_stream_opencv)/launch/camera.launch">

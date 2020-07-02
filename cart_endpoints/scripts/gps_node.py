@@ -25,9 +25,7 @@ class GPS_Parser(object):
         r.sleep()
         while not rospy.is_shutdown():
             if self.static_position is not None:
-                # rospy.logerr('Static Position is not None')
                 if self.distance_formula(self.static_position, self.current_position):
-                    rospy.logerr('Polling Location')
                     self.get_and_pub_packet()
                     self.static_position = None
             r.sleep()
@@ -44,8 +42,6 @@ class GPS_Parser(object):
         for x in xrange(poll_size):
             data = bytes(0.0)
             data, addr = self.sock.recvfrom(512)
-            #print(data)
-            #print(len(data))
             line = data[206:278]
       
             gps_coords = NavSatFix()
@@ -66,12 +62,10 @@ class GPS_Parser(object):
             latitude_total += latitude
             longitude_total += longitude
             
-            #rospy.loginfo("Latitude: " + str(gps_coords.latitude) + " Longitude: " + str(gps_coords.longitude))
             
         gps_coords.latitude = latitude_total / poll_size
         gps_coords.longitude = longitude_total / poll_size
         gps_coords.altitude = 0.0
-        rospy.logerr('GPS: ' + str(gps_coords.latitude) + " " + str(gps_coords.longitude))
 
         self.gps_pub.publish(gps_coords)
 
