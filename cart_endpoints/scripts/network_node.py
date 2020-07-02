@@ -48,10 +48,8 @@ class Network_Node(object):
         
         self.exit_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
         self.enter_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))
-        rate = rospy.Rate(10)  # 10hz
 
-        while not rospy.is_shutdown():
-            rate.sleep()
+        rospy.spin()
         
         
         
