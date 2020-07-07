@@ -2,6 +2,7 @@
 
 import socketio
 import time
+import threading
 import rospy
 import json
 import vlc
@@ -46,7 +47,12 @@ def disconnect():
     rospy.loginfo('disconnected from server')
 
 def send(msg, data):
-    sio.emit(msg, data, namespace='/cart')
+    server_lock.acquire()
+    try:
+        sio.emit(msg, data, namespace='/cart')
+    except:
+        rospy.loginfo('Was unable to send data to the server')
+    server_lock.release()
     
 @sio.on('cart_request', namespace='/cart')
 def on_cart_req(data):
@@ -240,9 +246,13 @@ def front_image_callback(img_msg):
 
 if __name__ == "__main__":
     rospy.init_node('network_node')
+    server_lock = threading.Lock()
     
-    rospy.loginfo("Attempting connection with socketio server")    
-    sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
+    try:
+        rospy.loginfo("Attempting connection with socketio server")    
+        sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
+    except:
+        rospy.loginfo('Was unable to connect to the server')
     
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
     req_pub = rospy.Publisher('/destination_request', String, queue_size=10)
@@ -250,6 +260,7 @@ if __name__ == "__main__":
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
     safety_constant_pub = rospy.Publisher('/safety_constant', Bool, queue_size=10)
     safety_exit_pub = rospy.Publisher('/safety_exit', Bool, queue_size=10)
+    
 
     rospy.Subscriber('/zed/image_raw', Image, passenger_image_callback)
     rospy.Subscriber('/front_facing/image_raw', Image, front_image_callback)

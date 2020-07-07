@@ -29,9 +29,6 @@ class add_test_points(object):
         #for i in range(100):
 
         self.waypoint_pub.publish(msg)
-            #rospy.sleep(.1)
-        #print msg
-        print "done"
 
         rospy.spin()
 
