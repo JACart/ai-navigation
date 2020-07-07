@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import socketio
+import time
 import rospy
 import json
 import vlc
@@ -22,9 +24,10 @@ network_client.
 
 
         
-global empty = True
-id = '1bcadd2fea88'
+empty = True
+is_connected = False
 
+id = '1bcadd2fea88'
 sio = socketio.Client()
         
 ########################
@@ -39,7 +42,6 @@ def connect():
         
 @sio.event(namespace='/cart')
 def disconnect():
-    #camera.cleanUp()
     is_connected = False
     rospy.loginfo('disconnected from server')
 
@@ -81,7 +83,7 @@ def on_pull_over():
     stop_pub.publish(stop_msg)
 
 @sio.on('resume_driving',namespace='/cart')
-def onResume():
+def on_resume():
     rospy.loginfo("Received a resume signal")
     stop_msg = EmergencyStop()
     stop_msg.emergency_stop = False
@@ -89,15 +91,16 @@ def onResume():
     stop_pub.publish(stop_msg)
     
 @sio.on('stop',namespace='/cart')
-def onStop(data):
+def on_stop(data):
     rospy.loginfo("Received a stop signal")
     stop_msg = EmergencyStop()
     stop_msg.emergency_stop = True
     stop_msg.sender_id = 1
-    stop_pub.publish(stop_msg)
+    stop_pub.publish(stop_msg)    
+ 
     
 @sio.on('transit_await',namespace='/cart')
-def onTransitAwait():
+def on_transit_await():
     rospy.loginfo("TransitAwait")
     time.sleep(4)
     location_speech_pub.publish(True)
@@ -211,37 +214,35 @@ def status_update(data):
                 arrived_dest()
                 
 #Processes and sends the image from the zed camera
-def passenger_image(msg):
-    bridge = CvBridge() 
-    image_raw = np.frombuffer(msg.data, dtype=np.uint8)
-    image_raw.shape = (msg.height, msg.width, 3)
-    image_raw = bridge.imgmsg_to_cv2(msg, desired_encoding="mono8")
-    h,w = image_raw.shape[:2]
-    # Crop image and get the image width and height  
-    cropped = image_raw[0:h, 0:672]  
-    final_image = cv2.flip(cropped, -1)
-    
-    f2 = camera.rescale_frame(final_image, 20)
-    retval, buffer = cv2.imencode('.jpg', f2)  
-    send('passenger_video', base64.b64encode(buffer))
 
-#Processes and sends the image from the front facing camera
-def front_camera_img(msg):
+def passenger_image_callback(img_msg):
     bridge = CvBridge() 
-    image_raw = np.frombuffer(msg.data, dtype=np.uint8)
-    image_raw.shape = (msg.height, msg.width, 3)
-    image_raw = bridge.imgmsg_to_cv2(msg, desired_encoding="mono8")
+    image_raw = np.frombuffer(img_msg.data, dtype=np.uint8)
+    image_raw.shape = (img_msg.height, img_msg.width, 3)
+    image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
     h,w = image_raw.shape[:2]
     # Crop image and get the image width and height  
     cropped = image_raw[0:h, 0:672]  
     final_image = cv2.flip(cropped, -1)
-    
-    f2 = camera.rescale_frame(final_image, 20)
-    retval, buffer = cv2.imencode('.jpg', f2)  
-    send('front_facing_video', base64.b64encode(buffer))
+    dim = (400, 400)
+    f2 = cv2.resize(final_image, dim, interpolation=cv2.INTER_AREA)
+    retval, buffer = cv2.imencode('.jpg', f2)    
+    send('passenger_video',base64.b64encode(buffer) )
+    rospy.sleep(.1)
+
+
+def front_image_callback(img_msg):
+    bridge = CvBridge() 
+    image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
+    retval, buffer = cv2.imencode('.jpg', image_raw)    
+    send('cart_video', base64.b64encode(buffer))
+    rospy.sleep(.1)
 
 if __name__ == "__main__":
     rospy.init_node('network_node')
+    
+    rospy.loginfo("Attempting connection with socketio server")    
+    sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
     
     stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
     req_pub = rospy.Publisher('/destination_request', String, queue_size=10)
@@ -250,22 +251,18 @@ if __name__ == "__main__":
     safety_constant_pub = rospy.Publisher('/safety_constant', Bool, queue_size=10)
     safety_exit_pub = rospy.Publisher('/safety_exit', Bool, queue_size=10)
 
-    rospy.Subscriber('/zed/image_raw', Image, passenger_image)
-    rospy.Subscriber('/front_facing/image_raw', Image, front_camera_img)
-    rospy.Subscriber('/current_position', Int8, sendPositionIndex)
+    rospy.Subscriber('/zed/image_raw', Image, passenger_image_callback)
+    rospy.Subscriber('/front_facing/image_raw', Image, front_image_callback)
+    rospy.Subscriber('/current_position', Int8, send_position_index)
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)
     rospy.Subscriber('/pullover', Bool, pullover_callback)
     rospy.Subscriber('/speech_text', String, send_audio)
-    rospy.Subscriber('/gps_coordinates', NavSatFix, sendLocation)
+    rospy.Subscriber('/gps_coordinates', NavSatFix, send_location)
     rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback)
     rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
-    
     
     exit_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
     enter_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))
     
-    rospy.loginfo("Attempting connection with socketio server")    
-    sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
-
     rospy.spin()
         
