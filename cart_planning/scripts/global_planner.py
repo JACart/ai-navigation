@@ -200,14 +200,19 @@ class global_planner(object):
 
     def gps_request_cb(self, msg):
         local_point = Point()
+
         
-        #the anchor point is the 0, 0 in our map
-        y, x = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433795, -78.862290)
-        x = -(x)
+        #the anchor point is the latitude/longitude for the pcd origin
+        # x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433795, -78.862290)
+        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433939, -78.862157)
         
         local_point.x = x
         local_point.y = y
+
+        # Currect the heading of the point by map offset around origin
+        local_point = simple_gps_util.heading_correction(0, 0, 100, local_point)
         self.calc_nav(local_point)
+        
 
         marker = Marker()
         marker.header = Header()
@@ -225,12 +230,12 @@ class global_planner(object):
         
         marker.lifetime = rospy.Duration.from_sec(10)
         
-        marker.pose.position.x = x
-        marker.pose.position.y = y
+        marker.pose.position.x = local_point.x
+        marker.pose.position.y = local_point.y
         marker.pose.position.z = 0.0
         
-        marker.scale.x = 0.8
-        marker.scale.y = 0.8
+        marker.scale.x = 3
+        marker.scale.y = 3
         marker.scale.z = 0.8
         
         self.display_pub.publish(marker)

@@ -22,20 +22,21 @@
     <group if="$(arg pose)">
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
     </group>
-    <include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>
+    <!--<include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>-->
     <group if="$(arg obstacle_detection)">
-        <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="sisualize_pose)" />creen"/>
+        <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
         <node name="local_planner" pkg="cart_endpoints" type="local_planner.py" output="screen"/>
     </group>
     <include file="$(find video_stream_opencv)/launch/camera.launch">
             <!--This is referring to the zed camera facing the passenger-->
             <arg name = "camera_name" value="zed"/>
-            <arg name="video_stream_provider" value="/dev/video0" />
+            <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Leopard_ZED-video-index0
+" />
             <arg name="visualize" value="$(arg visualize_pose)" />
         </include>
     <include file="$(find video_stream_opencv)/launch/camera.launch">
             <!--This is referring to the front facing camera-->
             <arg name="camera_name" value="front_facing"/>
-            <arg name="video_stream_provider" value="/dev/video7" />
+            <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0" />
         </include>
 </launch>

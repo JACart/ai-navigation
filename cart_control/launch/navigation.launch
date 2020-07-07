@@ -12,7 +12,7 @@
   <arg name="health" default="false"/>
   <arg name="voice" default="true"/>
   <arg name="pose" default="true"/>
-  <arg name="obstacle_detection" default="true"/>
+  <arg name="obstacle_detection" default="false"/>
   <arg name="visualize_pose" default="false"/>
 
   <!-- Configuration for real-world driving -->
