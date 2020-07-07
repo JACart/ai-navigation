@@ -65,7 +65,7 @@ def get_point(current_gps):
     sensors_map_point = np.dot(M, planning_point) #dot product to get transformed point
     relative_point.x = sensors_map_point[0,0]
     relative_point.y = sensors_map_point[1,0]
-    print(relative_point)
+    rospy.loginfo(relative_point)
     return relative_point
 
 def xy_between_coordinates(lat1, lng1, theta1, lat2, lng2):
@@ -257,5 +257,3 @@ for i in range(v1_np.shape[1]):
 
 M = transformations.affine_matrix_from_points(v0, new_arr)
 #M = transformations.affine_matrix_from_points(v0, v1_np)
-
-print (M)

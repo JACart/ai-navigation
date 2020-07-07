@@ -61,10 +61,10 @@ class PathCreation(object):
             self.auto_connect = False
             self.auto_build = False
             file_name = sys.argv[1]
-            print("Loading: " + file_name)
+            rospy.loginfo("Loading: " + file_name)
             self.global_graph = nx.read_gml(file_name)
             self.display_graph = self.global_graph
-            print("Loaded, keep in mind auto-connect, auto-build, should remain toggled off lest you want to unleash the kraken.\n (Basically don't press b or c)\n")
+            rospy.loginfo("Loaded, keep in mind auto-connect, auto-build, should remain toggled off lest you want to unleash the kraken.\n (Basically don't press b or c)\n")
         curses.wrapper(self.get_input)
         
         
@@ -115,7 +115,7 @@ class PathCreation(object):
                 self.add_weighted_edge(self.node_count, self.last_node_right)
             elif self.road_type == "two_lane":
                 #self.global_graph.add_node(self.node_name_l, pos=[])
-                print("Two Laner")
+                rospy.loginfo("Two Laner")
                 
         
         self.last_node_right = node_name_r
@@ -210,7 +210,7 @@ class PathCreation(object):
                 self.point_mode = "Add"
             elif keyval == w:
                 self.auto_connect = not (self.auto_connect)
-                print( 'Auto-Connect: ' + str(self.auto_connect) + "\n")
+                rospy.loginfo( 'Auto-Connect: ' + str(self.auto_connect) + "\n")
             elif keyval == c:
                 self.point_mode = "Connect"
             elif keyval == r:
@@ -222,9 +222,9 @@ class PathCreation(object):
                 rospy.loginfo("Graph saved as: " + g_name)
             elif keyval == b:
                 self.auto_build = not (self.auto_build)
-                print("Map auto-build set to: " + str(self.auto_build) + "\n")
+                rospy.loginfo("Map auto-build set to: " + str(self.auto_build) + "\n")
                 
-            print("Current Point Mode: " + self.point_mode + "\n")
+            rospy.loginfo("Current Point Mode: " + self.point_mode + "\n")
             
             self.prev_key = keyval
             rate.sleep()

@@ -37,7 +37,7 @@ class pose_tracking(object):
         self.passenger_exit_pub = rospy.Publisher('/passenger_exit', Bool, queue_size=10)
         rospy.Subscriber('/safety_constant', Bool, self.initial_safety)
         rospy.Subscriber('/safety_exit', Bool, self.passenger_exit)
-        rospy.Subscriber('/camera/image_raw', Image, self.update_image)
+        rospy.Subscriber('/zed/image_raw', Image, self.update_image)
         
         ###################################################
         # Set up global variables for use in all methods. #
@@ -220,7 +220,6 @@ class pose_tracking(object):
                 break  # esc to quit
             
         
-        print("\nPASSENGER SAFE")
         self.sendPassengerSafe()
         self.passenger_unsafe = False
         self.safety_analysis()

@@ -61,7 +61,7 @@ class speech_recognition_core(object):
             text = text.lower()
             text_array = text.split()
             if self.text_passing:
-                print(text)
+                rospy.loginfo(text)
                 for x in range(len(text_array)):
                     if (text_array[x] == "cafeteria" or text_array[x] == "home" or text_array[x] == "xlabs" 
                         or text_array[x] == "clinic" or text_array[x]=="reccenter"):
@@ -69,7 +69,7 @@ class speech_recognition_core(object):
                         self.ping_in_sound.play()
                         self.speech_text_pub.publish(text_array[x])
             else:
-                print(text)
+                rospy.loginfo(text)
                 #Alucard, autocorrect, autocart possible other words that need added
                 for x in range(len(text_array)):
                     #checks for single words like autocart and skips looking for individual words if it is found
@@ -103,26 +103,26 @@ class speech_recognition_core(object):
                                     #this is a temporary fix to the cart hearing the emergency message playing
                                     break
                                 if text_array[y] == "terminate":
-                                    print("Termination")
+                                    rospy.loginfo("Termination")
                                     #end the ride... do we still want/need this functionality?
                                     break
                                 if text_array[y] == "help" or text_array[y] == "stop":
                                     self.emergency_sound.stop()
                                     self.emergency_sound.play()
                                     #time.sleep(3)
-                                    print("Emergency Issued")
+                                    rospy.loginfo("Emergency Issued")
                                     self.pullover_pub.publish(True)
                                     break
                                 if text_array[y] == "cancel" or text_array[y] == "resume":
-                                    print("Emergency Canceled")
+                                    rospy.loginfo("Emergency Canceled")
                                     self.active = 0
                                     self.pullover_pub.publish(False)
                                     break
                                 
                                 
                             if time.time() >= self.end_time:
-                                print(time.time())
-                                print(self.end_time)
+                                rospy.loginfo(time.time())
+                                rospy.loginfo(self.end_time)
                                 self.active = 0
                             #if self.active > 0:
                             #    self.active -= 1
@@ -132,14 +132,14 @@ class speech_recognition_core(object):
                             break
 
         except Exception as e:
-            print("Error, typically means there was no registered english speech: " + str(e))
+            rospy.loginfo("Error, typically means there was no registered english speech: " + str(e))
          
          
     def location_speech_callback(self, msg):
-        print(str(msg.data))
+        rospy.loginfo(str(msg.data))
         if msg.data:
             #send text to server
-            print("start the text passing")
+            rospy.loginfo("start the text passing")
             self.text_passing = True
         else:
             self.text_passing = False

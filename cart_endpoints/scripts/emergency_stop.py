@@ -19,7 +19,6 @@ class EmergencyNode(object):
         soc.listen(5) 			 # Now wait for client connection.
         while not rospy.is_shutdown():
             c, addr = soc.accept() 		# Establish connection with client.
-            print ('Got connection from', addr)
             c.send('Emergency stop started'.encode())
             c.close() 			# Close the connection.
             self.stop = True

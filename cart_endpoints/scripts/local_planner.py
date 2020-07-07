@@ -184,8 +184,6 @@ class LocalPlanner(object):
         lookahead_local = self.t.transformPose("/base_link", lookahead_global)
 
         
-        print(left_wheel_pos)
-
         points_arr = []
 
         p1 = Point32()
