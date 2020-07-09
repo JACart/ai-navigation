@@ -9,6 +9,6 @@
         anchor_theta : 0
 
         <!-- Global Planner graph file parameter -->
-        graph_file : "/home/jeffercize/catkin_ws/src/ai-navigation/EastCampusLiteV4.gml"
+        graph_file : "/home/jeffercize/catkin_ws/src/ai-navigation/EastCampusLiteV5.gml"
     </rosparam>
 </launch>

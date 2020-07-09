@@ -37,6 +37,9 @@ class global_planner(object):
         #The points on the map
         self.local_array = None
 
+        # Minimizng travel will have the cart stop when its closest to the passenger regardless of which side of the road the summon comes from
+        self.minimize_travel = True
+
         # Temporary solution for destinations, TODO: Make destinations embedded in graph nodes
         self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
         
@@ -100,6 +103,7 @@ class global_planner(object):
         # Get the node closest to where we want to go
         destination_point = self.get_closest_node(point.x, point.y)
 
+        """
         # Remove our previous node to prevent searching directly behind cart
         
         name = None
@@ -132,7 +136,12 @@ class global_planner(object):
                 rospy.loginfo("Out edge: u,v " + str(u) + "," + str(v))
                 self.global_graph.add_edge(name, v, weight=data['weight'])
 
-        
+        """
+        if self.minimize_travel:
+            nodelist = self.calc_efficient_destination(destination_point)
+        else:
+            nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
+
         # Set all nodes back to a state of not being a part of the previous/current path
         for node in self.global_graph:
             self.global_graph.node[node]['active'] = False
@@ -148,6 +157,44 @@ class global_planner(object):
         
         self.logic_graph = copy.deepcopy(self.global_graph)
         self.path_pub.publish(points_arr)
+
+    def calc_efficient_destination(self, destination):
+        # Find nodes within 3 meters of destination node
+        close_nodes = [destination]
+        local_logic_graph = copy.deepcopy(self.logic_graph)
+        dest_node_pos = local_logic_graph.node[destination]['pos']
+        
+        for node in self.global_graph.nodes:
+            inefficient = True
+            node_pos = local_logic_graph.node[node]['pos']
+
+            # Is node close enough and also not incident to the destination
+            dist = self.dis(node_pos[0], node_pos[1], dest_node_pos[0], dest_node_pos[1])
+            if dist < 3 and node is not destination:
+                for u, v in local_logic_graph.out_edges(node):
+                    if u is destination or v is destination:
+                        inefficient = True
+                        break
+                    else:
+                        inefficient = False
+            
+            # if node is not an inefficient destination add it
+            if not inefficient:
+                close_nodes.append(node)
+
+        min_path = None
+        # Out of the most efficient paths, which one has the least driving distance
+        for node in close_nodes:
+            node_path = nx.dijkstra_path(local_logic_graph, self.current_cart_node, node)
+            if min_path is None:
+                min_path = node_path
+
+            # TODO replace with cost analysis
+            if len(node_path) < len(min_path):
+                min_path = node_path
+        
+        return min_path
+            
 
     # Closest node to given point
     def get_closest_node(self, x, y, cart_trans=False):

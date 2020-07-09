@@ -34,9 +34,9 @@
 " />
             <arg name="visualize" value="$(arg visualize_pose)" />
         </include>
-    <include file="$(find video_stream_opencv)/launch/camera.launch">
-            <!--This is referring to the front facing camera-->
+    <!--<include file="$(find video_stream_opencv)/launch/camera.launch">
+            This is referring to the front facing camera
             <arg name="camera_name" value="front_facing"/>
             <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0" />
-        </include>
+        </include>-->
 </launch>
