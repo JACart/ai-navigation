@@ -69,16 +69,14 @@ def on_dest(msg):
     location_speech_pub.publish(False)
     safety_constant_pub.publish(True)
 
-    rospy.loginfo("RECIEVED GOAL: " + str(msg))
+    rospy.loginfo("RECIEVED GOAL: " + str(msg)) 
     location_string = str(msg)
     # Delete White Spaces
     location_string = location_string.replace(" ", "")
     # Lowercase Entire String
     location_string = location_string.lower()
-    #Process the string into a waypoint
-    calculated_waypoint = locationFinder(location_string)
     #Send requested waypoint to planner
-    req_pub.publish(calculated_waypoint)
+    req_pub.publish(String(location_string))
 
 @sio.on('pull_over',namespace='/cart')
 def on_pull_over():
@@ -157,22 +155,6 @@ def send_ready():
 #pose tracking send when unsafe
 def send_unsafe():
     send('passenger_unsafe',id)
-
-#######################
-### Other Functions ###
-#######################
-def location_finder(location_string):
-    if(location_string == "home"): #near the garage
-        return 28
-    if(location_string == "xlabs"): #front of xlabs
-        return 23
-    if(location_string == "cafeteria"): #the exit from xlabs
-        return 12
-    if(location_string == "clinic"): #right after the intersection heading towards the exit
-        return 6
-    if(location_string == "reccenter"): #on the straight away going away from the garage towards the front
-        return 1
-    return 28
     
 
 
@@ -221,28 +203,39 @@ def status_update(data):
                 
 #Processes and sends the image from the zed camera
 
+last_front_pub = -1
+last_passenger_pub = -1
+
 def passenger_image_callback(img_msg):
-    bridge = CvBridge() 
-    image_raw = np.frombuffer(img_msg.data, dtype=np.uint8)
-    image_raw.shape = (img_msg.height, img_msg.width, 3)
-    image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
-    h,w = image_raw.shape[:2]
-    # Crop image and get the image width and height  
-    cropped = image_raw[0:h, 0:672]  
-    final_image = cv2.flip(cropped, -1)
-    dim = (400, 400)
-    f2 = cv2.resize(final_image, dim, interpolation=cv2.INTER_AREA)
-    retval, buffer = cv2.imencode('.jpg', f2)    
-    send('passenger_video',base64.b64encode(buffer) )
-    rospy.sleep(.1)
+    global last_passenger_pub
+    cur_time = time.time()
+    if cur_time > last_passenger_pub + 1:
+        bridge = CvBridge() 
+        image_raw = np.frombuffer(img_msg.data, dtype=np.uint8)
+        image_raw.shape = (img_msg.height, img_msg.width, 3)
+        image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
+        h,w = image_raw.shape[:2]
+        # Crop image and get the image width and height  
+        cropped = image_raw[0:h, 0:672]  
+        final_image = cv2.flip(cropped, -1)
+        dim = (400, 400)
+        f2 = cv2.resize(final_image, dim, interpolation=cv2.INTER_AREA)
+        retval, buffer = cv2.imencode('.jpg', f2)    
+        send('passenger_video',base64.b64encode(buffer) )
+        last_passenger_pub = cur_time
+    
 
 
 def front_image_callback(img_msg):
-    bridge = CvBridge() 
-    image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
-    retval, buffer = cv2.imencode('.jpg', image_raw)    
-    send('cart_video', base64.b64encode(buffer))
-    rospy.sleep(.1)
+    global last_front_pub
+    cur_time = time.time()
+    if cur_time > last_front_pub + 1:
+        cur_time = time.time()
+        bridge = CvBridge() 
+        image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
+        retval, buffer = cv2.imencode('.jpg', image_raw)    
+        send('cart_video', base64.b64encode(buffer))
+        last_front_pub = cur_time
 
 if __name__ == "__main__":
     rospy.init_node('network_node')
