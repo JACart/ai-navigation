@@ -7,6 +7,7 @@ import math
 import copy
 import networkx as nx
 import datetime
+import re
 
 from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
@@ -27,7 +28,7 @@ class PathCreation(object):
         
         # Modes
         self.point_mode = "Add" # Select, Add, Remove, Connect ...a point
-        self.road_type = "one_way" # One way single lane road (one_way), Two way single lane road (two_way), Two Lane road opposing directions(two_lane)
+        self.road_type = "directed" # One way single lane road (one_way), Two way single lane road (two_way), Two Lane road opposing directions(two_lane)
         
         # Auto-build the map
         self.auto_build = False
@@ -61,10 +62,21 @@ class PathCreation(object):
             self.auto_connect = False
             self.auto_build = False
             file_name = sys.argv[1]
-            rospy.loginfo("Loading: " + file_name)
+            print("Loading: " + file_name)
             self.global_graph = nx.read_gml(file_name)
-            self.display_graph = self.global_graph
-            rospy.loginfo("Loaded, keep in mind auto-connect, auto-build, should remain toggled off lest you want to unleash the kraken.\n (Basically don't press b or c)\n")
+            #self.node_count = len(self.global_graph) + 1
+
+            # Make sure we start at the most recently placed node
+            self.node_count = 0
+            for node in self.global_graph.nodes:
+                node_name = str(node)
+                node_num = int(node_name[7:])
+                if node_num > self.node_count:
+                    self.node_count = node_num
+
+            self.node_count += 1
+            self.display_graph = copy.deepcopy(self.global_graph)
+            print("Loaded, keep in mind auto-connect, auto-build, should remain toggled off lest you want to unleash the kraken.\n (Basically don't press b or c)\n")
         curses.wrapper(self.get_input)
         
         
@@ -79,6 +91,8 @@ class PathCreation(object):
             self.remove_point(node_x, node_y)
         elif self.point_mode is "Connect":
             self.connect_point(node_x, node_y)
+        elif self.point_mode is "Efficient":
+            self.lazy_mode(node_x, node_y)
         
         #Prevent display function from handling outdated graph attributes
         self.display_graph = copy.deepcopy(self.global_graph)
@@ -99,34 +113,30 @@ class PathCreation(object):
         
     # Add point to the graph
     def add_point(self, x, y):
+        self.node_count += 1
         # Create a rightside node representing right lane, also plays role of being the center in a one lane secnario
         node_name_r = 'R_Node:' + str(self.node_count)
-        self.global_graph.add_node(node_name_r, pos=[x, y])
+        self.global_graph.add_node(node_name_r, pos=[x, y], active=False)
         
         node_name_l = 'L_Node' + str(self.node_count)
         #self.global_graph.add_node()
             
             
         #Connect previous node to current node
-        if self.node_count > 0 and self.auto_connect:
+        if self.node_count > 0 and self.auto_connect is True:
             self.add_weighted_edge(self.last_node_right, node_name_r)
             # Create cycle between last and current node if this road is a one lane two way
-            if self.road_type == "two_way":
-                self.add_weighted_edge(self.node_count, self.last_node_right)
-            elif self.road_type == "two_lane":
-                #self.global_graph.add_node(self.node_name_l, pos=[])
-                rospy.loginfo("Two Laner")
+            if self.road_type == "undirected":
+                self.add_weighted_edge(node_name_r, self.last_node_right)
                 
-        
         self.last_node_right = node_name_r
-        self.node_count += 1
+        
         
     def remove_point(self, x, y):
         # TODO checking for empty graph here
         # Find the closest node to where the user clicked
-        min_node = get_closest_node(x, y)
+        min_node = self.get_closest_node(x, y)
         
-        self.node_count -= 1
         self.global_graph.remove_node(min_node)
             
     def add_weighted_edge(self, first_node, second_node):
@@ -143,6 +153,17 @@ class PathCreation(object):
         
         self.global_graph.add_edge(first_node, second_node, weight=cost)
             
+    def get_node_coordinates(self, first_node, second_node):
+        pos_tuple_last = self.global_graph.node[first_node]['pos']
+        pos_tuple_curr = self.global_graph.node[second_node]['pos']
+        
+        x1 = pos_tuple_last[0]
+        y1 = pos_tuple_last[1]
+        x2 = pos_tuple_curr[0]
+        y2 = pos_tuple_curr[1]
+
+        return x1, y1, x2, y2
+
     # Select two points to connect
     def connect_point(self, x, y):
         if self.first_selection == None:
@@ -153,10 +174,50 @@ class PathCreation(object):
             
             self.add_weighted_edge(self.first_selection, self.second_selection)
             
+            # Handle two way single lane road
+            if self.road_type is "undirected":
+                self.add_weighted_edge(self.second_selection, self.first_selection)
             # Reset first and second selections
             self.first_selection = None
             self.second_selection = None
+    
+    # Generate points between two positions
+    def lazy_mode(self, x, y):
+        if self.first_selection == None:
+            self.first_selection = (x, y)
+        else:
+            self.second_selection = (x, y)
+            x1, y1 = self.first_selection[0], self.first_selection[1]
+            x2, y2 = self.second_selection[0], self.second_selection[1]
+
+            # Difference between coordinates
+            diff_x = x2 - x1
+            diff_y = y2 - y1
+
+            # Subdivide segment
+            num_points = int(self.dis(x1, y1, x2, y2) / self.AUTO_POINT_GAP)
+
+            # Step size
+            step_x = diff_x / num_points
+            step_y = diff_y / num_points
+
+            prev_node = None
+            for i in range(0, num_points + 1):
+                self.node_count += 1
+                new_x = x1 + (step_x * i)
+                new_y = y1 + (step_y * i)
+                node_name_r = 'R_Node:' + str(self.node_count)
+                self.global_graph.add_node(node_name_r, pos=[new_x, new_y], active=False)
+
+                if prev_node is not None:
+                    self.add_weighted_edge(prev_node, node_name_r)
+                
+                prev_node = node_name_r
+                
             
+            self.first_selection = None
+            self.second_selection = None
+
             
     def get_closest_node(self, x, y):
         # Find closest node to passed point
@@ -186,6 +247,8 @@ class PathCreation(object):
         c = 99
         r = 114
         g = 103
+        l = 108
+        m = 109
     
         stdscr.nodelay(True)
         rate = rospy.Rate(60) 
@@ -194,7 +257,9 @@ class PathCreation(object):
                       C - Connect two points\n 
                       W - toggle auto-connecting nodes\n 
                       G - Save the graph(Will be named the current time)\n
-                      B - Drive the cart around and auto-build a map""")
+                      B - Drive the cart around and auto-build a map\n
+                      L - Efficient adding, allows you to create a line of points on a map\n
+                      M - Change connection type(undirected, directed)""")
 
         while 1:
             if self.display_graph is not None:
@@ -210,22 +275,42 @@ class PathCreation(object):
                 self.point_mode = "Add"
             elif keyval == w:
                 self.auto_connect = not (self.auto_connect)
-                rospy.loginfo( 'Auto-Connect: ' + str(self.auto_connect) + "\n")
             elif keyval == c:
+                self.first_selection = None
+                self.second_selection = None
                 self.point_mode = "Connect"
             elif keyval == r:
                 self.point_mode = "Remove"
             elif keyval == g:
-                rospy.loginfo("Saving graph")
+                stdscr.addstr("Saving graph")
                 g_name = "Graph: " + str(datetime.datetime.now()) + ".gml"
                 nx.write_gml(self.global_graph, g_name)
-                rospy.loginfo("Graph saved as: " + g_name)
+                stdscr.addstr("Graph saved as: " + g_name)
             elif keyval == b:
                 self.auto_build = not (self.auto_build)
-                rospy.loginfo("Map auto-build set to: " + str(self.auto_build) + "\n")
-                
-            rospy.loginfo("Current Point Mode: " + self.point_mode + "\n")
-            
+            elif keyval == l:
+                self.first_selection = None
+                self.second_selection = None
+                self.point_mode = "Efficient"
+            elif keyval == m:
+                if self.road_type is "directed":
+                     self.road_type = "undirected" 
+                else: 
+                    self.road_type = "directed"
+
+            stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
+                      R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
+                      C - Connect two points\n 
+                      W - toggle auto-connecting nodes\n 
+                      G - Save the graph(Will be named the current time)\n
+                      B - Drive the cart around and auto-build a map\n
+                      L - Efficient adding, allows you to create a line of points on a map\n""")
+            stdscr.addstr("Current Point Mode: " + self.point_mode + "\n")
+            stdscr.addstr("Auto-Connect: " + str(self.auto_connect) + "\n")
+            stdscr.addstr("Map auto-build set to: " + str(self.auto_build) + "\n")
+            stdscr.addstr("Connection type: " + str(self.road_type) + "\n")
+            stdscr.addstr("Node Count (Not number of nodes): " + str(self.node_count) + "\n")
+
             self.prev_key = keyval
             rate.sleep()
             
@@ -251,7 +336,7 @@ class PathCreation(object):
             marker.color.g = 1.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.3)
+            marker.lifetime = rospy.Duration.from_sec(0.4)
 
             marker.pose.position.x = x
             marker.pose.position.y = y
@@ -293,7 +378,7 @@ class PathCreation(object):
             marker.color.g = 0.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.1)
+            marker.lifetime = rospy.Duration.from_sec(0.4)
 
             marker.points = points
 

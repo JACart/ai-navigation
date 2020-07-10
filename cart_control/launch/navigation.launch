@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
 <launch>
   <!-- General launch profiles -->
-  <arg name = "realtime" default="true"/>
+  <arg name = "realtime" default="false"/>
   <arg name = "simulator" default="false"/>
   <arg name = "replay" default="false"/>
 
 
   <!-- Fine tune customization -->
-  <arg name="endpoints" default="true"/>
+  <arg name="endpoints" default="false"/>
   <arg name="networking" default="true"/>
   <arg name="health" default="false"/>
   <arg name="voice" default="true"/>

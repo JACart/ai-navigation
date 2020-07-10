@@ -13,14 +13,19 @@ from navigation_msgs.msg import LocalPointsArray, LatLongPoint
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String, Header
+from tf.transformations import euler_from_quaternion
 
 class global_planner(object):
+    """Global Planner Node that handles global pathfinding to a destination."""
     def __init__(self):
         rospy.init_node('global_planner')
 
         self.anchor_lat = 38.432150 
         self.anchor_long = -78.876106
         
+        # Maintain whether or not the planner has yet made any plans
+        self.cart_navigated = False
+
         #Create a new directional graph
         self.global_graph = nx.DiGraph()
         self.logic_graph = None
@@ -29,12 +34,13 @@ class global_planner(object):
         file_name = rospy.get_param('graph_file')
         self.load_file(file_name)
         
-        #Current waypoint of cart
+        # Current waypoint of cart
         self.current_pos = None
         self.current_cart_node = None
         self.prev_cart_node = None
+        self.yaw = None
 
-        #The points on the map
+        # The points on the map
         self.local_array = None
 
         # Minimizng travel will have the cart stop when its closest to the passenger regardless of which side of the road the summon comes from
@@ -67,6 +73,13 @@ class global_planner(object):
     
     # Load the graph file as the global graph
     def load_file(self, file_name):
+        """Loads a file and sets all nodes to active(allowed to take part in pathfinding).
+
+        Args:
+            file_name (string): The .gml file to load as the graph, cart_planning/launch/constants.launch
+            is where the file path can be found
+        """
+
         try:
             self.global_graph = nx.read_gml(file_name)
             for node in self.global_graph:
@@ -77,6 +90,13 @@ class global_planner(object):
     
     #If we receive a request for a destination
     def request_callback(self, msg):
+        """ If a stringed destination (i.e. 'cafeteria') is received under /destination_request
+        calculate a path to it.
+
+        Args:
+            msg (ROS String Message): The destination represented as a ROS string message
+        """
+
         # ROS coordinates of the destination
         dest_pos = self.dest_dict[msg.data]
 
@@ -88,6 +108,11 @@ class global_planner(object):
         self.calc_nav(point)
 
     def calc_nav(self, point):
+        """ Main navigation calculation function, main job is to calculate the path.
+
+        Args:
+            point (ROS Point Message): Point representing where the cart should navigate to
+        """
 
         # Make a destination request when we don't know where the cart is at yet
         if self.current_pos is None:
@@ -97,46 +122,15 @@ class global_planner(object):
         
         # Our current position in local coordinates and closest node to our position
         current_cart_pos = self.current_pos.pose.position
-        rospy.loginfo("Before: " + str(self.current_cart_node))
         self.current_cart_node = self.get_closest_node(current_cart_pos.x, current_cart_pos.y, cart_trans=True)
-        rospy.loginfo("After: " + str(self.current_cart_node))
         # Get the node closest to where we want to go
         destination_point = self.get_closest_node(point.x, point.y)
 
-        """
-        # Remove our previous node to prevent searching directly behind cart
-        
-        name = None
-        position = None
-        status = None
-        in_edges = None
-        out_edges = None
-        if self.prev_cart_node is not None:
-            self.logic_graph = copy.deepcopy(self.global_graph)
-            name = self.prev_cart_node
-            position = self.global_graph.node[self.prev_cart_node]['pos']
-            status = self.global_graph.node[self.prev_cart_node]['active']
-            in_edges = copy.deepcopy(self.global_graph.in_edges(self.prev_cart_node, data=True))
-            out_edges = copy.deepcopy(self.global_graph.out_edges(self.prev_cart_node, data=True))
-            self.global_graph.remove_node(self.prev_cart_node)
-        
-        # Find shortest path from our current position to the destination node
-        nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
-        
-        self.logic_graph = copy.deepcopy(self.global_graph)
-        # Re-add the previous node
-        if name is not None:
-            self.global_graph.add_node(name, pos=position, active=status)
-            for u, v, data in in_edges:
-                rospy.loginfo("Our new node")
-                rospy.loginfo("In edge: u,v " + str(u) + "," + str(v))
-                self.global_graph.add_edge(u, name, weight=data['weight'])
-            
-            for u, v, data in out_edges:
-                rospy.loginfo("Out edge: u,v " + str(u) + "," + str(v))
-                self.global_graph.add_edge(name, v, weight=data['weight'])
+        # If the cart hasn't navigated yet we need to figure out the lane we're in and position ourselves in that lane
+        if not self.cart_navigated:
+            self.current_cart_node = self.determine_lane(self.current_cart_node)
+            self.cart_navigated = True
 
-        """
         if self.minimize_travel:
             nodelist = self.calc_efficient_destination(destination_point)
         else:
@@ -158,19 +152,96 @@ class global_planner(object):
         self.logic_graph = copy.deepcopy(self.global_graph)
         self.path_pub.publish(points_arr)
 
+    def determine_lane(self, cart_node):
+        """ A function for determining which lane the cart is in, or should be in. (Note lanes being directions in the directed graph)
+
+        Args:
+            cart_node (NetworkX Node/Hashable object): The node the cart is at or closest to
+
+        Returns:
+            The closest node of the appropriate lane
+        """
+        # Obtain the nodes within a 10 meter radius
+        closest_nodes = self.get_nodes_in_radius(cart_node, 10)
+
+        # Dictionary of nodes and the angle difference between the cart and the node
+        node_angles = {}
+        for node in closest_nodes:
+            for u,v in self.global_graph.out_edges(node):
+                # Calculate the angle of our node to its outgoing neighbor
+                dy = self.global_graph.node[v]['pos'][1] - self.global_graph.node[u]['pos'][1]
+                dx = self.global_graph.node[v]['pos'][0] - self.global_graph.node[u]['pos'][0]
+                node_angle = math.atan2(dy,dx)
+
+                # Obtain the yaw of the cart
+                cart_angle = self.orientation[2]
+
+                # If node qualifies as being correct in the lane(not requiring a turn of more than half pi radians) assign a distance to it
+                if abs(cart_angle - node_angle) < math.pi/2:
+                    rospy.loginfo("Qualification, node angle: " + str(node_angle))
+                    rospy.loginfo("Qualification, cart angle: " + str(cart_angle))
+                    rospy.loginfo("Qualification, angle delta: " + str(abs(cart_angle - node_angle)))
+                    node_pos = self.global_graph.node[node]['pos']
+                    cart_pos = self.global_graph.node[cart_node]['pos']
+                    node_angles[node] = self.dis(node_pos[0], node_pos[1], cart_pos[0], cart_pos[1])
+
+        # Sort nodes by distance
+        sorted_node_angles = sorted(node_angles.items(), key=lambda x: x[1])
+
+        # Finally return the closest node of the proper lane
+        return min(node_angles, key=node_angles.get)
+
+    
+    def get_nodes_in_radius(self, center_node, radius=3):
+        """ Obtains nodes in a given radius from a node representing center.
+        TODO Generalize cetner_node into x,y coordinates for more versatility
+
+        Args:
+            center_node (NetworkX Node/Hashable Object): The center node for determining where to search out from
+            radius (int): The radius (in meters to search) to search from the center
+
+        Returns:
+            A list of nodes that are in distance
+        """
+        close_nodes = []
+        center_node_pos = self.global_graph.node[center_node]['pos']
+        # Loop through each node determine if in proximity
+        for node in self.global_graph.nodes:
+            node_pos = self.global_graph.node[node]['pos']
+
+            # Distance between this node in iteration and center node
+            dist = self.dis(node_pos[0], node_pos[1], center_node_pos[0], center_node_pos[1])
+
+            if dist < radius:
+                close_nodes.append(node)
+        
+        return close_nodes
+
+
     def calc_efficient_destination(self, destination):
+        """ Attempts to find more efficient pathfinding to the destination over the default path.
+        This is useful for not having the cart overshoot the passenger if the passenger is on the wrong side of the road for pickup.
+        Preventing the cart from having to go far and doing a U-Turn to get to the side the passenger is on.
+
+        Args:
+            destination (NetworkX Node/Hashable Object): The destination node for pickup/driving to
+
+        Returns:
+            Path list of nodes to the destination
+        """
         # Find nodes within 3 meters of destination node
         close_nodes = [destination]
         local_logic_graph = copy.deepcopy(self.logic_graph)
         dest_node_pos = local_logic_graph.node[destination]['pos']
         
+        # Begin determining which nodes are close and eliminate any nodes that are more efficient just because they are next to the destination node
         for node in self.global_graph.nodes:
             inefficient = True
             node_pos = local_logic_graph.node[node]['pos']
 
             # Is node close enough and also not incident to the destination
             dist = self.dis(node_pos[0], node_pos[1], dest_node_pos[0], dest_node_pos[1])
-            if dist < 3 and node is not destination:
+            if dist < 4 and node is not destination:
                 for u, v in local_logic_graph.out_edges(node):
                     if u is destination or v is destination:
                         inefficient = True
@@ -198,6 +269,17 @@ class global_planner(object):
 
     # Closest node to given point
     def get_closest_node(self, x, y, cart_trans=False):
+        """ Gets node closest to the given x, y
+
+        Args:
+            x (int/float): The X position of the center to search from
+            y (int/float): The y position of the center to search from
+            cart_trans (boolean): If true the cart will look for the closest node that only exists in the current path it is on,
+            otherwise it will look for the closest node in the entire graph
+
+        Returns:
+            The node closest to the (x,y) tuple
+        """
         min_dist = 99999
         min_node = None
         
@@ -231,21 +313,52 @@ class global_planner(object):
         return min_node
     
     def dis(self, x1, y1, x2, y2):
+        """ Distance between two points
+
+        Args:
+            x1 (float): The X position of the first point
+            y1 (float): The Y position of the first point
+            x2 (float): The X position of the second point
+            y2 (float): The y position of the second point
+
+        Returns:
+            Distance between the two points
+        """
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
     
     #Get the closest waypoint to the cart
     def pose_callback(self, msg):
+        """ On new cart positon update update the class on the new position and orientation information
+
+        Args:
+            msg (ROS PoseStamped Message): The PoseStamped of the cart's position and orientation coming from /limited_pose topic
+        """
         self.current_pos = msg
         self.current_cart_node = self.get_closest_node(msg.pose.position.x, msg.pose.position.y, cart_trans=True)
 
+        cart_quat = (
+            msg.pose.orientation.x,
+            msg.pose.orientation.y,
+            msg.pose.orientation.z,
+            msg.pose.orientation.w
+        )
+        self.orientation = euler_from_quaternion(cart_quat)
+
     # We've received a clicked point from RViz, calculate a path to it
     def point_callback(self, msg):
+        """ If a point was published in RViz figure out how to get there
+
+        Args:
+            msg (PointStamped): The Clicked Point coming from the publish in RViz
+        """
         self.calc_nav(msg.point)
-    
-    def cur_cart_pos(self):
-        return self.get_closest_node(msg.pose.position.x, msg.pose.position.y)
 
     def gps_request_cb(self, msg):
+        """ Converts a GPS point from Lat, Long to UTM coordinate system using AlvinXY. Also displays the GPS once converted, in RViz
+
+        Args:
+            msg (ROS LatLongPoint Message): Message containing the latitude and longitude to convert and navigate to
+        """
         local_point = Point()
 
         
@@ -287,7 +400,12 @@ class global_planner(object):
         
         self.display_pub.publish(marker)
         
-    def display_rviz(self, frame):
+    def display_rviz(self, frame="/map"):
+        """ Function for visualizing the underlying graph structure
+
+        Args:
+            frame (String): The frame to transform the nodes to
+        """
         local_display = copy.deepcopy(self.global_graph)
         i = 0
         for node in local_display.nodes:
