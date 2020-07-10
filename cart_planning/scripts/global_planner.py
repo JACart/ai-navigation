@@ -9,7 +9,7 @@ import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped
-from navigation_msgs.msg import LocalPointsArray, LatLongPoint
+from navigation_msgs.msg import LocalPointsArray, LatLongPoint, LatLongArray
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String, Header
@@ -20,11 +20,15 @@ class global_planner(object):
     def __init__(self):
         rospy.init_node('global_planner')
 
-        self.anchor_lat = 38.432150 
-        self.anchor_long = -78.876106
+        self.anchor_lat = rospy.get_param('anchor_lat')
+        self.anchor_long = rospy.get_param('anchor_long')
+        self.anchor_theta = rospy.get_param('anchor_theta')
         
         # Maintain whether or not the planner has yet made any plans
         self.cart_navigated = False
+        
+        # Maintain state whether the cart is currently calculating a navigation path
+        self.calculating_nav = False
 
         #Create a new directional graph
         self.global_graph = nx.DiGraph()
@@ -68,6 +72,9 @@ class global_planner(object):
         # Publish the path to allow mind.py to begin navigation
         self.path_pub = rospy.Publisher('/global_path', LocalPointsArray, queue_size=10)
 
+        # Publishes the path but in GPS coordinates
+        self.gps_path_pub = rospy.Publisher('/gps_global_path', LatLongArray, queue_size=10)
+        
         # self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
         rospy.spin()
     
@@ -114,6 +121,9 @@ class global_planner(object):
             point (ROS Point Message): Point representing where the cart should navigate to
         """
 
+        # Allows other functions to not make critical decisions or modify data while calculating navigation
+        self.calculating_nav = True
+
         # Make a destination request when we don't know where the cart is at yet
         if self.current_pos is None:
             self.current_pos = PoseStamped()
@@ -149,7 +159,16 @@ class global_planner(object):
             new_point.position.y = self.global_graph.node[node]['pos'][1]
             points_arr.localpoints.append(new_point)
         
-        self.logic_graph = copy.deepcopy(self.global_graph)
+        # Allows for class changes again
+        self.calculating_nav = False
+
+        # Convert the path to GPS to give to Networking
+        self.output_path_gps(points_arr)
+
+        # Copy a logic graph so extra functions don't impact an evolving graph
+        # self.logic_graph = copy.deepcopy(self.global_graph)
+
+        # Publish the local points so Mind.py can begin the navigation
         self.path_pub.publish(points_arr)
 
     def determine_lane(self, cart_node):
@@ -328,14 +347,18 @@ class global_planner(object):
     
     #Get the closest waypoint to the cart
     def pose_callback(self, msg):
-        """ On new cart positon update update the class on the new position and orientation information
+        """ On new cart positon, update the class on the new position and orientation information
 
         Args:
             msg (ROS PoseStamped Message): The PoseStamped of the cart's position and orientation coming from /limited_pose topic
         """
         self.current_pos = msg
-        self.current_cart_node = self.get_closest_node(msg.pose.position.x, msg.pose.position.y, cart_trans=True)
 
+        # If the cart is mid-navigation calculation, theres no need to update the cart node until it is done
+        if not self.calculating_nav:
+            self.current_cart_node = self.get_closest_node(msg.pose.position.x, msg.pose.position.y, cart_trans=True)
+
+        # Obtain euler angles from pose orientation of cart
         cart_quat = (
             msg.pose.orientation.x,
             msg.pose.orientation.y,
@@ -353,6 +376,42 @@ class global_planner(object):
         """
         self.calc_nav(msg.point)
 
+    def output_path_gps(self, path):
+        """ Function for converting the list of points along a path to latitude and longitude
+
+        Args:
+            path (LocalPointsArray message): List of X,Y points along the path
+        """
+        gps_path = LatLongArray()
+        for pose in path.localpoints:
+            # Testing conversion back to latitude/longitude
+            stock_point = Point()
+            
+            # Correct the angle of the points from offset of map
+            stock_point.x = pose.position.x
+            stock_point.y = pose.position.y
+            stock_point = simple_gps_util.heading_correction(0, 0, -(self.anchor_theta), stock_point)
+
+            # Convert to latitude and longitude
+            lat, lon = simple_gps_util.xy2latlon(stock_point.x, stock_point.y, self.anchor_lat, self.anchor_long)
+
+            final_pose = LatLongPoint()
+            final_pose.latitude = lat
+            final_pose.longitude = lon
+
+            gps_path.gpspoints.append(final_pose)
+        '''
+        # Debug to file
+        out_file = open("/home/browermb/gps_out.txt", "w")
+        for point in gps_path.gpspoints:
+            out_file.write(str(point.latitude) + "," + str(point.longitude))
+            out_file.write("\n")
+        out_file.close()
+        '''
+        # Publish here
+        self.gps_path_pub.publish(gps_path)
+            
+
     def gps_request_cb(self, msg):
         """ Converts a GPS point from Lat, Long to UTM coordinate system using AlvinXY. Also displays the GPS once converted, in RViz
 
@@ -363,14 +422,13 @@ class global_planner(object):
 
         
         #the anchor point is the latitude/longitude for the pcd origin
-        # x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433795, -78.862290)
-        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, 38.433939, -78.862157)
+        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)
         
         local_point.x = x
         local_point.y = y
 
         # Currect the heading of the point by map offset around origin
-        local_point = simple_gps_util.heading_correction(0, 0, 100, local_point)
+        local_point = simple_gps_util.heading_correction(0, 0, self.anchor_theta, local_point)
         self.calc_nav(local_point)
         
 

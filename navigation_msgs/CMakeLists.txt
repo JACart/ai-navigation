@@ -21,6 +21,7 @@ add_message_files(
     VehicleState.msg
 	Obstacle.msg
 	ObstacleArray.msg
+    LatLongArray.msg
 )
  generate_messages(
    DEPENDENCIES
