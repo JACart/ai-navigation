@@ -61,6 +61,9 @@ class global_planner(object):
         # Listen for standard destination requests
         self.dest_req_sub = rospy.Subscriber('/destination_request', String, self.request_callback, queue_size=10)
         
+        # Listen for vehicle state changes
+        # self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, state_change)
+
         # Clicked destination requests, accepted from RViz clicked points, disabled when building maps
         self.click_req_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
         
@@ -91,7 +94,6 @@ class global_planner(object):
             self.global_graph = nx.read_gml(file_name)
             for node in self.global_graph:
                 self.global_graph.node[node]['active'] = True
-            self.logic_graph = copy.deepcopy(self.global_graph)
         except:
             rospy.logerr("Unable to launch graph file pointed to in the constants file in .../cart_planning/launch")
     
@@ -133,13 +135,27 @@ class global_planner(object):
         # Our current position in local coordinates and closest node to our position
         current_cart_pos = self.current_pos.pose.position
         self.current_cart_node = self.get_closest_node(current_cart_pos.x, current_cart_pos.y, cart_trans=True)
+
         # Get the node closest to where we want to go
         destination_point = self.get_closest_node(point.x, point.y)
 
-        # If the cart hasn't navigated yet we need to figure out the lane we're in and position ourselves in that lane
-        if not self.cart_navigated:
-            self.current_cart_node = self.determine_lane(self.current_cart_node)
-            self.cart_navigated = True
+        self.current_cart_node = self.determine_lane(self.current_cart_node)
+
+        # Maybe the cart was manually moved and the lane is no longer near the original destination
+        if self.current_cart_node is None:
+            rospy.logerr("Problem obtaining position of the cart, maybe you moved the cart manually? Refreshing graph status and retrying...")
+
+            # Attempt to find a node that was not a part of the original path that is appropriate to the cart
+            self.reset_node_activity()
+            self.current_cart_node = self.determine_lane(None)
+
+            # If the cart still can not find a reliable node/lane for the cart to be in give up
+            if self.current_cart_node is None:
+                rospy.logerr("Still an issue finding an appropriate position in the graph")
+                rospy.logerr("Make sure you are within reliable distance of the road network supported by the graph(~10 meters)")
+                return None
+            else:
+                rospy.logwarn("A suitable node was found, please check RViz to make sure the pathing is safe")
 
         if self.minimize_travel:
             nodelist = self.calc_efficient_destination(destination_point)
@@ -180,40 +196,64 @@ class global_planner(object):
         Returns:
             The closest node of the appropriate lane
         """
-        # Obtain the nodes within a 10 meter radius
-        closest_nodes = self.get_nodes_in_radius(cart_node, 10)
+        if cart_node is not None:
+            # Obtain the nodes within a 10 meter radius
+            closest_nodes = self.get_nodes_in_radius(cart_node, 10)
+        else:
+            # A reduced radius, assuming this is used for second attempt, need to be safer here
+            closest_nodes = self.get_nodes_in_radius(None, 5)
+
+        if len(closest_nodes) < 1:
+            return None
+
+        cart_pos = None
 
         # Dictionary of nodes and the angle difference between the cart and the node
         node_angles = {}
         for node in closest_nodes:
-            for u,v in self.global_graph.out_edges(node):
-                # Calculate the angle of our node to its outgoing neighbor
-                dy = self.global_graph.node[v]['pos'][1] - self.global_graph.node[u]['pos'][1]
-                dx = self.global_graph.node[v]['pos'][0] - self.global_graph.node[u]['pos'][0]
-                node_angle = math.atan2(dy,dx)
+            # If the node is to far away from the actual cart(10 meters) somehow, disregard it
+            node_pos = self.global_graph.node[node]['pos']
+            cart_pos = (self.current_pos.pose.position.x, self.current_pos.pose.position.y) 
+            distance = self.dis(node_pos[0], node_pos[1], cart_pos[0], cart_pos[1])
+            if distance > 10:
+                continue
+            # A node is active if and only if the cart traverses or is supposed to traverse the node at some point during its trip
+            if self.global_graph.node[node]['active']:
+                for u,v in self.global_graph.out_edges(node):
+                    # Calculate the angle of our node to its outgoing neighbor
+                    dy = self.global_graph.node[v]['pos'][1] - self.global_graph.node[u]['pos'][1]
+                    dx = self.global_graph.node[v]['pos'][0] - self.global_graph.node[u]['pos'][0]
+                    node_angle = math.atan2(dy,dx)
 
-                # Obtain the yaw of the cart
-                cart_angle = self.orientation[2]
+                    # Obtain the yaw of the cart
+                    cart_angle = self.orientation[2]
 
-                # If node qualifies as being correct in the lane(not requiring a turn of more than half pi radians) assign a distance to it
-                if abs(cart_angle - node_angle) < math.pi/2:
-                    rospy.loginfo("Qualification, node angle: " + str(node_angle))
-                    rospy.loginfo("Qualification, cart angle: " + str(cart_angle))
-                    rospy.loginfo("Qualification, angle delta: " + str(abs(cart_angle - node_angle)))
-                    node_pos = self.global_graph.node[node]['pos']
-                    cart_pos = self.global_graph.node[cart_node]['pos']
-                    node_angles[node] = self.dis(node_pos[0], node_pos[1], cart_pos[0], cart_pos[1])
+                    # If node qualifies as being correct in the lane(not requiring a turn of more than half pi radians) assign a distance to it
+                    if abs(cart_angle - node_angle) < math.pi/2:
+                        node_pos = self.global_graph.node[node]['pos']
 
+                        # If there is a close valid node to the cart, use it for distance calculations
+                        if cart_node is not None:
+                            cart_pos = self.global_graph.node[cart_node]['pos']
+                        node_angles[node] = self.dis(node_pos[0], node_pos[1], cart_pos[0], cart_pos[1])
+
+        if len(node_angles) < 1:
+            return None
+        
         # Sort nodes by distance
-        sorted_node_angles = sorted(node_angles.items(), key=lambda x: x[1])
+        # sorted_node_angles = sorted(node_angles.items(), key=lambda x: x[1])
 
         # Finally return the closest node of the proper lane
         return min(node_angles, key=node_angles.get)
 
-    
+    def reset_node_activity(self):
+        """ Resets all nodes active status to True this makes them all game for the cart to determine which is closest/most appropriate
+        """
+        for node in self.global_graph.nodes:
+            self.global_graph.node[node]['active'] = True
+
     def get_nodes_in_radius(self, center_node, radius=3):
         """ Obtains nodes in a given radius from a node representing center.
-        TODO Generalize cetner_node into x,y coordinates for more versatility
 
         Args:
             center_node (NetworkX Node/Hashable Object): The center node for determining where to search out from
@@ -223,12 +263,20 @@ class global_planner(object):
             A list of nodes that are in distance
         """
         close_nodes = []
-        center_node_pos = self.global_graph.node[center_node]['pos']
+        center_node_pos = None
+
+        # If there is a center node to go by find in its radius neighbors
+        if center_node is not None:
+            center_node_pos = self.global_graph.node[center_node]['pos']
+        else:
+            # If there is no known or at least reliable center node use the carts current position
+            center_node_pos = (self.current_pos.pose.position.x, self.current_pos.pose.position.y) 
+
         # Loop through each node determine if in proximity
         for node in self.global_graph.nodes:
             node_pos = self.global_graph.node[node]['pos']
 
-            # Distance between this node in iteration and center node
+            # Distance between this node in iteration and center node or cart position
             dist = self.dis(node_pos[0], node_pos[1], center_node_pos[0], center_node_pos[1])
 
             if dist < radius:
@@ -250,7 +298,7 @@ class global_planner(object):
         """
         # Find nodes within 3 meters of destination node
         close_nodes = [destination]
-        local_logic_graph = copy.deepcopy(self.logic_graph)
+        local_logic_graph = self.global_graph
         dest_node_pos = local_logic_graph.node[destination]['pos']
         
         # Begin determining which nodes are close and eliminate any nodes that are more efficient just because they are next to the destination node
@@ -260,7 +308,7 @@ class global_planner(object):
 
             # Is node close enough and also not incident to the destination
             dist = self.dis(node_pos[0], node_pos[1], dest_node_pos[0], dest_node_pos[1])
-            if dist < 4 and node is not destination:
+            if dist < 5 and node is not destination:
                 for u, v in local_logic_graph.out_edges(node):
                     if u is destination or v is destination:
                         inefficient = True
@@ -303,7 +351,7 @@ class global_planner(object):
         min_node = None
         
         # Just in case if the graph list in the for loop is outdated by a future update
-        local_logic_graph = copy.deepcopy(self.logic_graph)
+        local_logic_graph = self.global_graph
 
         for node in local_logic_graph.nodes:
             # Position of each node in the graph
