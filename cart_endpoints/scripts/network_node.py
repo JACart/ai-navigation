@@ -243,7 +243,7 @@ if __name__ == "__main__":
     
     try:
         rospy.loginfo("Attempting connection with socketio server")    
-        sio.connect('http://35.238.125.238:8020', namespaces=['/cart'])#172.30.167.135
+        sio.connect('http://localhost:8021', namespaces=['/cart'])#172.30.167.135
     except:
         rospy.loginfo('Was unable to connect to the server')
     
