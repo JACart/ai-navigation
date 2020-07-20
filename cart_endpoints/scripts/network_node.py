@@ -54,7 +54,7 @@ def send(msg, data):
         rospy.loginfo('Was unable to send data to the server')
     server_lock.release()
     
-@sio.on('cart_request', namespace='/cart')
+@sio.on('summon', namespace='/cart')
 def on_cart_req(data):
     lat_long = json.loads(data)
     rospy.loginfo("Latitude/Long received: " + str(data))
@@ -78,7 +78,7 @@ def on_dest(msg):
     #Send requested waypoint to planner
     req_pub.publish(String(location_string))
 
-@sio.on('pull_over',namespace='/cart')
+@sio.on('pull-over',namespace='/cart')
 def on_pull_over():
     rospy.loginfo("Recieved Pull Over")
     stop_msg = EmergencyStop()
@@ -86,7 +86,7 @@ def on_pull_over():
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
 
-@sio.on('resume_driving',namespace='/cart')
+@sio.on('resume-driving',namespace='/cart')
 def on_resume():
     rospy.loginfo("Received a resume signal")
     stop_msg = EmergencyStop()
@@ -103,7 +103,7 @@ def on_stop(data):
     stop_pub.publish(stop_msg)    
  
     
-@sio.on('transit_await',namespace='/cart')
+@sio.on('transit-await',namespace='/cart')
 def on_transit_await():
     rospy.loginfo("TransitAwait")
     time.sleep(4)
@@ -140,21 +140,21 @@ def send_location(msg):
         'longitude': msg.longitude,
         'id': id
     }
-    send('current_location',json.dumps(data))
+    send('gps',json.dumps(data))
     
 def send_passenger_exit():
-    send('passenger_exit',id)
+    send('passenger-exit',id)
 
 def send_position_index(data):
     send("position", data.data)
 
 #pose tracking send when ready, AI start driving
 def send_ready():
-    send('passenger_ready',id)
+    send('transit-start',id)
 
 #pose tracking send when unsafe
 def send_unsafe():
-    send('passenger_unsafe',id)
+    send('passenger-unsafe',id)
     
 
 
@@ -221,7 +221,7 @@ def passenger_image_callback(img_msg):
         dim = (400, 400)
         f2 = cv2.resize(final_image, dim, interpolation=cv2.INTER_AREA)
         retval, buffer = cv2.imencode('.jpg', f2)    
-        send('passenger_video',base64.b64encode(buffer) )
+        send('passenger-video',base64.b64encode(buffer) )
         last_passenger_pub = cur_time
     
 
@@ -234,7 +234,7 @@ def front_image_callback(img_msg):
         bridge = CvBridge() 
         image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
         retval, buffer = cv2.imencode('.jpg', image_raw)    
-        send('cart_video', base64.b64encode(buffer))
+        send('cart-video', base64.b64encode(buffer))
         last_front_pub = cur_time
 
 if __name__ == "__main__":
