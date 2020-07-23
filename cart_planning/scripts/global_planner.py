@@ -4,15 +4,16 @@ import rospy
 import os
 import copy
 import math
+import time
 import gps_util
 import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
-from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped
-from navigation_msgs.msg import LocalPointsArray, LatLongPoint, LatLongArray
+from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, TwistStamped
+from navigation_msgs.msg import LocalPointsArray, LatLongPoint, LatLongArray, VehicleState
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import String, Header
+from std_msgs.msg import String, Header, Float32
 from tf.transformations import euler_from_quaternion
 
 class global_planner(object):
@@ -26,6 +27,9 @@ class global_planner(object):
         
         # Maintain whether or not the planner has yet made any plans
         self.cart_navigated = False
+
+        # Whether the cart is navigating or not
+        self.navigating = False
         
         # Maintain state whether the cart is currently calculating a navigation path
         self.calculating_nav = False
@@ -42,6 +46,7 @@ class global_planner(object):
         self.current_pos = None
         self.current_cart_node = None
         self.prev_cart_node = None
+        self.destination_node = None
         self.yaw = None
 
         # The points on the map
@@ -49,6 +54,9 @@ class global_planner(object):
 
         # Minimizng travel will have the cart stop when its closest to the passenger regardless of which side of the road the summon comes from
         self.minimize_travel = True
+
+        # Current trip distance
+        self.total_distance = 0
 
         # Temporary solution for destinations, TODO: Make destinations embedded in graph nodes
         self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
@@ -62,11 +70,14 @@ class global_planner(object):
         self.dest_req_sub = rospy.Subscriber('/destination_request', String, self.request_callback, queue_size=10)
         
         # Listen for vehicle state changes
-        # self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, state_change)
+        self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, self.state_change, queue_size=10)
 
         # Clicked destination requests, accepted from RViz clicked points, disabled when building maps
         self.click_req_sub = rospy.Subscriber('/clicked_point', PointStamped, self.point_callback)
         
+        # Listen for velocity/speed of cart
+        self.vel_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
+
         # This is here temporarily to test GPS_Util
         self.lat_long_req = rospy.Subscriber('/gps_request', LatLongPoint, self.gps_request_cb, queue_size=10)
         
@@ -125,6 +136,7 @@ class global_planner(object):
 
         # Allows other functions to not make critical decisions or modify data while calculating navigation
         self.calculating_nav = True
+        self.total_distance = 0
 
         # Make a destination request when we don't know where the cart is at yet
         if self.current_pos is None:
@@ -138,6 +150,7 @@ class global_planner(object):
 
         # Get the node closest to where we want to go
         destination_point = self.get_closest_node(point.x, point.y)
+        self.destination_node = destination_point
 
         self.current_cart_node = self.determine_lane(self.current_cart_node)
 
@@ -161,6 +174,7 @@ class global_planner(object):
             nodelist = self.calc_efficient_destination(destination_point)
         else:
             nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
+            self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, destination_point)
 
         # Set all nodes back to a state of not being a part of the previous/current path
         for node in self.global_graph:
@@ -330,6 +344,9 @@ class global_planner(object):
             # TODO replace with cost analysis
             if len(node_path) < len(min_path):
                 min_path = node_path
+                self.destination_node = node
+                # Also set the distance of the best planned trip
+                self.total_distance = nx.dijkstra_path_length(local_logic_graph, self.current_cart_node, node)
         
         return min_path
             
@@ -372,7 +389,6 @@ class global_planner(object):
             
         # if we found a new closer node along our path let global planner know the current node and previous node
         if min_node is not self.current_cart_node and cart_trans:
-                self.prev_cart_node = self.current_cart_node
                 self.current_cart_node = min_node
                 #rospy.loginfo("Current node: " + str(self.current_cart_node))
                 #rospy.loginfo("Previous node: " + str(self.prev_cart_node))
@@ -423,6 +439,42 @@ class global_planner(object):
             msg (PointStamped): The Clicked Point coming from the publish in RViz
         """
         self.calc_nav(msg.point)
+
+    def state_change(self, msg):
+        """ Keeps the global planner updated on the current state of the cart
+
+        Args:
+            msg (VehicleState): A VehicleState message containing navigation status
+        """
+        self.navigating = msg.is_navigating
+
+    def vel_callback(self, msg):
+        """ Keeps the global planner updated on current speed of the cart
+        Also does processing of ETA to destination
+
+        Args:
+            msg (Float32 message): Contains current cart speed
+        """
+        # Current speed of the cart
+        cur_speed = msg.data
+
+        # Are we at a new node 
+        can_update = self.prev_cart_node is not self.current_cart_node
+
+        # Calculate distance remaining if the cart is navigating
+        if self.navigating and can_update and cur_speed > 0.1:
+            self.prev_cart_node = self.current_cart_node
+            # Update the remaining distance on the trip
+            self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, self.destination_node)
+
+            # Remaining time in seconds
+            remaining_time = self.total_distance/cur_speed
+
+            rospy.loginfo("Remaining Time to Destination (Seconds): " + str(remaining_time))
+            rospy.loginfo("Remaining distance to destination(meters): " + str(self.total_distance))
+            # The time we should get there
+            arrive_time = time.time() + remaining_time
+            rospy.loginfo("Estimated time of arrival: " + str(time.ctime(arrive_time)) + "\n")
 
     def output_path_gps(self, path):
         """ Function for converting the list of points along a path to latitude and longitude
@@ -505,83 +557,6 @@ class global_planner(object):
         marker.scale.z = 0.8
         
         self.display_pub.publish(marker)
-        
-    def display_rviz(self, frame="/map"):
-        """ Function for visualizing the underlying graph structure
-
-        Args:
-            frame (String): The frame to transform the nodes to
-        """
-        local_display = copy.deepcopy(self.global_graph)
-        i = 0
-        for node in local_display.nodes:
-            x = local_display.node[node]['pos'][0]
-            y = local_display.node[node]['pos'][1]
-            
-            marker = Marker()
-            marker.header = Header()
-            marker.header.frame_id = frame
-
-            marker.ns = "Path_NS"
-            marker.id = i
-            marker.type = Marker.CUBE
-            marker.action = 0
-            marker.color.r = 0.0
-            marker.color.g = 1.0
-            marker.color.b = 0.0
-            marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.4)
-
-            marker.pose.position.x = x
-            marker.pose.position.y = y
-            marker.pose.position.z = 0
-
-            marker.scale.x = 0.6
-            marker.scale.y = 0.6
-            marker.scale.z = 0.6
-
-            self.display_pub.publish(marker)
-            i += 1
-            
-        for edge in local_display.edges:
-            first_node = local_display.node[edge[0]]
-            second_node = local_display.node[edge[1]]
-            
-            points = []
-            
-            first_point = Point()
-            first_point.x = first_node['pos'][0]
-            first_point.y = first_node['pos'][1]
-            
-            second_point = Point()
-            second_point.x = second_node['pos'][0]
-            second_point.y = second_node['pos'][1]
-            
-            points.append(first_point)
-            points.append(second_point)
-            
-            marker = Marker()
-            marker.header = Header()
-            marker.header.frame_id = frame
-
-            marker.ns = "Path_NS"
-            marker.id = i
-            marker.type = Marker.ARROW
-            marker.action = 0
-            marker.color.r = 1.0
-            marker.color.g = 0.0
-            marker.color.b = 0.0
-            marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.4)
-
-            marker.points = points
-
-            marker.scale.x = 0.3
-            marker.scale.y = 0.6
-            marker.scale.z = 0
-
-            self.display_pub.publish(marker)
-            i += 1
 
 if __name__ == "__main__":
     try:

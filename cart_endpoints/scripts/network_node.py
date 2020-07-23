@@ -34,14 +34,14 @@ sio = socketio.Client()
 ########################
 ### Recieving Events ###
 ########################
-@sio.event(namespace='/cart')
+@sio.event(namespace='/ros')
 def connect():
     rospy.loginfo('connection established')
     send('connect', id)
     is_connected = True
 
         
-@sio.event(namespace='/cart')
+@sio.event(namespace='/ros')
 def disconnect():
     is_connected = False
     rospy.loginfo('disconnected from server')
@@ -49,12 +49,12 @@ def disconnect():
 def send(msg, data):
     server_lock.acquire()
     try:
-        sio.emit(msg, data, namespace='/cart')
+        sio.emit(msg, data, namespace='/ros')
     except:
         rospy.loginfo('Was unable to send data to the server')
     server_lock.release()
     
-@sio.on('summon', namespace='/cart')
+@sio.on('summon', namespace='/ros')
 def on_cart_req(data):
     lat_long = json.loads(data)
     rospy.loginfo("Latitude/Long received: " + str(data))
@@ -64,7 +64,7 @@ def on_cart_req(data):
     gps_request_pub.publish(msg)
 
 
-@sio.on('destination', namespace='/cart')
+@sio.on('destination', namespace='/ros')
 def on_dest(msg):
     location_speech_pub.publish(False)
     safety_constant_pub.publish(True)
@@ -78,7 +78,7 @@ def on_dest(msg):
     #Send requested waypoint to planner
     req_pub.publish(String(location_string))
 
-@sio.on('pull-over',namespace='/cart')
+@sio.on('pull-over',namespace='/ros')
 def on_pull_over():
     rospy.loginfo("Recieved Pull Over")
     stop_msg = EmergencyStop()
@@ -86,7 +86,7 @@ def on_pull_over():
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
 
-@sio.on('resume-driving',namespace='/cart')
+@sio.on('resume-driving',namespace='/ros')
 def on_resume():
     rospy.loginfo("Received a resume signal")
     stop_msg = EmergencyStop()
@@ -94,7 +94,7 @@ def on_resume():
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
     
-@sio.on('stop',namespace='/cart')
+@sio.on('stop',namespace='/ros')
 def on_stop(data):
     rospy.loginfo("Received a stop signal")
     stop_msg = EmergencyStop()
@@ -103,7 +103,7 @@ def on_stop(data):
     stop_pub.publish(stop_msg)    
  
     
-@sio.on('transit-await',namespace='/cart')
+@sio.on('transit-await',namespace='/ros')
 def on_transit_await():
     rospy.loginfo("TransitAwait")
     time.sleep(4)
@@ -119,12 +119,12 @@ def arrived_dest():
     safety_exit_pub.publish(True)
     exit_sound.stop()
     exit_sound.play()
-    send('arrived','/cart')
+    send('arrived','/ros')
     
 def arrived_empty_dest():
     enter_sound.stop()
     enter_sound.play()
-    send('arrived','/cart')
+    send('arrived','/ros')
 
 def send_audio(msg):
     data = {
@@ -243,7 +243,7 @@ if __name__ == "__main__":
     
     try:
         rospy.loginfo("Attempting connection with socketio server")    
-        sio.connect('http://localhost:8021', namespaces=['/cart'])#172.30.167.135
+        sio.connect('http://localhost:8021', namespaces=['/ros'])#172.30.167.135
     except:
         rospy.loginfo('Was unable to connect to the server')
     
