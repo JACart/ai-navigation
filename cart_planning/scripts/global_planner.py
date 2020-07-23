@@ -455,14 +455,14 @@ class global_planner(object):
         Args:
             msg (Float32 message): Contains current cart speed
         """
-        # Current speed of the cart
+        # Current speed of the cart (meters/second)
         cur_speed = msg.data
 
         # Are we at a new node 
         can_update = self.prev_cart_node is not self.current_cart_node
 
         # Calculate distance remaining if the cart is navigating
-        if self.navigating and can_update and cur_speed > 0.1:
+        if self.navigating and can_update and cur_speed > 1.0:
             self.prev_cart_node = self.current_cart_node
             # Update the remaining distance on the trip
             self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, self.destination_node)
@@ -470,11 +470,9 @@ class global_planner(object):
             # Remaining time in seconds
             remaining_time = self.total_distance/cur_speed
 
-            rospy.loginfo("Remaining Time to Destination (Seconds): " + str(remaining_time))
-            rospy.loginfo("Remaining distance to destination(meters): " + str(self.total_distance))
             # The time we should get there
             arrive_time = time.time() + remaining_time
-            rospy.loginfo("Estimated time of arrival: " + str(time.ctime(arrive_time)) + "\n")
+            rospy.loginfo("Travel ETA: " + str(time.ctime(arrive_time)) + "\n")
 
     def output_path_gps(self, path):
         """ Function for converting the list of points along a path to latitude and longitude
@@ -500,14 +498,7 @@ class global_planner(object):
             final_pose.longitude = lon
 
             gps_path.gpspoints.append(final_pose)
-        '''
-        # Debug to file
-        out_file = open("/home/browermb/gps_out.txt", "w")
-        for point in gps_path.gpspoints:
-            out_file.write(str(point.latitude) + "," + str(point.longitude))
-            out_file.write("\n")
-        out_file.close()
-        '''
+            
         # Publish here
         self.gps_path_pub.publish(gps_path)
             

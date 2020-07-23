@@ -41,8 +41,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
-        - /Obstacle Marker1
-        - /Marker1
       Splitter Ratio: 0.5
     Tree Height: 504
 Toolbars:
@@ -85,8 +83,8 @@ Visualization Manager:
     - Alpha: 0.0500000007
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 33.7778625
+        Min Value: -3.27933836
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -97,7 +95,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
+      Max Intensity: 232
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: Points Map
@@ -131,10 +129,10 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
         Grid: true
         LaserScan: true
         Look Ahead Point: true
+        Marker: true
         Obstacle Marker: true
         Points Map: true
         Points Raw: true
@@ -199,7 +197,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         front_left_caster:
           Alpha: 1
           Show Axes: false
@@ -386,26 +383,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 71.2472916
+      Angle: 0
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: -0.328191996
-        Y: -0.312988251
-        Z: -1.22253728
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.54979634
+      Scale: 7.50715828
       Target Frame: map
-      Value: Orbit (rviz)
-      Yaw: 0.355403513
+      Value: TopDownOrtho (rviz)
+      X: 15.720089
+      Y: 6.38741922
     Saved: ~
 Window Geometry:
   Camera:
