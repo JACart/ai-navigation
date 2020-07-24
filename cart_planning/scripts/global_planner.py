@@ -21,9 +21,11 @@ class global_planner(object):
     def __init__(self):
         rospy.init_node('global_planner')
 
+        # Various GPS Utility information
         self.anchor_lat = rospy.get_param('anchor_lat')
         self.anchor_long = rospy.get_param('anchor_long')
         self.anchor_theta = rospy.get_param('anchor_theta')
+        self.gps_calibrated = False
         
         # Maintain whether or not the planner has yet made any plans
         self.cart_navigated = False
@@ -510,7 +512,12 @@ class global_planner(object):
             msg (ROS LatLongPoint Message): Message containing the latitude and longitude to convert and navigate to
         """
         local_point = Point()
-
+        
+        # Have we calibrated the GPS yet?
+        if not self.gps_calibrated:
+            self.anchor_theta = simple_gps_util.calibrate_util(67.6, 115, 38.433170, -78.860981, self.anchor_lat, self.anchor_long)
+            rospy.loginfo("Calibrated with angle: " + str(self.anchor_theta))
+            self.gps_calibrated = True
         
         #the anchor point is the latitude/longitude for the pcd origin
         x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)
@@ -543,8 +550,8 @@ class global_planner(object):
         marker.pose.position.y = local_point.y
         marker.pose.position.z = 0.0
         
-        marker.scale.x = 3
-        marker.scale.y = 3
+        marker.scale.x = 1
+        marker.scale.y = 1
         marker.scale.z = 0.8
         
         self.display_pub.publish(marker)

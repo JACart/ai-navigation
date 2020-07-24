@@ -310,7 +310,13 @@ class PathCreation(object):
             stdscr.addstr("Map auto-build set to: " + str(self.auto_build) + "\n")
             stdscr.addstr("Connection type: " + str(self.road_type) + "\n")
             stdscr.addstr("Node Count (Not number of nodes): " + str(self.node_count) + "\n")
-
+            if self.point_mode is "Connect" or self.point_mode is "Efficient":
+                if self.first_selection == None:
+                    stdscr.addstr("Waiting on first node selection..." + "\n")
+                    stdscr.refresh()
+                else:
+                    stdscr.addstr("Waiting on second node selection..." + "\n")
+                    stdscr.refresh()
             self.prev_key = keyval
             rate.sleep()
             
