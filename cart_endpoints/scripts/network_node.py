@@ -65,18 +65,13 @@ def on_cart_req(data):
 
 
 @sio.on('destination', namespace='/ros')
-def on_dest(msg):
-    location_speech_pub.publish(False)
-    safety_constant_pub.publish(True)
-
-    rospy.loginfo("RECIEVED GOAL: " + str(msg)) 
-    location_string = str(msg)
-    # Delete White Spaces
-    location_string = location_string.replace(" ", "")
-    # Lowercase Entire String
-    location_string = location_string.lower()
-    #Send requested waypoint to planner
-    req_pub.publish(String(location_string))
+def on_dest(data):
+    lat_long = json.loads(data)
+    rospy.loginfo("Latitude/Long received: " + str(data))
+    msg = LatLongPoint()
+    msg.latitude = lat_long["latitude"]
+    msg.longitude = lat_long["longitude"]
+    gps_request_pub.publish(msg)
 
 @sio.on('pull-over',namespace='/ros')
 def on_pull_over():
@@ -191,15 +186,7 @@ def passenger_exit_callback(msg):
 
 #Handles destination arrival as well as various other vehicle state changes
 def status_update(data):
-    global empty
-    if not data.is_navigating:
-        if data.reached_destination:
-            if empty:
-                empty = False
-                arrived_empty_dest()
-            else:
-                empty = True
-                arrived_dest()
+    arrived_dest()
                 
 #Processes and sends the image from the zed camera
 

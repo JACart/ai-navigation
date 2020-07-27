@@ -62,7 +62,7 @@ class Mind(object):
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         self.param_sub = rospy.Subscriber('realtime_param_change', Int8, self.param_callback, queue_size = 10)
         #publishes points that are now in gps coordinates
-        self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10)
+        self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
         self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)

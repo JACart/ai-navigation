@@ -61,7 +61,7 @@ class global_planner(object):
         self.total_distance = 0
 
         # Temporary solution for destinations, TODO: Make destinations embedded in graph nodes
-        self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
+        # self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
         
         # self.location_req = rospy.Subscriber('/gps_request', String, self.request_callback, queue_size=10)
 
@@ -69,7 +69,7 @@ class global_planner(object):
         self.pose_sub = rospy.Subscriber('/limited_pose', PoseStamped, self.pose_callback, queue_size=10)
         
         # Listen for standard destination requests
-        self.dest_req_sub = rospy.Subscriber('/destination_request', String, self.request_callback, queue_size=10)
+        # self.dest_req_sub = rospy.Subscriber('/destination_request', String, self.request_callback, queue_size=10)
         
         # Listen for vehicle state changes
         self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, self.state_change, queue_size=10)
