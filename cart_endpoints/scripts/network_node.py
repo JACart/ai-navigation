@@ -54,7 +54,7 @@ def send(msg, data):
         rospy.loginfo('Was unable to send data to the server')
     server_lock.release()
     
-@sio.on('summon', namespace='/ros')
+@sio.on('drive-to', namespace='/ros')
 def on_cart_req(data):
     lat_long = json.loads(data)
     rospy.loginfo("Latitude/Long received: " + str(data))
