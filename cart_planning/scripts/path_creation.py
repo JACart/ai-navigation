@@ -91,7 +91,7 @@ class PathCreation(object):
             self.remove_point(node_x, node_y)
         elif self.point_mode is "Connect":
             self.connect_point(node_x, node_y)
-        elif self.point_mode is "Efficient":
+        elif self.point_mode is "Efficient" or "Multi-line":
             self.lazy_mode(node_x, node_y)
         
         #Prevent display function from handling outdated graph attributes
@@ -213,9 +213,11 @@ class PathCreation(object):
                     self.add_weighted_edge(prev_node, node_name_r)
                 
                 prev_node = node_name_r
-                
             
-            self.first_selection = None
+            # If it is a multi-line continue where we left off
+            if self.point_mode == "Multi-line":
+                self.first_selection = self.second_selection
+            
             self.second_selection = None
 
             
@@ -249,17 +251,19 @@ class PathCreation(object):
         g = 103
         l = 108
         m = 109
+        t = 116
     
         stdscr.nodelay(True)
         rate = rospy.Rate(60) 
-        stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
+        '''stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
                       R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
                       C - Connect two points\n 
                       W - toggle auto-connecting nodes\n 
                       G - Save the graph(Will be named the current time)\n
                       B - Drive the cart around and auto-build a map\n
-                      L - Efficient adding, allows you to create a line of points on a map\n
-                      M - Change connection type(undirected, directed)""")
+                      L - Line tool, allows you to create a line of points on a map\n
+                      T - Change connection type(undirected, directed)\n
+                      M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)""")'''
 
         while 1:
             if self.display_graph is not None:
@@ -293,30 +297,30 @@ class PathCreation(object):
                 self.second_selection = None
                 self.point_mode = "Efficient"
             elif keyval == m:
+                self.first_selection = None
+                self.second_selection = None
+                self.point_mode = "Multi-line"
+            elif keyval == t:
                 if self.road_type is "directed":
                      self.road_type = "undirected" 
                 else: 
                     self.road_type = "directed"
 
-            stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
-                      R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
-                      C - Connect two points\n 
-                      W - toggle auto-connecting nodes\n 
-                      G - Save the graph(Will be named the current time)\n
-                      B - Drive the cart around and auto-build a map\n
-                      L - Efficient adding, allows you to create a line of points on a map\n""")
-            stdscr.addstr("Current Point Mode: " + self.point_mode + "\n")
-            stdscr.addstr("Auto-Connect: " + str(self.auto_connect) + "\n")
-            stdscr.addstr("Map auto-build set to: " + str(self.auto_build) + "\n")
-            stdscr.addstr("Connection type: " + str(self.road_type) + "\n")
-            stdscr.addstr("Node Count (Not number of nodes): " + str(self.node_count) + "\n")
-            if self.point_mode is "Connect" or self.point_mode is "Efficient":
-                if self.first_selection == None:
-                    stdscr.addstr("Waiting on first node selection..." + "\n")
-                    stdscr.refresh()
-                else:
-                    stdscr.addstr("Waiting on second node selection..." + "\n")
-                    stdscr.refresh()
+            try:
+                stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
+                        R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
+                        C - Connect two points\n 
+                        W - toggle auto-connecting nodes\n 
+                        G - Save the graph(Will be named the current time)\n
+                        B - Drive the cart around and auto-build a map\n
+                        L - Line tool, allows you to create a line of points on a map\n
+                        T - Change connection type(undirected, directed)\n
+                        M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)""")
+                stdscr.addstr("Current Point Mode: " + self.point_mode + "\n")
+                stdscr.addstr("Auto-Connect: " + str(self.auto_connect) + "\n")
+                stdscr.addstr("Map auto-build set to: " + str(self.auto_build) + "\n")
+            except curses.error:
+                pass
             self.prev_key = keyval
             rate.sleep()
             

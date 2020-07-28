@@ -32,7 +32,7 @@ class teleop(object):
         y = 121
     
         angle_max = 70
-        angle_step = 10
+        angle_step = 0.5
         velstr = 'Hard stop     '
         anglestr = 'Center wheels '
         stdscr.nodelay(True)

@@ -83,18 +83,22 @@ class MotorEndpoint(object):
         target_speed = int(self.cmd_msg.vel) #float64
         current_speed = int(self.cmd_msg.vel_curr) #float64
         #adjust the target_angle range from (-45 <-> 45) to (0 <-> 100)
+        # rospy.loginfo("Angle before adjustment: " + str(self.cmd_msg.angle))
         if(self.cmd_msg.angle < -45):
             self.cmd_msg.angle = -45
         if(self.cmd_msg.angle > 45):
             self.cmd_msg.angle = 45
         target_angle = 100 - int(( (self.cmd_msg.angle + 45) / 90 ) * 100)
+        # rospy.loginfo("Angle after range adjustment: " + str(target_angle))
         #adjust the target angle additionally using a realtime adjustable testing value
         if self.new_vel:
+            # rospy.loginfo("Doing a realtime adjustment: " + str(target_angle))
             if target_angle < self.angle_adjust:
                 target_angle -= (10 + int(self.angle_adjust/2))
             if target_angle > 100 - self.angle_adjust:
                 target_angle += (10 + int(self.angle_adjust/2))
         data = (target_speed,current_speed,target_angle)
+        # rospy.loginfo("Before readied data" + str(data))
         data = bytearray(b'\x00' * 5)
             
         #if debug printing is requested print speed and angle info
@@ -136,6 +140,7 @@ class MotorEndpoint(object):
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
         else:
             bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
+        # rospy.loginfo("Readied data: " + str(data) + "\n")
         self.speed_ser.write(data) 
 
 if __name__ == "__main__":
