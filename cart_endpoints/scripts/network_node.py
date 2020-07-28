@@ -186,7 +186,9 @@ def passenger_exit_callback(msg):
 
 #Handles destination arrival as well as various other vehicle state changes
 def status_update(data):
-    arrived_dest()
+    if not data.is_navigating:
+        if data.reached_destination:
+            arrived_dest()
                 
 #Processes and sends the image from the zed camera
 
