@@ -5,7 +5,6 @@ import os
 import copy
 import math
 import time
-import gps_util
 import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
