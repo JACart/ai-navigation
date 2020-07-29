@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import math
-import gps_util
 import geometry_util
 import rospy
 from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
@@ -25,10 +24,10 @@ class Mind(object):
         self.odom = Odometry()
         self.debug = False
         #Our current velocity (linear x value)
-        self.gTwist = Twist()
+        self.global_twist = Twist()
         
         #Our current position in local coordinates
-        self.gPose = Pose()
+        self.global_pose = Pose()
 
         self.meters = 10.0
         self.seconds = 3.6
@@ -44,10 +43,7 @@ class Mind(object):
         self.rp_dist = 99999999999
         self.stop_thresh = 5 #this is how many seconds an object is away
 
-        #waypoints are points coming in from the map
-        self.waypoints_s = rospy.Subscriber('/waypoints', WaypointsArray,
-                                            self.waypoints_callback, queue_size=10)
-                                            
+        # The points to use for a path, typically coming from global planner                                
         self.local_sub = rospy.Subscriber('/global_path', LocalPointsArray,
                                             self.localpoints_callback, queue_size=10)
                                             
@@ -61,7 +57,6 @@ class Mind(object):
         self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
         self.param_sub = rospy.Subscriber('realtime_param_change', Int8, self.param_callback, queue_size = 10)
-        #publishes points that are now in gps coordinates
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
         self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
@@ -88,10 +83,10 @@ class Mind(object):
         self.odom = msg
     
     def twist_callback(self, msg):
-        self.gTwist = msg.twist
+        self.global_twist = msg.twist
         
     def pose_callback(self, msg):
-        self.gPose = msg.pose
+        self.global_pose = msg.pose
 
     def rp_callback(self, msg):
         #used to stop the vehicle if objects are within a certain distance of the cart
@@ -114,14 +109,6 @@ class Mind(object):
         self.path_valid = False
         self.new_path = True
 
-
-    #Converts waypoints into points in gps coordinates as opposed to the map
-    def waypoints_callback(self, msg):
-        for gps_point in msg.waypoints:
-            point = gps_util.get_point(gps_point)
-            self.google_points.append(point)
-
-        self.create_path()
     '''
     Creates a path for the cart with a set of google_points
     Adds 15 more points between the google points
@@ -172,8 +159,8 @@ class Mind(object):
             target_speed = self.global_speed
 
             # initial state
-            pose = self.gPose
-            twist = self.gTwist
+            pose = self.global_pose
+            twist = self.global_twist
 
             quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
             angles = tf.euler_from_quaternion(quat)
@@ -252,8 +239,8 @@ class Mind(object):
     '''
     def update(self, state, a, delta):
 
-        pose = self.gPose
-        twist = self.gTwist
+        pose = self.global_pose
+        twist = self.global_twist
         current_spd = twist.linear.x
         msg = VelAngle()
         if self.debug:
