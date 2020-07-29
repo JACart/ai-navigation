@@ -2,11 +2,14 @@
 <package format="2">
   <name>cart_endpoints</name>
   <version>0.0.0</version>
-  <description>Package for golfcart's hardware endpoints that interface with planning</description>
+  <description>Package for golfcart's hardware endpoints that interface with planning. 
+  These endpoints essentially deal with data incoming to the system (obtaining LiDAR data) and 
+  data going outside (motor endpoint).</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
+  <maintainer email="Tyree.mitch@gmail.com">Tyree Mitchell</maintainer>
   <maintainer email="browermb@dukes.jmu.edu">Maddie Brower</maintainer>
 
 

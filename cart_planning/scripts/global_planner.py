@@ -59,6 +59,10 @@ class global_planner(object):
         # Current trip distance
         self.total_distance = 0
 
+        # For obtaining an average of incoming velocities 
+        self.cur_speed = 0
+        self.vel_polls = 0
+
         # Temporary solution for destinations, TODO: Make destinations embedded in graph nodes
         # self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
         
@@ -432,6 +436,9 @@ class global_planner(object):
         )
         self.orientation = euler_from_quaternion(cart_quat)
 
+        # Also calculate the ETA to the destination, given most recent position
+        self.eta_calc()
+
     # We've received a clicked point from RViz, calculate a path to it
     def point_callback(self, msg):
         """ If a point was published in RViz figure out how to get there
@@ -451,29 +458,34 @@ class global_planner(object):
 
     def vel_callback(self, msg):
         """ Keeps the global planner updated on current speed of the cart
-        Also does processing of ETA to destination
 
         Args:
             msg (Float32 message): Contains current cart speed
         """
-        # Current speed of the cart (meters/second)
-        cur_speed = msg.data
+        # Estimated velocity can fluctuate slightly, so an average is ideal
+        if self.vel_polls < 5:
+            self.cur_speed += msg.data
+            self.vel_polls += 1
+        else:
+            self.cur_speed = self.cur_speed/self.vel_polls
+            self.vel_polls = 0
+            self.cur_speed = 0
 
+    def eta_calc(self):
         # Are we at a new node 
         can_update = self.prev_cart_node is not self.current_cart_node
 
         # Calculate distance remaining if the cart is navigating
-        if self.navigating and can_update and cur_speed > 1.0:
+        if self.navigating and can_update and self.cur_speed > 0:
             self.prev_cart_node = self.current_cart_node
             # Update the remaining distance on the trip
             self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, self.destination_node)
 
             # Remaining time in seconds
-            remaining_time = self.total_distance/cur_speed
+            remaining_time = self.total_distance/self.cur_speed
 
             # The time we should get there
             arrive_time = time.time() + remaining_time
-            rospy.loginfo("Travel ETA: " + str(time.ctime(arrive_time)) + "\n")
 
     def output_path_gps(self, path):
         """ Function for converting the list of points along a path to latitude and longitude

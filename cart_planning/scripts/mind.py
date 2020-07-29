@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import math
-import geometry_util
 import rospy
 from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
 from nav_msgs.msg import Path
@@ -90,7 +89,7 @@ class Mind(object):
         self.local_points = []
         for local_point in msg.localpoints:
             self.local_points.append(local_point.position)
-        #path_valid being set to false will end the previous navigation and new_path being true will trigger the creation of a new path
+        # path_valid being set to false will end the previous navigation and new_path being true will trigger the creation of a new path
         self.path_valid = False
         self.new_path = True
 
@@ -101,7 +100,7 @@ class Mind(object):
     '''
     def create_path(self):
         # Increase the "resolution" of the path with 15 intermediate points
-        local_points_plus = geometry_util.add_intermediate_points(self.local_points, 15.0)
+        local_points_plus = self.local_points # geometry_util.add_intermediate_points(self.local_points, 15.0)
 
         ax = []
         ay = []
