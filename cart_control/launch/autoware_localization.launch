@@ -21,13 +21,6 @@
   
   <!-- Location of Point Cloud Map file -->
   <arg name="map_arg" default="$(env HOME)/AVData/speedBoiMap.pcd"/>
-  
-    <!-- Start lidar code first to avoid issues-->
-    <group if="$(arg lidar)">
-        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
-        <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
-   </group> 
-         <!-- <remap from="/velodyne_points" to="/points_raw"/> -->
 
   <group>
       <!-- Start Gazebo with an empty world -->

@@ -3,10 +3,12 @@
 <launch>
     <rosparam>
         <!-- GPS Util Params -->
-        anchor_lat: 38.433939
-        anchor_long: -78.862157
-        anchor_elev : 396
+        anchor_gps: [38.433939, -78.862157]
         anchor_theta : 100
+        <!-- GPS Calibration Params -->
+        anchor_local: [0, 0]
+        test_loc_gps: [38.433170, -78.860981]
+        test_loc_local: [67.6, 115]
 
         <!-- Global Planner graph file parameter -->
         graph_file : "/home/browermb/catkin_ws/src/ai-navigation/EastCampusLiteV5.gml"

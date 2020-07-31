@@ -91,8 +91,8 @@ class PathCreation(object):
             self.remove_point(node_x, node_y)
         elif self.point_mode is "Connect":
             self.connect_point(node_x, node_y)
-        elif self.point_mode is "Efficient" or "Multi-line":
-            self.lazy_mode(node_x, node_y)
+        elif self.point_mode is "Line" or "Multi-line":
+            self.line_mode(node_x, node_y)
         
         #Prevent display function from handling outdated graph attributes
         self.display_graph = copy.deepcopy(self.global_graph)
@@ -182,7 +182,7 @@ class PathCreation(object):
             self.second_selection = None
     
     # Generate points between two positions
-    def lazy_mode(self, x, y):
+    def line_mode(self, x, y):
         if self.first_selection == None:
             self.first_selection = (x, y)
         else:
@@ -295,7 +295,7 @@ class PathCreation(object):
             elif keyval == l:
                 self.first_selection = None
                 self.second_selection = None
-                self.point_mode = "Efficient"
+                self.point_mode = "Line"
             elif keyval == m:
                 self.first_selection = None
                 self.second_selection = None

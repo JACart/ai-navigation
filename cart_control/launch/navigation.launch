@@ -7,6 +7,7 @@
 
 
   <!-- Fine tune customization -->
+  <arg name="lidar" default="true"/>
   <arg name="endpoints" default="true"/>
   <arg name="networking" default="true"/>
   <arg name="health" default="false"/>
@@ -47,6 +48,7 @@
         <arg name="pose" value="$(arg pose)"/>
         <arg name="visualize_pose" value="$(arg visualize_pose)"/>
         <arg name="obstacle_detection" value="$(arg obstacle_detection)"/>
+        <arg name="lidar" value="$(arg lidar)"/>
       </include>
   </group>
 

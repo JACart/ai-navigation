@@ -21,9 +21,13 @@ class global_planner(object):
         rospy.init_node('global_planner')
 
         # Various GPS Utility information
-        self.anchor_lat = rospy.get_param('anchor_lat')
-        self.anchor_long = rospy.get_param('anchor_long')
+        self.anchor_gps = rospy.get_param('anchor_gps')
         self.anchor_theta = rospy.get_param('anchor_theta')
+
+        # GPS Utility Calibration Parameters
+        self.anchor_local = rospy.get_param('anchor_local')
+        self.test_location_gps = rospy.get_param('test_loc_gps')
+        self.test_location_local = rospy.get_param('test_loc_local')
         self.gps_calibrated = False
         
         # Maintain whether or not the planner has yet made any plans
@@ -494,6 +498,7 @@ class global_planner(object):
             path (LocalPointsArray message): List of X,Y points along the path
         """
         gps_path = LatLongArray()
+
         for pose in path.localpoints:
             # Testing conversion back to latitude/longitude
             stock_point = Point()
@@ -504,7 +509,7 @@ class global_planner(object):
             stock_point = simple_gps_util.heading_correction(0, 0, -(self.anchor_theta), stock_point)
 
             # Convert to latitude and longitude
-            lat, lon = simple_gps_util.xy2latlon(stock_point.x, stock_point.y, self.anchor_lat, self.anchor_long)
+            lat, lon = simple_gps_util.xy2latlon(stock_point.x, stock_point.y, self.anchor_gps[0], self.anchor_gps[1])
 
             final_pose = LatLongPoint()
             final_pose.latitude = lat
@@ -518,20 +523,38 @@ class global_planner(object):
 
     def gps_request_cb(self, msg):
         """ Converts a GPS point from Lat, Long to UTM coordinate system using AlvinXY. Also displays the GPS once converted, in RViz
-
+        Note: Information on calibrating can be found here: 
+        https://git.cs.jmu.edu/av-xlabs-19/robotics/ai-navigation/wikis/Setting-Up-a-New-Driving-Environment#4-calibrating-the-gps-utility-for-the-new-map
+        
         Args:
             msg (ROS LatLongPoint Message): Message containing the latitude and longitude to convert and navigate to
         """
         local_point = Point()
         
-        # Have we calibrated the GPS yet?
+        anchor_gps = None
+
+        # Calibrate GPS Utility if not yet calibrated
         if not self.gps_calibrated:
-            self.anchor_theta = simple_gps_util.calibrate_util(67.6, 115, 38.433170, -78.860981, self.anchor_lat, self.anchor_long)
-            rospy.loginfo("Calibrated with angle: " + str(self.anchor_theta))
+            # A test point on the map X, Y
+            test_local = self.test_location_local
+
+            # Origin of the map X, Y
+            anchor_local = self.anchor_local
+
+            # That same test point but in latitude, longitude from Google Maps
+            test_gps = self.test_location_gps
+
+            # That same Origin but in latitude, longitude from Google Maps
+            anchor_gps = self.anchor_gps
+
+            # Get the calibrated heading and set
+            self.anchor_theta = simple_gps_util.calibrate_util(test_local, anchor_local, test_gps, anchor_gps)
+            rospy.set_param('anchor_theta', float(self.anchor_theta))
+            rospy.loginfo("Calibrated GPS Utility With Heading Offset: " + str(self.anchor_theta) + " degrees")
             self.gps_calibrated = True
         
         #the anchor point is the latitude/longitude for the pcd origin
-        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)
+        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, anchor_gps[0], anchor_gps[1])
         
         local_point.x = x
         local_point.y = y

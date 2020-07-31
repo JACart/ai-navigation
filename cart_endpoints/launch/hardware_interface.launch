@@ -6,6 +6,13 @@
     <arg name="pose" default="true"/>
     <arg name="visualize_pose" default="false"/>
     <arg name="obstacle_detection" default="true"/>
+    <arg name="lidar" default="true"/>
+
+       <!-- Start lidar code -->
+    <group if="$(arg lidar)">
+        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+        <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
+   </group> 
 
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>

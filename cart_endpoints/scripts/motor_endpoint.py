@@ -91,12 +91,6 @@ class MotorEndpoint(object):
         target_angle = 100 - int(( (self.cmd_msg.angle + 45) / 90 ) * 100)
         # rospy.loginfo("Angle after range adjustment: " + str(target_angle))
         #adjust the target angle additionally using a realtime adjustable testing value
-        if self.new_vel:
-            # rospy.loginfo("Doing a realtime adjustment: " + str(target_angle))
-            if target_angle < self.angle_adjust:
-                target_angle -= (10 + int(self.angle_adjust/2))
-            if target_angle > 100 - self.angle_adjust:
-                target_angle += (10 + int(self.angle_adjust/2))
         data = (target_speed,current_speed,target_angle)
         # rospy.loginfo("Before readied data" + str(data))
         data = bytearray(b'\x00' * 5)
