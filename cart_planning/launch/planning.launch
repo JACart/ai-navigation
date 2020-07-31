@@ -2,7 +2,7 @@
 
 <launch>
     <group>
-        <node name="mind" pkg="cart_planning" type="mind.py" required="true" output="screen"/>
+        <node name="local_planner" pkg="cart_planning" type="local_planner.py" required="true" output="screen"/>
 
         <!-- New Navigation system -->
         <node name="global_planner" pkg="cart_planning" type="global_planner.py" required="true" output="screen"/>

@@ -1,231 +1,306 @@
 #!/usr/bin/env python
 
-'''
-Local Planner node, takes in obstacle data from the obstacle detector endpoint and makes decisions based on the obstacles.
-'''
-
-import socket
-import rospy
 import math
-import tf
-
-from navigation_msgs.msg import ObstacleArray, Obstacle, EmergencyStop
-from geometry_msgs.msg import PoseStamped, PolygonStamped, Point32, Point
+import rospy
+from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
+from nav_msgs.msg import Path
+from std_msgs.msg import Header, Float32, String, Int8, Bool
+from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
+import tf.transformations as tf
 
+import cubic_spline_planner
+import pure_pursuit
+
+'''
+This class contains the code to track and fit a path
+for the cart to follow
+'''
 class LocalPlanner(object):
-
     def __init__(self):
-        self.stop = False
         rospy.init_node('local_planner')
 
-        self.t = tf.TransformListener()
+        self.debug = False
+        #Our current velocity (linear x value)
+        self.global_twist = Twist()
+        
+        #Our current position in local coordinates
+        self.global_pose = Pose()
 
-        self.cur_obstacles = None
-        self.cur_pos = None
-        self.target_pos = None
+        self.meters = 10.0
+        self.seconds = 3.6
 
-        self.lookahead_local = None
+        self.delay_print = 0
 
-        self.cart_width = 0.5715 #Constant width of the front of the cart
-        self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
-        self.pos_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.position_callback, queue_size=10)
-        self.taget_sub = rospy.Subscriber('/target_point', Marker, self.target_callback, queue_size=10)
+        self.global_speed = self.meters / self.seconds  # [m/s]
 
-        self.line_pub = rospy.Publisher('/collision_line', Marker, queue_size=10)
-        self.stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
-        self.boundingbox_pub = rospy.Publisher('/bb_viz', PolygonStamped, queue_size=10)
-        r = rospy.Rate(60)
+        self.navigating = False
+        self.new_path = False
+        self.path_valid = False
+        self.local_points = []
+        self.stop_thresh = 5 #this is how many seconds an object is away
+
+        # The points to use for a path, typically coming from global planner                                
+        self.local_sub = rospy.Subscriber('/global_path', LocalPointsArray,
+                                            self.localpoints_callback, queue_size=10)
+
+        # The Velocity and angular velocity of the cart coming from NDT Matching based on LiDAR                                      
+        self.twist_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.twist_callback, queue_size = 10)
+
+        # Get the current position of the cart from NDT Matching
+        self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
+
+        # Allow the sharing of the current staus of the vehicle driving
+        self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
+
+        # For sending out speed, and steering requests to Motor Endpoint
+        self.motion_pub = rospy.Publisher('/nav_cmd', VelAngle, queue_size=10)
+
+        # Show the points on the map in RViz
+        self.points_pub = rospy.Publisher('/points', Path, queue_size=10, latch=True)
+
+        # Show the cubic spline path the cart will be taking in RViz
+        self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
+
+        # Show the current point along the path the cart is attempting to navigate to in RViz
+        self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
+
+        # Show the currently requested steering angle in RViz
+        self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
+        
+        rate = rospy.Rate(5)
+
         while not rospy.is_shutdown():
-            if self.target_pos is not None:
+            # Upon receipt of a new path request, create a new one
+            if self.new_path:
+                rospy.loginfo("Creating a new path")
+                self.path_valid = True
+                self.new_path = False
+                self.create_path()
+            rate.sleep()
+    
+    def twist_callback(self, msg):
+        self.global_twist = msg.twist
+        
+    def pose_callback(self, msg):
+        self.global_pose = msg.pose
 
-                self.t.waitForTransform("/base_laser_link", "/base_link", rospy.Time(0), rospy.Duration(0.01))
-                link_pos, left_quat = self.t.lookupTransform("/base_link", "/base_laser_link", rospy.Time())
+    def localpoints_callback(self, msg):
+        self.local_points = []
+        for local_point in msg.localpoints:
+            self.local_points.append(local_point.position)
+        # path_valid being set to false will end the previous navigation and new_path being true will trigger the creation of a new path
+        self.path_valid = False
+        self.new_path = True
+
+    '''
+    Creates a path for the cart with a set of local_points
+    Adds 15 more points between the google points
+    Intermediate points are added for a better fitting spline
+    '''
+    def create_path(self):
+        # Increase the "resolution" of the path with 15 intermediate points
+        local_points_plus = self.local_points # geometry_util.add_intermediate_points(self.local_points, 15.0)
+
+        ax = []
+        ay = []
+
+        # Create a Path object for displaying the raw path (no spline) in RViz
+        display_points = Path()
+        display_points.header = Header()
+        display_points.header.frame_id = '/map'
+        
+        # Set the beginning of the navigation the first point
+        last_index = 0
+        target_ind = 0
+        
+        # Creates a list of the x's and y's to be used when calculating the spline
+        for p in local_points_plus:
+            display_points.poses.append(create_pose_stamped(p))
+            ax.append(p.x)
+            ay.append(p.y)
+
+        self.points_pub.publish(display_points)
+
+        # If the path doesn't have any successive points to navigate through, don't try
+        if len(ax) > 2:
+            # Create a cubic spline from the raw path
+            cx, cy, cyaw, ck, cs = cubic_spline_planner.calc_spline_course(ax, ay, ds=0.1)
+
+            # Create Path object which displays the cubic spline in RViz
+            path = Path()
+            path.header = Header()
+            path.header.frame_id = '/map'
+
+            # Add cubic spline points to path
+            for i in range(0, len(cx)):
+                curve_point = Point()
+                curve_point.x = cx[i]
+                curve_point.y = cy[i]
+                path.poses.append(create_pose_stamped(curve_point))
+            
+            self.path_pub.publish(path)
+
+            # Set the current state of the cart to navigating
+            current_state = VehicleState()
+            current_state.is_navigating = True
+            self.vehicle_state_pub.publish(current_state)
+            
+            target_speed = self.global_speed
+
+            # initial state
+            pose = self.global_pose
+            twist = self.global_twist
+
+            quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+            angles = tf.euler_from_quaternion(quat)
+            initial_v = twist.linear.x
+            #TODO state has to be where we start
+            state = State(x=pose.position.x, y=pose.position.y, yaw=angles[2], v=initial_v)
+
+            # last_index represents the last point in the cubic spline, the destination
+            last_index = len(cx) - 1
+            time = 0.0
+            x = [state.x]
+            y = [state.y]
+            yaw = [state.yaw]
+            v = [state.v]
+            t = [0.0]
+            target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
+
+             # Continue to loop while we have not hit the target destination, and the path is still valid
+            while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
+                target_speed = self.global_speed            
+                ai = target_speed#pure_pursuit.PIDControl(target_speed, state.v)
+                di, target_ind = pure_pursuit.pure_pursuit_control(state, cx, cy, target_ind)
                 
-                x1 = link_pos[0]
-                y1 = link_pos[1]
-                x2 = self.target_pos.position.x
-                y2 = self.target_pos.position.y
+                #publish our desired position
+                mkr = create_marker(cx[target_ind], cy[target_ind], '/map')
+                self.target_pub.publish(mkr)
 
+                # Arrow that represents steering angle
+                arrow = create_marker(0, 0, '/base_link')
+                arrow.type = 0 #arrow
+                arrow.scale.x = 2.0
+                arrow.scale.y = 1.0
+                arrow.scale.z = 1.0
+                arrow.color.r = 1.0
+                arrow.color.g = 0.0
+                arrow.color.b = 0.0
 
-                p1 = Point()
-                p1.x = x1
-                p1.y = y1
-                p1.z = 0.5
+                quater = tf.quaternion_from_euler(0, 0, di)
+                arrow.pose.orientation.x = quater[0]
+                arrow.pose.orientation.y = quater[1]
+                arrow.pose.orientation.z = quater[2]
+                arrow.pose.orientation.w = quater[3]
+                self.target_twist_pub.publish(arrow)
 
-                p2 = Point()
-                p2.x = x2
-                p2.y = y2
-                p2.z = 0.5
+                state = self.update(state, ai, di)
+
+                x.append(state.x)
+                y.append(state.y)
+                yaw.append(state.yaw)
+                v.append(state.v)
+                t.append(time)
+        else:
+            self.path_valid = False
+            rospy.logwarn("It appears the cart is already at the destination")
+            
+        #Check if we've reached the destination, if so we should change the cart state to finished
+        rospy.loginfo("Done navigating")
+        current_state = VehicleState()
+        current_state.is_navigating = False
+        current_state.reached_destination = True
+
+        if self.path_valid:
+            rospy.loginfo("Reached Destination")
+        else:
+            rospy.loginfo("Already at destination, or there may be no path to get to the destination or navigation was interrupted.")
         
-                line_list = Marker()
-                line_list.header.frame_id = "/base_link"
-                line_list.header.stamp = rospy.Time(0)
-                line_list.id = 100
-
-                line_list.type = Marker.LINE_LIST
-                line_list.points.append(p1)
-                line_list.points.append(p2)
-
-                self.line_pub.publish(line_list)
-
-                for obstacle in self.cur_obstacles:
-                    cx = obstacle.pos.point.x
-                    cy = obstacle.pos.point.y
-                    radius = obstacle.radius
-
-                    if self.collision_check(x1, y1, x2, y2, cx, cy, radius):
-                        stop_msg = EmergencyStop()
-                        stop_msg.emergency_stop = True
-                        stop_msg.sender_id = 6
-                        self.stop_pub.publish(stop_msg)
-                        rospy.loginfo("COLLISION DETECTED")
-                    else:
-                        stop_msg = EmergencyStop()
-                        stop_msg.emergency_stop = False
-                        stop_msg.sender_id = 6
-                        self.stop_pub.publish(stop_msg)
-                        rospy.loginfo("No Collision")
-                    
-            r.sleep()
-
-    def obstacle_callback(self, msg):
-        self.cur_obstacles = msg.obstacles
-
-    def position_callback(self, msg):
-        self.cur_pos = msg.pose
-
-    def target_callback(self, msg):
-        self.target_pos = msg.pose
-        lookahead_global = PoseStamped()
-        lookahead_global.header.frame_id = "/map"
-        lookahead_global.pose = self.target_pos
-
-        self.lookahead_local = self.t.transformPose("/base_link", lookahead_global)
-        
-    def collision_check(self, x1, y1, x2, y2, cx, cy, radius):
-        radius += self.cart_width / 2 #Add buffer to circle radius
-
-        inside = self.pointCircle(x1, y1, cx, cy, radius)
-        inside2 = self.pointCircle(x1, y2, cx, cy, radius)
-
-        if inside or inside2:
-            return True
-        
-        #Line length
-        dX = x1 - x2
-        dY = y1- y2
-        len = math.sqrt( (dX**2) + (dY**2) )
-
-        #Dot product of line and circle
-        dot = ( ((cx-x1)*(x2-x1)) + ((cy-y1)*(y2-y1)) ) / math.pow(len, 2)
-
-        closestX = x1 + (dot * (x2-x1))
-        closestY = y1 + (dot * (y2-y1))
-
-        on_segment = self.linePoint(x1, y1, x2, y2, closestX, closestY)
-
-        #Ensure point on line
-        if not on_segment:
-            return False
-
-        dX = closestX - cx
-        dY = closestY - cy
-
-        dist = math.sqrt( (dX**2) + (dY**2) )
-
-        if dist <= radius:
-            return True
-        
-        return False
-
-    def pointCircle(self, px, py, cx, cy, radius):
-        dX = px - cx
-        dY = py - cy
-
-        dist = math.sqrt((dX**2) + (dY**2))
-
-        if dist <= radius:
-            return True
-
-        return False
-
-        
-    def linePoint(self, x1, y1, x2, y2, px, py):
-        d1 = self.distance(px, py, x1, y1)
-        d2 = self.distance(px, py, x2, y2)
-
-        line_len = self.distance(x1, y1, x2, y2)
-
-        float_buff = 0.01
-
-        if((d1 + d2 >= (line_len - float_buff)) and ((d1+d2) <= line_len+float_buff) ):
-            return True
-
-        return False
-        
-    def distance(self, x1, y1, x2, y2):
-        dX = (x2 - x1)**2
-        dY = (y2 - y1)**2
-
-        return math.sqrt(dX + dY)
-
-    def calcBounds(self):
-        display_bb = PolygonStamped()
-        self.t.waitForTransform("/front_left_caster", "/base_link", rospy.Time(0), rospy.Duration(0.01))
-        self.t.waitForTransform("/front_right_caster", "/base_link", rospy.Time(0), rospy.Duration(0.01))
-        left_wheel_pos, left_quat = self.t.lookupTransform("/base_link", "/front_left_caster", rospy.Time())
-        right_wheel_pos, right_quat = self.t.lookupTransform("/base_link", "/front_right_caster", rospy.Time())
-
-        lookahead_global = PoseStamped()
-        lookahead_global.header.frame_id = "/map"
-        lookahead_global.pose = self.target_pos
-
-        lookahead_local = self.t.transformPose("/base_link", lookahead_global)
-
-        
-        points_arr = []
-
-        p1 = Point32()
-        p1.x = left_wheel_pos[0] - self.cart_width / 1.8
-        p1.y = left_wheel_pos[1]
-        points_arr.append(p1)
-        
-        p2 = Point32()
-        p2.x = right_wheel_pos[0] + self.cart_width / 1.8
-        p2.y = right_wheel_pos[1]
-        points_arr.append(p2)
-
-
-        p3 = Point32()
-        p3.x = lookahead_local.pose.position.x - self.cart_width / 1.8
-        p3.y = lookahead_local.pose.position.y
-        points_arr.append(p3)
-
-        p4 = Point32()
-        p4.x = lookahead_local.pose.position.x + self.cart_width / 1.8
-        p4.y = lookahead_local.pose.position.y
-        points_arr.append(p4)
-
-        display_bb.header.frame_id = "/base_link"
-        display_bb.header.stamp = rospy.Time(0)
-        display_bb.polygon.points = points_arr
-
-        self.boundingbox_pub.publish(display_bb)
-
-
-
-        
+        self.vehicle_state_pub.publish(current_state)
+        msg = VelAngle()
+        msg.vel = 0
+        msg.angle = 0
+        msg.vel_curr = 0
+        self.motion_pub.publish(msg)
         
 
 
+    '''
+    Updates the carts position by a given state and delta
+    '''
+    def update(self, state, a, delta):
 
-        
+        pose = self.global_pose
+        twist = self.global_twist
+        current_spd = twist.linear.x
+        msg = VelAngle()
+        if self.debug:
+            self.delay_print -= 1
+            if self.delay_print <= 0:
+                self.delay_print = 50
+                rospy.loginfo("Target Speed: " + str(a))
+                rospy.loginfo("Current Speed: " + str(current_spd))
+        msg.vel = a #Speed we want from pure pursuit controller
+        msg.angle = (delta*180)/math.pi
+        msg.vel_curr = current_spd
+        self.motion_pub.publish(msg)
 
-        
+        state.x = pose.position.x
+        state.y = pose.position.y
+
+        quat = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
+        angles = tf.euler_from_quaternion(quat)
+
+        state.yaw = angles[2]
+
+        state.v = twist.linear.x
+
+        return state
+
+
+class State:
+    def __init__(self, x=0.0, y=0.0, yaw=0.0, v=0.0):
+        self.x = x
+        self.y = y
+        self.yaw = yaw
+        self.v = v
+
+def create_pose_stamped(point):
+    stamped = PoseStamped()
+    stamped.header = Header()
+    stamped.header.frame_id = '/map'
+    stamped.pose.position = point
+    return stamped
+
+def create_marker(x, y, frame_id):
+    marker = Marker()
+    marker.header.frame_id = frame_id
+    marker.header.stamp = rospy.Time.now()
+    marker.ns = "my_namespace"
+    marker.id = 0
+    marker.type = 1 #cube
+    marker.action = 0 #add
+    marker.pose.position.x = x
+    marker.pose.position.y = y
+    marker.pose.position.z = 0
+
+    marker.pose.orientation.x = 0.0
+    marker.pose.orientation.y = 0.0
+    marker.pose.orientation.z = 0.0
+    marker.pose.orientation.w = 1.0
+    marker.scale.x = 1.0
+    marker.scale.y = 1.0
+    marker.scale.z = 1.0
+    marker.color.a = 1.0
+    marker.color.r = 0.0
+    marker.color.g = 1.0
+    marker.color.b = 0.0
+
+    return marker
+
 if __name__ == "__main__":
     try:
         LocalPlanner()
     except rospy.ROSInterruptException:
         pass
-

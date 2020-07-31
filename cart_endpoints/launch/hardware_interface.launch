@@ -32,7 +32,7 @@
     <!--<include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>-->
     <group if="$(arg obstacle_detection)">
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
-        <node name="local_planner" pkg="cart_planning" type="local_planner.py" output="screen"/>
+        <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
     <include file="$(find video_stream_opencv)/launch/camera.launch">
             <!--This is referring to the zed camera facing the passenger-->
