@@ -21,6 +21,8 @@ class GPS_Parser(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('', self.UDP_PORT))
         rospy.loginfo("GPS Connected")
+        # Publish the starting position
+        self.get_and_pub_packet()
         r = rospy.Rate(10)
         r.sleep()
         while not rospy.is_shutdown():
