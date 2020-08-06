@@ -11,6 +11,6 @@
         test_loc_local: [67.6, 115]
 
         <!-- Global Planner graph file parameter -->
-        graph_file : "/home/browermb/catkin_ws/src/ai-navigation/EastCampusLiteV5.gml"
+        graph_file: "/home/browermb/catkin_ws/src/ai-navigation/EastCampusLiteV5.gml"
     </rosparam>
 </launch>

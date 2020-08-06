@@ -19,7 +19,7 @@ class MotorEndpoint(object):
         self.new_vel = True
         self.debug = False
         self.angle_adjust = 0
-        self.stopping_dictionary = {0: False, 1: False, 2: False, 3:False, 4:False}
+        self.stop = False
         self.delay_print = 0
         self.brake = int(255)
         self.drove_since_braking = True
@@ -40,7 +40,7 @@ class MotorEndpoint(object):
         """
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
-        self.stop_subscriber = rospy.Subscriber('/emergency_stop', EmergencyStop,
+        self.stop_subscriber = rospy.Subscriber('/stop_vehicle', Bool,
                                                       self.stop_callback, queue_size=10)
         self.param_subscriber = rospy.Subscriber('/realtime_a_param_change', Int8, self.param_callback, queue_size=10)
         
@@ -61,7 +61,7 @@ class MotorEndpoint(object):
         self.angle_adjust += (msg.data * 10)
 
     def stop_callback(self, msg):
-        self.stopping_dictionary[msg.sender_id] = msg.emergency_stop
+        self.stop = msg.data
 
     def debug_callback(self, msg):
         self.debug = msg.data
@@ -103,17 +103,8 @@ class MotorEndpoint(object):
                 rospy.loginfo("Endpoint Angle: " + str(target_angle))
                 rospy.loginfo("Endpoint Speed: " + str(target_speed))
             
-        # sender_id is important to ensure all parties 
-        # are ready to resume before releasing the stop command
-        # ie both voice and pose tell us we need to stop and then
-        # pose gives us the all clear but we should still be 
-        # waiting for voice to also give the all clear
-        # sender_id = 1 is the server, 2 is voice, 3 is pose, 4 is health monitor, 
-        # 0 is for internal usage but is currently unused
-        for x in self.stopping_dictionary.values():
-           #rospy.loginfo(x)
-           pass
-        if any(x == True for x in self.stopping_dictionary.values()):
+        # Check for request to stop vehicle
+        if self.stop:
             target_speed = (int(-self.brake))
             if(self.drove_since_braking == True):
                 self.braking_duration = 3

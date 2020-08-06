@@ -2,7 +2,7 @@
 
 import math
 import rospy
-from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState
+from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState, EmergencyStop
 from nav_msgs.msg import Path
 from std_msgs.msg import Header, Float32, String, Int8, Bool
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
@@ -40,6 +40,9 @@ class LocalPlanner(object):
         self.local_points = []
         self.stop_thresh = 5 #this is how many seconds an object is away
 
+        # To allow other nodes to make stop requests
+        self.stop_requests = {}
+
         # The points to use for a path, typically coming from global planner                                
         self.local_sub = rospy.Subscriber('/global_path', LocalPointsArray,
                                             self.localpoints_callback, queue_size=10)
@@ -49,6 +52,9 @@ class LocalPlanner(object):
 
         # Get the current position of the cart from NDT Matching
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
+
+        # Allow nodes to make stop requests
+        self.emergency_stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
 
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
@@ -61,6 +67,9 @@ class LocalPlanner(object):
 
         # Show the cubic spline path the cart will be taking in RViz
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
+
+        # Publish stop to Motor Endpoint
+        self.stop_pub = rospy.Publisher('/stop_vehicle', Bool, queue_size=10)
 
         # Show the current point along the path the cart is attempting to navigate to in RViz
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
@@ -84,6 +93,9 @@ class LocalPlanner(object):
         
     def pose_callback(self, msg):
         self.global_pose = msg.pose
+
+    def stop_callback(self, msg):
+        self.stop_requests[msg.sender_id] = msg.emergency_stop
 
     def localpoints_callback(self, msg):
         self.local_points = []
@@ -244,7 +256,16 @@ class LocalPlanner(object):
         msg.vel = a #Speed we want from pure pursuit controller
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd
-        self.motion_pub.publish(msg)
+
+        # Check if any node wants us to stop
+        stop_msg = Bool()
+        if any(x == True for x in self.stop_requests.values()):
+            stop_msg.data = True
+        else:
+            stop_msg.data = False
+            self.motion_pub.publish(msg)
+
+        self.stop_pub.publish(stop_msg)
 
         state.x = pose.position.x
         state.y = pose.position.y
@@ -257,7 +278,6 @@ class LocalPlanner(object):
         state.v = twist.linear.x
 
         return state
-
 
 class State:
     def __init__(self, x=0.0, y=0.0, yaw=0.0, v=0.0):
