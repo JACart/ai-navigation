@@ -50,8 +50,8 @@ class speech_recognition_core(object):
                 #print(self.end_time)
                 if self.active > 0:
                     self.active = 0
-                    self.ping_out_sound.stop()
-                    self.ping_out_sound.play()
+                    #self.ping_out_sound.stop()
+                    #self.ping_out_sound.play()
             rate.sleep()
 
     def listener(self, recognizer, audio):
@@ -65,8 +65,8 @@ class speech_recognition_core(object):
                 for x in range(len(text_array)):
                     if (text_array[x] == "cafeteria" or text_array[x] == "home" or text_array[x] == "xlabs" 
                         or text_array[x] == "clinic" or text_array[x]=="reccenter"):
-                        self.ping_in_sound.stop()
-                        self.ping_in_sound.play()
+                        #self.ping_in_sound.stop()
+                        #self.ping_in_sound.play()
                         self.speech_text_pub.publish(text_array[x])
             else:
                 rospy.loginfo(text)
@@ -78,8 +78,8 @@ class speech_recognition_core(object):
                             if self.active <= 0:
                                 self.active = 1
                                 self.end_time = time.time() + 5
-                                self.ping_in_sound.stop()
-                                self.ping_in_sound.play()
+                                #self.ping_in_sound.stop()
+                                #self.ping_in_sound.play()
                     #checks for two words that together form autocart
                     if self.active > 0 or text_array[x] == "auto":
                         if (self.active > 0 or len(text_array) > x+1 and (text_array[x+1] == "cart" or text_array[x+1] == "part" 
@@ -88,8 +88,8 @@ class speech_recognition_core(object):
                             #self.active basically allows the speech to be recongized for one loop after saying auto cart to support this design
                             if self.active <= 0:
                                 self.end_time = time.time() + 5
-                                self.ping_in_sound.stop()
-                                self.ping_in_sound.play()
+                                #self.ping_in_sound.stop()
+                                #self.ping_in_sound.play()
                                 self.active = 1
                             for y in range(x, len(text_array)):
                                 if text_array[y] == "hello":
@@ -97,7 +97,7 @@ class speech_recognition_core(object):
                                     self.google_tts = gTTS(text="Hello welcome to autocart", lang=self.language, slow=False)
                                     self.google_tts.save(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/realtime', "test_speech.mp3"))
                                     self.tts_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), 'catkin_ws/src/ai-navigation/cart_endpoints/sounds/realtime', 'test_speech.mp3'))
-                                    self.tts_sound.play()
+                                    #self.tts_sound.play()
                                     time.sleep(3)
                                 if text_array[y] == "indicated":
                                     #this is a temporary fix to the cart hearing the emergency message playing
@@ -107,8 +107,8 @@ class speech_recognition_core(object):
                                     #end the ride... do we still want/need this functionality?
                                     break
                                 if text_array[y] == "help" or text_array[y] == "stop":
-                                    self.emergency_sound.stop()
-                                    self.emergency_sound.play()
+                                    #self.emergency_sound.stop()
+                                    #self.emergency_sound.play()
                                     #time.sleep(3)
                                     rospy.loginfo("Emergency Issued")
                                     self.pullover_pub.publish(True)
@@ -127,8 +127,9 @@ class speech_recognition_core(object):
                             #if self.active > 0:
                             #    self.active -= 1
                             if self.active <= 0:
-                                self.ping_out_sound.stop()
-                                self.ping_out_sound.play()
+                                #self.ping_out_sound.stop()
+                                #self.ping_out_sound.play()
+                                rospy.loginfo("")
                             break
 
         except Exception as e:
