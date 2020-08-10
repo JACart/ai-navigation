@@ -16,9 +16,6 @@
     <group if="$(arg networking)">
         <node name="network_node" pkg="cart_endpoints" type="network_node.py" output="screen"/>
     </group>
-    <group if="$(arg voice)">
-        <node name="speech_recognition" pkg="cart_endpoints" type="speech_recognition_core.py" output="screen"/>
-    </group>
     <group if="$(arg pose)">
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
     </group>
