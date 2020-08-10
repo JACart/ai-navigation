@@ -112,13 +112,9 @@ def on_transit_await():
 
 def arrived_dest():
     safety_exit_pub.publish(True)
-    exit_sound.stop()
-    exit_sound.play()
     send('arrived','/ros')
     
 def arrived_empty_dest():
-    enter_sound.stop()
-    enter_sound.play()
     send('arrived','/ros')
 
 def send_audio(msg):

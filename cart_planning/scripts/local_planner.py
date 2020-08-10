@@ -2,6 +2,7 @@
 
 import math
 import rospy
+import time
 from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState, EmergencyStop
 from nav_msgs.msg import Path
 from std_msgs.msg import Header, Float32, String, Int8, Bool
@@ -34,6 +35,8 @@ class LocalPlanner(object):
 
         self.global_speed = self.meters / self.seconds  # [m/s]
 
+        self.cur_speed = 0
+
         self.navigating = False
         self.new_path = False
         self.path_valid = False
@@ -52,6 +55,12 @@ class LocalPlanner(object):
 
         # Get the current position of the cart from NDT Matching
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size = 10)
+
+        # Current Velocity of cart in Meters per second
+        self.speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
+
+        # Callback for a throttled /ndt_pose topic
+        self.throttled_pose_sub = rospy.Subscriber('/limited_pose')
 
         # Allow nodes to make stop requests
         self.emergency_stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
@@ -96,6 +105,9 @@ class LocalPlanner(object):
 
     def stop_callback(self, msg):
         self.stop_requests[msg.sender_id] = msg.emergency_stop
+
+    def vel_callback(self, msg):
+        self.cur_speed = msg.data
 
     def localpoints_callback(self, msg):
         self.local_points = []
@@ -278,6 +290,58 @@ class LocalPlanner(object):
         state.v = twist.linear.x
 
         return state
+    
+    def calc_eta(self):
+        """ Calculates the Estimated Time of Arrival to the destination
+        """
+        # Where are we at and how much further must we go
+        current_node = self.get_closest_point(self.global_pose.position.x, self.global_pose.position.y)
+        distance_remaining = self.calc_trip_dist(self.local_points, current_node)
+
+        # Remaining time in seconds
+        remaining_time = distance_remaining / self.cur_speed
+
+        # Calculate the ETA to the end
+        arrival_time = time.time() + remaining_time
+
+        rospy.loginfo("Estimated time of arrival: " + str(arrival_time))
+
+
+    def calc_trip_dist(self, points_list, start):
+        """ Calculates the trip distance from the "start" index to the end of the "points_list"
+
+        Args:
+            points_list(List): The list of path points to calculate the distance of
+            start(int): The index of which to start calculating the trip distance  
+        """
+        trip_sum = 0
+        prev_point = start
+        for i in range(start+1, len(points_list)):
+            trip_sum += self.calc_distance(points_list[start].x, points_list[start].y
+            points_list[i].x, points_list[i].y)
+
+        return trip_sum
+
+    def get_closest_point(self, pos_x, pos_y):
+        """ Get the closest point along the raw path from pos_x, pos_y
+
+        Args:
+            pos_x(float): The x position of search center
+            pos_y(float): The y position of search center
+        """
+        min_node = 0
+        min_dist = 99999
+        for i in range(len(self.local_points)):
+            dist = self.calc_distance(pos_x, pos_y, self.local_points[i].x, self.local_points[i].y)
+            if dist < min_dist:
+                min_dist = dist
+                min_node = i
+        
+        return min_node
+
+    def calc_distance(self, x1, y1, x2, y2):
+        return math.sqrt(((x2-x1)**2) + ((y2-y1)**2))
+
 
 class State:
     def __init__(self, x=0.0, y=0.0, yaw=0.0, v=0.0):
