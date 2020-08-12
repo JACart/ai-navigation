@@ -12,5 +12,10 @@
 
         <!-- Global Planner graph file parameter -->
         graph_file: "/home/browermb/catkin_ws/src/ai-navigation/EastCampusLiteV6.gml"
+
+        <!-- Maximum safety parameters -->
+        <!-- These are reactive in the sense that if the max_speed is reached the cart will emergency stop -->
+        max_speed: 5
+        max_ndt_health: 4
     </rosparam>
 </launch>

@@ -178,12 +178,18 @@ class global_planner(object):
                 return None
             else:
                 rospy.logwarn("A suitable node was found, please check RViz to make sure the pathing is safe")
+        
+        # Attempt to find a route to the destination
+        try:
+            if self.minimize_travel:
+                nodelist = self.calc_efficient_destination(destination_point)
+            else:
+                nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
+                self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, destination_point)
+        except:
+            rospy.logerr("Unable to find a path to the desired destination")
+            rospy.logerr("Debug info: Starting Node: " + str(self.current_cart_node) + " End node: " + str(destination_point))
 
-        if self.minimize_travel:
-            nodelist = self.calc_efficient_destination(destination_point)
-        else:
-            nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
-            self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, destination_point)
 
         # Set all nodes back to a state of not being a part of the previous/current path
         for node in self.global_graph:
@@ -441,7 +447,7 @@ class global_planner(object):
         self.orientation = euler_from_quaternion(cart_quat)
 
         # Also calculate the ETA to the destination, given most recent position
-        self.eta_calc()
+        # self.eta_calc()
 
     # We've received a clicked point from RViz, calculate a path to it
     def point_callback(self, msg):

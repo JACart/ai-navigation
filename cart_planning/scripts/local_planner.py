@@ -107,7 +107,10 @@ class LocalPlanner(object):
         self.stop_requests[msg.sender_id] = msg.emergency_stop
 
     def vel_callback(self, msg):
-        self.cur_speed = msg.data
+        if msg.data < 0.5:
+            self.cur_speed = self.global_speed
+        else:
+            self.cur_speed = msg.data
 
     def localpoints_callback(self, msg):
         self.local_points = []
