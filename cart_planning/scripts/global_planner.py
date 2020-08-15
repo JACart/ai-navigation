@@ -181,40 +181,43 @@ class global_planner(object):
         
         # Attempt to find a route to the destination
         try:
+            nodelist = None
             if self.minimize_travel:
                 nodelist = self.calc_efficient_destination(destination_point)
             else:
                 nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
                 self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, destination_point)
-        except:
+
+                    # Set all nodes to a state of not being a part of the coming path
+            for node in self.global_graph:
+                self.global_graph.node[node]['active'] = False
+
+            # Convert our list of nodes along the path to the destination to a list of Point messages
+            points_arr = LocalPointsArray()
+
+            # Begin conversion and set nodes belonging to the path to active
+            for node in nodelist:
+                self.global_graph.node[node]['active'] = True
+                new_point = Pose()
+                new_point.position.x = self.global_graph.node[node]['pos'][0]
+                new_point.position.y = self.global_graph.node[node]['pos'][1]
+                points_arr.localpoints.append(new_point)
+            
+            # Allows for class changes again
+            self.calculating_nav = False
+
+            # Convert the path to GPS to give to Networking
+            self.output_path_gps(points_arr)
+
+            # Publish the local points so Mind.py can begin the navigation
+            self.path_pub.publish(points_arr)
+        except nx.NetworkXNoPath:
             rospy.logerr("Unable to find a path to the desired destination")
             rospy.logerr("Debug info: Starting Node: " + str(self.current_cart_node) + " End node: " + str(destination_point))
-
-
-        # Set all nodes back to a state of not being a part of the previous/current path
-        for node in self.global_graph:
-            self.global_graph.node[node]['active'] = False
-
-        # Convert our list of nodes to the destination to a list of points
-        points_arr = LocalPointsArray()
-        for node in nodelist:
-            self.global_graph.node[node]['active'] = True
-            new_point = Pose()
-            new_point.position.x = self.global_graph.node[node]['pos'][0]
-            new_point.position.y = self.global_graph.node[node]['pos'][1]
-            points_arr.localpoints.append(new_point)
-        
-        # Allows for class changes again
-        self.calculating_nav = False
-
-        # Convert the path to GPS to give to Networking
-        self.output_path_gps(points_arr)
-
-        # Copy a logic graph so extra functions don't impact an evolving graph
-        # self.logic_graph = copy.deepcopy(self.global_graph)
-
-        # Publish the local points so Mind.py can begin the navigation
-        self.path_pub.publish(points_arr)
+            if not nx.has_path(self.global_graph, self.current_cart_node, destination_point):
+                rospy.logerr("NetworkX can't find a connection")
+            else:
+                rospy.logerr("NetworkX can find a connection")
 
     def determine_lane(self, cart_node):
         """ A function for determining which lane the cart is in, or should be in. (Note lanes being directions in the directed graph)
@@ -349,19 +352,19 @@ class global_planner(object):
             if not inefficient:
                 close_nodes.append(node)
 
+        rospy.logwarn("Here are the closest nodes: " + str(close_nodes))
         min_path = None
         # Out of the most efficient paths, which one has the least driving distance
         for node in close_nodes:
+            rospy.logwarn("Enumeration: " + str(node))
             node_path = nx.dijkstra_path(local_logic_graph, self.current_cart_node, node)
+            rospy.logwarn("Dijkstra path of " + str(node) + ": " + str(node_path))
             if min_path is None:
                 min_path = node_path
 
             # TODO replace with cost analysis
             if len(node_path) < len(min_path):
                 min_path = node_path
-                self.destination_node = node
-                # Also set the distance of the best planned trip
-                self.total_distance = nx.dijkstra_path_length(local_logic_graph, self.current_cart_node, node)
         
         return min_path
             
@@ -445,7 +448,6 @@ class global_planner(object):
             msg.pose.orientation.w
         )
         self.orientation = euler_from_quaternion(cart_quat)
-
         # Also calculate the ETA to the destination, given most recent position
         # self.eta_calc()
 
@@ -537,7 +539,7 @@ class global_planner(object):
         """
         local_point = Point()
         
-        anchor_gps = None
+        anchor_gps = self.anchor_gps
 
         # Calibrate GPS Utility if not yet calibrated
         if not self.gps_calibrated:
@@ -549,9 +551,6 @@ class global_planner(object):
 
             # That same test point but in latitude, longitude from Google Maps
             test_gps = self.test_location_gps
-
-            # That same Origin but in latitude, longitude from Google Maps
-            anchor_gps = self.anchor_gps
 
             # Get the calibrated heading and set
             self.anchor_theta = simple_gps_util.calibrate_util(test_local, anchor_local, test_gps, anchor_gps)

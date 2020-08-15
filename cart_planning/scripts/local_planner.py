@@ -5,7 +5,7 @@ import rospy
 import time
 from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState, EmergencyStop
 from nav_msgs.msg import Path
-from std_msgs.msg import Header, Float32, String, Int8, Bool
+from std_msgs.msg import Header, Float32, String, Int8, Bool, UInt64
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
 from visualization_msgs.msg import Marker
 import tf.transformations as tf
@@ -37,11 +37,12 @@ class LocalPlanner(object):
 
         self.cur_speed = 0
 
-        self.navigating = False
         self.new_path = False
         self.path_valid = False
         self.local_points = []
         self.stop_thresh = 5 #this is how many seconds an object is away
+
+        self.current_state = VehicleState()
 
         # To allow other nodes to make stop requests
         self.stop_requests = {}
@@ -58,9 +59,6 @@ class LocalPlanner(object):
 
         # Current Velocity of cart in Meters per second
         self.speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
-
-        # Callback for a throttled /ndt_pose topic
-        self.throttled_pose_sub = rospy.Subscriber('/limited_pose')
 
         # Allow nodes to make stop requests
         self.emergency_stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
@@ -85,10 +83,16 @@ class LocalPlanner(object):
 
         # Show the currently requested steering angle in RViz
         self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
+
+        # Publish the ETA
+        self.eta_pub = rospy.Publisher('/eta', UInt64, queue_size=10)
         
         rate = rospy.Rate(5)
 
         while not rospy.is_shutdown():
+            # Update Estimated Time of Arrival and send
+            self.calc_eta()
+
             # Upon receipt of a new path request, create a new one
             if self.new_path:
                 rospy.loginfo("Creating a new path")
@@ -104,7 +108,7 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[msg.sender_id] = msg.emergency_stop
+        self.stop_requests[str(msg.sender_id).lower()] = msg.emergency_stop
 
     def vel_callback(self, msg):
         if msg.data < 0.5:
@@ -169,9 +173,9 @@ class LocalPlanner(object):
             self.path_pub.publish(path)
 
             # Set the current state of the cart to navigating
-            current_state = VehicleState()
-            current_state.is_navigating = True
-            self.vehicle_state_pub.publish(current_state)
+            self.current_state = VehicleState()
+            self.current_state.is_navigating = True
+            self.vehicle_state_pub.publish(self.current_state)
             
             target_speed = self.global_speed
 
@@ -235,16 +239,16 @@ class LocalPlanner(object):
             
         #Check if we've reached the destination, if so we should change the cart state to finished
         rospy.loginfo("Done navigating")
-        current_state = VehicleState()
-        current_state.is_navigating = False
-        current_state.reached_destination = True
+        self.current_state = VehicleState()
+        self.current_state.is_navigating = False
+        self.current_state.reached_destination = True
 
         if self.path_valid:
             rospy.loginfo("Reached Destination")
         else:
             rospy.loginfo("Already at destination, or there may be no path to get to the destination or navigation was interrupted.")
         
-        self.vehicle_state_pub.publish(current_state)
+        self.vehicle_state_pub.publish(self.current_state)
         msg = VelAngle()
         msg.vel = 0
         msg.angle = 0
@@ -257,7 +261,7 @@ class LocalPlanner(object):
     Updates the carts position by a given state and delta
     '''
     def update(self, state, a, delta):
-
+        time.time()
         pose = self.global_pose
         twist = self.global_twist
         current_spd = twist.linear.x
@@ -297,17 +301,25 @@ class LocalPlanner(object):
     def calc_eta(self):
         """ Calculates the Estimated Time of Arrival to the destination
         """
-        # Where are we at and how much further must we go
-        current_node = self.get_closest_point(self.global_pose.position.x, self.global_pose.position.y)
-        distance_remaining = self.calc_trip_dist(self.local_points, current_node)
+        # Attempt an update only if the cart is driving
+        if self.current_state.is_navigating:
+            # Where are we at and how much further must we go
+            current_node = self.get_closest_point(self.global_pose.position.x, self.global_pose.position.y)
+            distance_remaining = self.calc_trip_dist(self.local_points, current_node)
 
-        # Remaining time in seconds
-        remaining_time = distance_remaining / self.cur_speed
+            # Remaining time in seconds
+            remaining_time = distance_remaining / self.cur_speed
 
-        # Calculate the ETA to the end
-        arrival_time = time.time() + remaining_time
+            eta_msg = UInt64()
 
-        rospy.loginfo("Estimated time of arrival: " + str(arrival_time))
+            # Calculate the ETA to the end
+            arrival_time = time.time() + remaining_time
+
+            # Convert the time to milliseconds
+            eta_msg.data = arrival_time * (1000)
+
+            self.eta_pub.publish(eta_msg)
+            
 
 
     def calc_trip_dist(self, points_list, start):
@@ -320,7 +332,7 @@ class LocalPlanner(object):
         trip_sum = 0
         prev_point = start
         for i in range(start+1, len(points_list)):
-            trip_sum += self.calc_distance(points_list[start].x, points_list[start].y
+            trip_sum += self.calc_distance(points_list[start].x, points_list[start].y,
             points_list[i].x, points_list[i].y)
 
         return trip_sum
