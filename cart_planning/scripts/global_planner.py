@@ -186,9 +186,8 @@ class global_planner(object):
                 nodelist = self.calc_efficient_destination(destination_point)
             else:
                 nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
-                self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, destination_point)
-
-                    # Set all nodes to a state of not being a part of the coming path
+            
+            # Set all nodes to a state of not being a part of the coming path
             for node in self.global_graph:
                 self.global_graph.node[node]['active'] = False
 
@@ -271,9 +270,6 @@ class global_planner(object):
 
         if len(node_angles) < 1:
             return None
-        
-        # Sort nodes by distance
-        # sorted_node_angles = sorted(node_angles.items(), key=lambda x: x[1])
 
         # Finally return the closest node of the proper lane
         return min(node_angles, key=node_angles.get)
@@ -352,13 +348,10 @@ class global_planner(object):
             if not inefficient:
                 close_nodes.append(node)
 
-        rospy.logwarn("Here are the closest nodes: " + str(close_nodes))
         min_path = None
         # Out of the most efficient paths, which one has the least driving distance
         for node in close_nodes:
-            rospy.logwarn("Enumeration: " + str(node))
             node_path = nx.dijkstra_path(local_logic_graph, self.current_cart_node, node)
-            rospy.logwarn("Dijkstra path of " + str(node) + ": " + str(node_path))
             if min_path is None:
                 min_path = node_path
 
@@ -448,8 +441,6 @@ class global_planner(object):
             msg.pose.orientation.w
         )
         self.orientation = euler_from_quaternion(cart_quat)
-        # Also calculate the ETA to the destination, given most recent position
-        # self.eta_calc()
 
     # We've received a clicked point from RViz, calculate a path to it
     def point_callback(self, msg):
@@ -482,22 +473,6 @@ class global_planner(object):
             self.cur_speed = self.cur_speed/self.vel_polls
             self.vel_polls = 0
             self.cur_speed = 0
-
-    def eta_calc(self):
-        # Are we at a new node 
-        can_update = self.prev_cart_node is not self.current_cart_node
-
-        # Calculate distance remaining if the cart is navigating
-        if self.navigating and can_update and self.cur_speed > 0:
-            self.prev_cart_node = self.current_cart_node
-            # Update the remaining distance on the trip
-            self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, self.destination_node)
-
-            # Remaining time in seconds
-            remaining_time = self.total_distance/self.cur_speed
-
-            # The time we should get there
-            arrive_time = time.time() + remaining_time
 
     def output_path_gps(self, path):
         """ Function for converting the list of points along a path to latitude and longitude
