@@ -42,7 +42,7 @@ class speech_recognition_core(object):
             
         self.r.listen_in_background(self.m, self.listener, phrase_time_limit=6)
 
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(60)
         while not rospy.is_shutdown():
             #self.loop()
             if time.time() >= self.end_time:
@@ -57,7 +57,7 @@ class speech_recognition_core(object):
     def listener(self, recognizer, audio):
         try:
             #audio = self.r.listen(source, phrase_time_limit=5)
-            text = recognizer.recognize_google(audio)
+            text = recognizer.recognize_sphinx(audio)
             text = text.lower()
             text_array = text.split()
             if self.text_passing:
