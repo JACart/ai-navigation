@@ -42,7 +42,7 @@ class speech_recognition_core(object):
             
         self.r.listen_in_background(self.m, self.listener, phrase_time_limit=6)
 
-        rate = rospy.Rate(60)
+        rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             #self.loop()
             if time.time() >= self.end_time:

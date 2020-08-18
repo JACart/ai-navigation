@@ -11,7 +11,7 @@
   <arg name="endpoints" default="true"/>
   <arg name="networking" default="true"/>
   <arg name="health" default="false"/>
-  <arg name="voice" default="true"/>
+  <arg name="voice" default="false"/>
   <arg name="pose" default="true"/>
   <arg name="obstacle_detection" default="false"/>
   <arg name="visualize_pose" default="false"/>

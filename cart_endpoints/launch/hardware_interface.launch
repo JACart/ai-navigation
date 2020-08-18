@@ -2,7 +2,7 @@
 <launch>
     <arg name="networking" default="true"/>
     <arg name="health" default="true"/>
-    <arg name="voice" default="true"/>
+    <arg name="voice" default="false"/>
     <arg name="pose" default="true"/>
     <arg name="visualize_pose" default="false"/>
     <arg name="obstacle_detection" default="true"/>

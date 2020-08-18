@@ -35,11 +35,14 @@ class LocalPlanner(object):
 
         self.global_speed = self.meters / self.seconds  # [m/s]
 
+        # Speed before and after averaging
+        self.raw_speed = 0
         self.cur_speed = 0
 
         self.new_path = False
         self.path_valid = False
         self.local_points = []
+        self.poll_sample = 0
         self.stop_thresh = 5 #this is how many seconds an object is away
 
         self.current_state = VehicleState()
@@ -86,13 +89,11 @@ class LocalPlanner(object):
 
         # Publish the ETA
         self.eta_pub = rospy.Publisher('/eta', UInt64, queue_size=10)
-        
+        self.eta_timer = rospy.Timer(rospy.Duration(15), self.calc_eta)
+
         rate = rospy.Rate(5)
 
         while not rospy.is_shutdown():
-            # Update Estimated Time of Arrival and send
-            self.calc_eta()
-
             # Upon receipt of a new path request, create a new one
             if self.new_path:
                 rospy.loginfo("Creating a new path")
@@ -112,9 +113,14 @@ class LocalPlanner(object):
 
     def vel_callback(self, msg):
         if msg.data < 0.5:
-            self.cur_speed = self.global_speed
+            self.cur_speed = 1.8 # Magic number however this is roughly the observed speed in realtime
         else:
-            self.cur_speed = msg.data
+            self.poll_sample += 1
+            self.raw_speed += msg.data
+            if self.poll_sample >= 5:
+                self.cur_speed = (self.raw_speed + msg.data)/self.poll_sample
+                self.raw_speed = 0
+                self.poll_sample = 0
 
     def localpoints_callback(self, msg):
         self.local_points = []
@@ -261,7 +267,6 @@ class LocalPlanner(object):
     Updates the carts position by a given state and delta
     '''
     def update(self, state, a, delta):
-        time.time()
         pose = self.global_pose
         twist = self.global_twist
         current_spd = twist.linear.x
@@ -298,7 +303,7 @@ class LocalPlanner(object):
 
         return state
     
-    def calc_eta(self):
+    def calc_eta(self, event):
         """ Calculates the Estimated Time of Arrival to the destination
         """
         # Attempt an update only if the cart is driving
@@ -309,15 +314,13 @@ class LocalPlanner(object):
 
             # Remaining time in seconds
             remaining_time = distance_remaining / self.cur_speed
-
             eta_msg = UInt64()
 
             # Calculate the ETA to the end
             arrival_time = time.time() + remaining_time
 
             # Convert the time to milliseconds
-            eta_msg.data = arrival_time * (1000)
-
+            eta_msg.data = int(arrival_time * (1000))
             self.eta_pub.publish(eta_msg)
             
 
@@ -330,10 +333,11 @@ class LocalPlanner(object):
             start(int): The index of which to start calculating the trip distance  
         """
         trip_sum = 0
-        prev_point = start
-        for i in range(start+1, len(points_list)):
-            trip_sum += self.calc_distance(points_list[start].x, points_list[start].y,
+        prev_node = start
+        for i in range(prev_node, len(points_list)):
+            trip_sum += self.calc_distance(points_list[prev_node].x, points_list[prev_node].y,
             points_list[i].x, points_list[i].y)
+            prev_node = i
 
         return trip_sum
 

@@ -223,7 +223,7 @@ def front_image_callback(img_msg):
         last_front_pub = cur_time
 
 def eta_callback(msg):
-    send('arrive-time', msg.data)
+    send('arrived-time', msg.data)
 
 if __name__ == "__main__":
     rospy.init_node('network_node')
