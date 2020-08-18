@@ -205,6 +205,9 @@ class LocalPlanner(object):
             t = [0.0]
             target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
 
+            # Publish the ETA to the destination before we get started
+            self.calc_eta(None)
+
              # Continue to loop while we have not hit the target destination, and the path is still valid
             while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
                 target_speed = self.global_speed            
