@@ -87,9 +87,12 @@ class LocalPlanner(object):
         # Show the currently requested steering angle in RViz
         self.target_twist_pub = rospy.Publisher('/target_twist', Marker, queue_size=10)
 
+        # Staus update to server
+        self.arrived_pub = rospy.Publisher('/arrived', String, queue_size=10)
+
         # Publish the ETA
         self.eta_pub = rospy.Publisher('/eta', UInt64, queue_size=10)
-        self.eta_timer = rospy.Timer(rospy.Duration(15), self.calc_eta)
+        self.eta_timer = rospy.Timer(rospy.Duration(10), self.calc_eta)
 
         rate = rospy.Rate(5)
 
@@ -112,7 +115,7 @@ class LocalPlanner(object):
         self.stop_requests[str(msg.sender_id).lower()] = msg.emergency_stop
 
     def vel_callback(self, msg):
-        if msg.data < 0.5:
+        if msg.data < 1.0:
             self.cur_speed = 1.8 # Magic number however this is roughly the observed speed in realtime
         else:
             self.poll_sample += 1
@@ -251,7 +254,14 @@ class LocalPlanner(object):
         self.current_state = VehicleState()
         self.current_state.is_navigating = False
         self.current_state.reached_destination = True
+        notify_server = String()
 
+        # If we have reached the destination notify the server
+        if not self.current_state.is_navigating:
+            if self.current_state.reached_destination:
+                self.arrived_pub.publish(notify_server)
+
+        # Let operator know why current path has stopped
         if self.path_valid:
             rospy.loginfo("Reached Destination")
         else:

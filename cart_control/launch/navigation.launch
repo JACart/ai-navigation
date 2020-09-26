@@ -12,7 +12,7 @@
   <arg name="networking" default="true"/>
   <arg name="health" default="false"/>
   <arg name="voice" default="false"/>
-  <arg name="pose" default="true"/>
+  <arg name="pose" default="false"/>
   <arg name="obstacle_detection" default="false"/>
   <arg name="visualize_pose" default="false"/>
 
@@ -52,13 +52,10 @@
       </include>
   </group>
 
-  <!--always launch planning nodes-->
+  <!--always launch planning nodes, system constants-->
   <group>
       <include file="$(find cart_planning)/launch/planning.launch"/>
-  </group>
-
-  <!--launch the constants on the param server -->
-  <group>
       <include file="$(find cart_planning)/launch/constants.launch"/>
   </group>
+
 </launch>

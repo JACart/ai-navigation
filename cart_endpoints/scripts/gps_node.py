@@ -2,7 +2,7 @@
 import socket
 import rospy
 import math
-from sensor_msgs.msg import NavSatFix
+from navigation_msgs.msg import LatLongPoint
 from geometry_msgs.msg import PoseStamped
 
 class GPS_Parser(object):
@@ -12,7 +12,7 @@ class GPS_Parser(object):
 
         self.static_position = None
 
-        self.gps_pub = rospy.Publisher('/gps_coordinates', NavSatFix, queue_size = 10)
+        self.gps_pub = rospy.Publisher('/gps_send', LatLongPoint, queue_size = 10)
         self.loc_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.location_callback)
 
         self.UDP_IP = "192.168.1.201"#"192.168.3.100"
@@ -45,7 +45,7 @@ class GPS_Parser(object):
             data, addr = self.sock.recvfrom(512)
             line = data[206:278]
       
-            gps_coords = NavSatFix()
+            gps_coords = LatLongPoint()
             gps_coords.header.stamp = rospy.Time.now()
 
             latitude_degrees = float(line[16:18])
@@ -66,7 +66,7 @@ class GPS_Parser(object):
             
         gps_coords.latitude = latitude_total / poll_size
         gps_coords.longitude = longitude_total / poll_size
-        gps_coords.altitude = 0.0
+        gps_coords.elevation = 0.0
 
         self.gps_pub.publish(gps_coords)
 
