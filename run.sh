@@ -10,4 +10,6 @@ gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch; exec b
 sleep 2
 echo "Starting local server..."
 gnome-terminal --tab -e 'sh -c "cd ~; cd Desktop/jakart-local-server; npm start; exec bash"'
+echo "Starting UI"
+gnome-terminal --tab -e 'sh -c "cd ~; cd Desktop/jakart-cart-ui; npm start; exec bash"'
 

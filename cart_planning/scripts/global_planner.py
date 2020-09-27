@@ -97,7 +97,13 @@ class global_planner(object):
 
         # Publishes the path but in GPS coordinates
         self.gps_path_pub = rospy.Publisher('/gps_global_path', LatLongArray, queue_size=10)
+
+        # Published the current cart position but in GPS coordinates TODO move to local planner
+        self.gps_pose_pub = rospy.Publisher('/gps_send', LatLongPoint, queue_size=10)
         
+        # How often to update the gps position of the cart
+        self.gps_update_timer = rospy.Timer(rospy.Duration(0.1), self.output_pos_gps)
+
         # self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
         rospy.spin()
     
@@ -428,7 +434,7 @@ class global_planner(object):
             msg (ROS PoseStamped Message): The PoseStamped of the cart's position and orientation coming from /limited_pose topic
         """
         self.current_pos = msg
-
+        
         # If the cart is mid-navigation calculation, theres no need to update the cart node until it is done
         if not self.calculating_nav:
             self.current_cart_node = self.get_closest_node(msg.pose.position.x, msg.pose.position.y, cart_trans=True)
@@ -474,11 +480,12 @@ class global_planner(object):
             self.vel_polls = 0
             self.cur_speed = 0
 
-    def output_path_gps(self, path):
+    def output_path_gps(self, path, single=False):
         """ Function for converting the list of points along a path to latitude and longitude
 
         Args:
             path (LocalPointsArray message): List of X,Y points along the path
+            single (Boolean): Whether or not you're sending a path with a single point or not (e.g. see output_pos_gps below)
         """
         gps_path = LatLongArray()
 
@@ -497,12 +504,25 @@ class global_planner(object):
             final_pose = LatLongPoint()
             final_pose.latitude = lat
             final_pose.longitude = lon
-
+            
+            # If we only care about a single point (e.g. cart position) send it off
+            if single:
+                return final_pose
+            
             gps_path.gpspoints.append(final_pose)
             
         # Publish here
         self.gps_path_pub.publish(gps_path)
-            
+
+    def output_pos_gps(self, event):
+        if self.navigating:
+            package_point = LocalPointsArray()
+            cart_pos = self.current_pos.pose
+            package_point.localpoints.append(cart_pos)
+
+            point_in_gps = self.output_path_gps(package_point, single=True)
+
+            self.gps_pose_pub.publish(point_in_gps)
 
     def gps_request_cb(self, msg):
         """ Converts a GPS point from Lat, Long to UTM coordinate system using AlvinXY. Also displays the GPS once converted, in RViz
