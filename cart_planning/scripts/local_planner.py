@@ -258,7 +258,7 @@ class LocalPlanner(object):
 
         # If we have reached the destination notify the server
         if not self.current_state.is_navigating:
-            if self.current_state.reached_destination:
+            if self.current_state.reached_destination and self.path_valid:
                 self.arrived_pub.publish(notify_server)
 
         # Let operator know why current path has stopped

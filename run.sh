@@ -2,7 +2,7 @@
 echo "Configuring Velodyne..."
 ./velodyne_setup.sh
 echo "Setting up display"
-xinput map-to-output 19 HDMI-0
+xinput map-to-output "G2Touch Multi-Touch by G2TSP" HDMI-0
 wait
 sleep 2
 echo "Launching Navigation Code..."
