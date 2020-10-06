@@ -11,7 +11,7 @@ import numpy as np
 import base64
 import cv2
 from cv_bridge import CvBridge
-from std_msgs.msg import Int8, String, Bool
+from std_msgs.msg import Int8, UInt64, String, Bool
 from geometry_msgs.msg import PoseStamped
 from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop, LatLongPoint
 from sensor_msgs.msg import NavSatFix, Image
@@ -222,6 +222,9 @@ def front_image_callback(img_msg):
         send('cart-video', base64.b64encode(buffer))
         last_front_pub = cur_time
 
+def eta_callback(msg):
+    send('arrived-time', msg.data)
+
 if __name__ == "__main__":
     rospy.init_node('network_node')
     server_lock = threading.Lock()
@@ -249,6 +252,7 @@ if __name__ == "__main__":
     rospy.Subscriber('/gps_coordinates', NavSatFix, send_location)
     rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback)
     rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
+    rospy.Subscriber('/eta', UInt64, eta_callback)
     
     exit_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
     enter_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))

@@ -3,12 +3,19 @@
 <launch>
     <rosparam>
         <!-- GPS Util Params -->
-        anchor_lat: 38.433939
-        anchor_long: -78.862157
-        anchor_elev : 396
+        anchor_gps: [38.433939, -78.862157]
         anchor_theta : 100
+        <!-- GPS Calibration Params -->
+        anchor_local: [0, 0]
+        test_loc_gps: [38.433170, -78.860981]
+        test_loc_local: [67.6, 115]
 
         <!-- Global Planner graph file parameter -->
-        graph_file : "/home/jeffercize/catkin_ws/src/ai-navigation/EastCampusLiteV6.gml"
+        graph_file: "/home/jeffercize/catkin_ws/src/ai-navigation/EastCampusLiteV6.gml"
+
+        <!-- Maximum safety parameters -->
+        <!-- These are reactive in the sense that if the max_speed is reached the cart will emergency stop -->
+        max_speed: 5
+        max_ndt_health: 4
     </rosparam>
 </launch>

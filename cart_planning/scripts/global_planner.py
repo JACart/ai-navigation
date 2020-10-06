@@ -5,7 +5,6 @@ import os
 import copy
 import math
 import time
-import gps_util
 import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -22,9 +21,13 @@ class global_planner(object):
         rospy.init_node('global_planner')
 
         # Various GPS Utility information
-        self.anchor_lat = rospy.get_param('anchor_lat')
-        self.anchor_long = rospy.get_param('anchor_long')
+        self.anchor_gps = rospy.get_param('anchor_gps')
         self.anchor_theta = rospy.get_param('anchor_theta')
+
+        # GPS Utility Calibration Parameters
+        self.anchor_local = rospy.get_param('anchor_local')
+        self.test_location_gps = rospy.get_param('test_loc_gps')
+        self.test_location_local = rospy.get_param('test_loc_local')
         self.gps_calibrated = False
         
         # Maintain whether or not the planner has yet made any plans
@@ -60,10 +63,9 @@ class global_planner(object):
         # Current trip distance
         self.total_distance = 0
 
-        # Temporary solution for destinations, TODO: Make destinations embedded in graph nodes
-        # self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
-        
-        # self.location_req = rospy.Subscriber('/gps_request', String, self.request_callback, queue_size=10)
+        # For obtaining an average of incoming velocities 
+        self.cur_speed = 0
+        self.vel_polls = 0
 
         # Listen for cart position changes
         self.pose_sub = rospy.Subscriber('/limited_pose', PoseStamped, self.pose_callback, queue_size=10)
@@ -90,7 +92,13 @@ class global_planner(object):
 
         # Publishes the path but in GPS coordinates
         self.gps_path_pub = rospy.Publisher('/gps_global_path', LatLongArray, queue_size=10)
+
+        # Published the current cart position but in GPS coordinates TODO move to local planner
+        self.gps_pose_pub = rospy.Publisher('/gps_send', LatLongPoint, queue_size=10)
         
+        # How often to update the gps position of the cart
+        self.gps_update_timer = rospy.Timer(rospy.Duration(0.1), self.output_pos_gps)
+
         # self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
         rospy.spin()
     
@@ -109,25 +117,6 @@ class global_planner(object):
                 self.global_graph.node[node]['active'] = True
         except:
             rospy.logerr("Unable to launch graph file pointed to in the constants file in .../cart_planning/launch")
-    
-    #If we receive a request for a destination
-    def request_callback(self, msg):
-        """ If a stringed destination (i.e. 'cafeteria') is received under /destination_request
-        calculate a path to it.
-
-        Args:
-            msg (ROS String Message): The destination represented as a ROS string message
-        """
-
-        # ROS coordinates of the destination
-        dest_pos = self.dest_dict[msg.data]
-
-        # Prepare a point of the destination and send it off for calculation
-        point = Point()
-        point.x = dest_pos[0]
-        point.y = dest_pos[1]
-
-        self.calc_nav(point)
 
     def calc_nav(self, point):
         """ Main navigation calculation function, main job is to calculate the path.
@@ -171,37 +160,46 @@ class global_planner(object):
                 return None
             else:
                 rospy.logwarn("A suitable node was found, please check RViz to make sure the pathing is safe")
-
-        if self.minimize_travel:
-            nodelist = self.calc_efficient_destination(destination_point)
-        else:
-            nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
-            self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, destination_point)
-
-        # Set all nodes back to a state of not being a part of the previous/current path
-        for node in self.global_graph:
-            self.global_graph.node[node]['active'] = False
-
-        # Convert our list of nodes to the destination to a list of points
-        points_arr = LocalPointsArray()
-        for node in nodelist:
-            self.global_graph.node[node]['active'] = True
-            new_point = Pose()
-            new_point.position.x = self.global_graph.node[node]['pos'][0]
-            new_point.position.y = self.global_graph.node[node]['pos'][1]
-            points_arr.localpoints.append(new_point)
         
-        # Allows for class changes again
-        self.calculating_nav = False
+        # Attempt to find a route to the destination
+        try:
+            nodelist = None
+            if self.minimize_travel:
+                nodelist = self.calc_efficient_destination(destination_point)
+            else:
+                nodelist = nx.dijkstra_path(self.global_graph, self.current_cart_node, destination_point)
+            
+            # Set all nodes to a state of not being a part of the coming path
+            for node in self.global_graph:
+                self.global_graph.node[node]['active'] = False
 
-        # Convert the path to GPS to give to Networking
-        self.output_path_gps(points_arr)
+            # Convert our list of nodes along the path to the destination to a list of Point messages
+            points_arr = LocalPointsArray()
 
-        # Copy a logic graph so extra functions don't impact an evolving graph
-        # self.logic_graph = copy.deepcopy(self.global_graph)
+            # Begin conversion and set nodes belonging to the path to active
+            for node in nodelist:
+                self.global_graph.node[node]['active'] = True
+                new_point = Pose()
+                new_point.position.x = self.global_graph.node[node]['pos'][0]
+                new_point.position.y = self.global_graph.node[node]['pos'][1]
+                points_arr.localpoints.append(new_point)
+            
+            # Allows for class changes again
+            self.calculating_nav = False
 
-        # Publish the local points so Mind.py can begin the navigation
-        self.path_pub.publish(points_arr)
+            # Convert the path to GPS to give to Networking
+            self.output_path_gps(points_arr)
+
+            # Publish the local points so Mind.py can begin the navigation
+            self.path_pub.publish(points_arr)
+
+        except nx.NetworkXNoPath:
+            rospy.logerr("Unable to find a path to the desired destination")
+            rospy.logerr("Debug info: Starting Node: " + str(self.current_cart_node) + " End node: " + str(destination_point))
+            if not nx.has_path(self.global_graph, self.current_cart_node, destination_point):
+                rospy.logerr("NetworkX can't find a connection")
+            else:
+                rospy.logerr("NetworkX can find a connection")
 
     def determine_lane(self, cart_node):
         """ A function for determining which lane the cart is in, or should be in. (Note lanes being directions in the directed graph)
@@ -255,9 +253,6 @@ class global_planner(object):
 
         if len(node_angles) < 1:
             return None
-        
-        # Sort nodes by distance
-        # sorted_node_angles = sorted(node_angles.items(), key=lambda x: x[1])
 
         # Finally return the closest node of the proper lane
         return min(node_angles, key=node_angles.get)
@@ -346,9 +341,6 @@ class global_planner(object):
             # TODO replace with cost analysis
             if len(node_path) < len(min_path):
                 min_path = node_path
-                self.destination_node = node
-                # Also set the distance of the best planned trip
-                self.total_distance = nx.dijkstra_path_length(local_logic_graph, self.current_cart_node, node)
         
         return min_path
             
@@ -419,7 +411,7 @@ class global_planner(object):
             msg (ROS PoseStamped Message): The PoseStamped of the cart's position and orientation coming from /limited_pose topic
         """
         self.current_pos = msg
-
+        
         # If the cart is mid-navigation calculation, theres no need to update the cart node until it is done
         if not self.calculating_nav:
             self.current_cart_node = self.get_closest_node(msg.pose.position.x, msg.pose.position.y, cart_trans=True)
@@ -452,37 +444,28 @@ class global_planner(object):
 
     def vel_callback(self, msg):
         """ Keeps the global planner updated on current speed of the cart
-        Also does processing of ETA to destination
 
         Args:
             msg (Float32 message): Contains current cart speed
         """
-        # Current speed of the cart (meters/second)
-        cur_speed = msg.data
+        # Estimated velocity can fluctuate slightly, so an average is ideal
+        if self.vel_polls < 5:
+            self.cur_speed += msg.data
+            self.vel_polls += 1
+        else:
+            self.cur_speed = self.cur_speed/self.vel_polls
+            self.vel_polls = 0
+            self.cur_speed = 0
 
-        # Are we at a new node 
-        can_update = self.prev_cart_node is not self.current_cart_node
-
-        # Calculate distance remaining if the cart is navigating
-        if self.navigating and can_update and cur_speed > 1.0:
-            self.prev_cart_node = self.current_cart_node
-            # Update the remaining distance on the trip
-            self.total_distance = nx.dijkstra_path_length(self.global_graph, self.current_cart_node, self.destination_node)
-
-            # Remaining time in seconds
-            remaining_time = self.total_distance/cur_speed
-
-            # The time we should get there
-            arrive_time = time.time() + remaining_time
-            rospy.loginfo("Travel ETA: " + str(time.ctime(arrive_time)) + "\n")
-
-    def output_path_gps(self, path):
+    def output_path_gps(self, path, single=False):
         """ Function for converting the list of points along a path to latitude and longitude
 
         Args:
             path (LocalPointsArray message): List of X,Y points along the path
+            single (Boolean): Whether or not you're sending a path with a single point or not (e.g. see output_pos_gps below)
         """
         gps_path = LatLongArray()
+
         for pose in path.localpoints:
             # Testing conversion back to latitude/longitude
             stock_point = Point()
@@ -493,34 +476,66 @@ class global_planner(object):
             stock_point = simple_gps_util.heading_correction(0, 0, -(self.anchor_theta), stock_point)
 
             # Convert to latitude and longitude
-            lat, lon = simple_gps_util.xy2latlon(stock_point.x, stock_point.y, self.anchor_lat, self.anchor_long)
+            lat, lon = simple_gps_util.xy2latlon(stock_point.x, stock_point.y, self.anchor_gps[0], self.anchor_gps[1])
 
             final_pose = LatLongPoint()
             final_pose.latitude = lat
             final_pose.longitude = lon
-
+            
+            # If we only care about a single point (e.g. cart position) send it off
+            if single:
+                return final_pose
+            
             gps_path.gpspoints.append(final_pose)
             
         # Publish here
         self.gps_path_pub.publish(gps_path)
-            
+
+    def output_pos_gps(self, event):
+        """ Outputs the cart location in GPS and publishes. This uses the GPS Util for an approximate solution 
+        rather than GPS which can be relatively inaccurate.
+        
+        """
+        if self.navigating:
+            package_point = LocalPointsArray()
+            cart_pos = self.current_pos.pose
+            package_point.localpoints.append(cart_pos)
+
+            point_in_gps = self.output_path_gps(package_point, single=True)
+
+            self.gps_pose_pub.publish(point_in_gps)
 
     def gps_request_cb(self, msg):
         """ Converts a GPS point from Lat, Long to UTM coordinate system using AlvinXY. Also displays the GPS once converted, in RViz
-
+        Note: Information on calibrating can be found here: 
+        https://git.cs.jmu.edu/av-xlabs-19/robotics/ai-navigation/wikis/Setting-Up-a-New-Driving-Environment#4-calibrating-the-gps-utility-for-the-new-map
+        
         Args:
             msg (ROS LatLongPoint Message): Message containing the latitude and longitude to convert and navigate to
         """
         local_point = Point()
         
-        # Have we calibrated the GPS yet?
+        anchor_gps = self.anchor_gps
+
+        # Calibrate GPS Utility if not yet calibrated
         if not self.gps_calibrated:
-            self.anchor_theta = simple_gps_util.calibrate_util(67.6, 115, 38.433170, -78.860981, self.anchor_lat, self.anchor_long)
-            rospy.loginfo("Calibrated with angle: " + str(self.anchor_theta))
+            # A test point on the map X, Y
+            test_local = self.test_location_local
+
+            # Origin of the map X, Y
+            anchor_local = self.anchor_local
+
+            # That same test point but in latitude, longitude from Google Maps
+            test_gps = self.test_location_gps
+
+            # Get the calibrated heading and set
+            self.anchor_theta = simple_gps_util.calibrate_util(test_local, anchor_local, test_gps, anchor_gps)
+            rospy.set_param('anchor_theta', float(self.anchor_theta))
+            rospy.loginfo("Calibrated GPS Utility With Heading Offset: " + str(self.anchor_theta) + " degrees")
             self.gps_calibrated = True
         
         #the anchor point is the latitude/longitude for the pcd origin
-        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, self.anchor_lat, self.anchor_long)
+        x, y = simple_gps_util.latlon2xy(msg.latitude, msg.longitude, anchor_gps[0], anchor_gps[1])
         
         local_point.x = x
         local_point.y = y

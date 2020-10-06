@@ -45,6 +45,7 @@ class PathCreation(object):
         # Keep track of global stae of graph(e.g. most recently placed node)
         self.global_graph = nx.DiGraph()
         self.last_node = None
+        self.prev_node = None
         self.selected_node = None
         self.node_count = 0
         
@@ -91,8 +92,8 @@ class PathCreation(object):
             self.remove_point(node_x, node_y)
         elif self.point_mode is "Connect":
             self.connect_point(node_x, node_y)
-        elif self.point_mode is "Efficient" or "Multi-line":
-            self.lazy_mode(node_x, node_y)
+        elif self.point_mode is "Line" or "Multi-line":
+            self.line_mode(node_x, node_y)
         
         #Prevent display function from handling outdated graph attributes
         self.display_graph = copy.deepcopy(self.global_graph)
@@ -182,7 +183,7 @@ class PathCreation(object):
             self.second_selection = None
     
     # Generate points between two positions
-    def lazy_mode(self, x, y):
+    def line_mode(self, x, y):
         if self.first_selection == None:
             self.first_selection = (x, y)
         else:
@@ -201,18 +202,23 @@ class PathCreation(object):
             step_x = diff_x / num_points
             step_y = diff_y / num_points
 
-            prev_node = None
-            for i in range(0, num_points + 1):
+            start = 0
+
+            # If we are connecting the lines, skip the first selection as it alrady exists
+            if self.point_mode == "Multi-line":
+                start = 1
+
+            for i in range(start, num_points + 1):
                 self.node_count += 1
                 new_x = x1 + (step_x * i)
                 new_y = y1 + (step_y * i)
                 node_name_r = 'R_Node:' + str(self.node_count)
                 self.global_graph.add_node(node_name_r, pos=[new_x, new_y], active=False)
 
-                if prev_node is not None:
-                    self.add_weighted_edge(prev_node, node_name_r)
+                if self.prev_node is not None:
+                    self.add_weighted_edge(self.prev_node, node_name_r)
                 
-                prev_node = node_name_r
+                self.prev_node = node_name_r
             
             # If it is a multi-line continue where we left off
             if self.point_mode == "Multi-line":
@@ -295,10 +301,12 @@ class PathCreation(object):
             elif keyval == l:
                 self.first_selection = None
                 self.second_selection = None
-                self.point_mode = "Efficient"
+                self.prev_node = None
+                self.point_mode = "Line"
             elif keyval == m:
                 self.first_selection = None
                 self.second_selection = None
+                self.prev_node = None
                 self.point_mode = "Multi-line"
             elif keyval == t:
                 if self.road_type is "directed":

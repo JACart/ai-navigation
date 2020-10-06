@@ -2,10 +2,17 @@
 <launch>
     <arg name="networking" default="true"/>
     <arg name="health" default="true"/>
-    <arg name="voice" default="true"/>
+    <arg name="voice" default="false"/>
     <arg name="pose" default="true"/>
     <arg name="visualize_pose" default="false"/>
     <arg name="obstacle_detection" default="true"/>
+    <arg name="lidar" default="true"/>
+
+       <!-- Start lidar code -->
+    <group if="$(arg lidar)">
+        <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+        <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
+   </group> 
 
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
@@ -14,7 +21,9 @@
         <node name="cart_health_monitor" pkg="cart_endpoints" type="cart_health_monitor.py" output="screen"/>
     </group>
     <group if="$(arg networking)">
-        <node name="network_node" pkg="cart_endpoints" type="network_node.py" output="screen"/>
+        <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+            <arg name="port" value="9090"/>
+        </include>
     </group>
     <group if="$(arg pose)">
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
@@ -22,7 +31,7 @@
     <!--<include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>-->
     <group if="$(arg obstacle_detection)">
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
-        <node name="local_planner" pkg="cart_endpoints" type="local_planner.py" output="screen"/>
+        <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
     <include file="$(find video_stream_opencv)/launch/camera.launch">
             <!--This is referring to the zed camera facing the passenger-->
@@ -32,7 +41,6 @@
             <arg name="visualize" value="$(arg visualize_pose)" />
         </include>
     <include file="$(find video_stream_opencv)/launch/camera.launch">
-            This is referring to the front facing camera
             <arg name="camera_name" value="front_facing"/>
             <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0" />
         </include>

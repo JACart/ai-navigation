@@ -2,11 +2,13 @@
 <package format="2">
   <name>cart_planning</name>
   <version>0.0.0</version>
-  <description>Package containng planning and navigation node scripts and launch files</description>
+  <description>Package containng planning and navigation node scripts and launch files. These nodes are responsible for actually calculating how to
+  get somewhere and what should be sent to the motor endpoint to make it possible.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
+  <maintainer email="Tyree.mitch@gmail.com">Tyree Mitchell</maintainer>
   <maintainer email="browermb@dukes.jmu.edu">Maddie Brower</maintainer>
 
 

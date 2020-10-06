@@ -2,12 +2,16 @@
 <package format="2">
   <name>cart_control</name>
   <version>0.0.0</version>
-  <description>Core planning and navigation package for running and testing planning nodes</description>
+  <description>Core package for the primary launch files used to launch the cart system. 
+  Typically navigation.launch calls autoware_localization.launch.
+  For more details on launch cases refer to the wiki.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="weilannw@todo.todo">weilannw</maintainer>
+  <maintainer email="Tyree.mitch@gmail.com">Tyree Mitchell</maintainer>
+  <maintainer email="browermb@dukes.jmu.edu">Maddie Brower</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->

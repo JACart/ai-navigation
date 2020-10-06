@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Local Planner node, takes in obstacle data from the obstacle detector endpoint and makes decisions based on the obstacles.
+Collision Detector node, takes in obstacle data from the obstacle detector endpoint and makes decisions based on the obstacles.
 '''
 
 import socket
@@ -13,11 +13,11 @@ from navigation_msgs.msg import ObstacleArray, Obstacle, EmergencyStop
 from geometry_msgs.msg import PoseStamped, PolygonStamped, Point32, Point
 from visualization_msgs.msg import Marker
 
-class LocalPlanner(object):
+class CollisionDetector(object):
 
     def __init__(self):
         self.stop = False
-        rospy.init_node('local_planner')
+        rospy.init_node('collision_detector')
 
         self.t = tf.TransformListener()
 
@@ -225,7 +225,7 @@ class LocalPlanner(object):
         
 if __name__ == "__main__":
     try:
-        LocalPlanner()
+        CollisionDetector()
     except rospy.ROSInterruptException:
         pass
 
