@@ -67,11 +67,6 @@ class global_planner(object):
         self.cur_speed = 0
         self.vel_polls = 0
 
-        # Temporary solution for destinations, TODO: Make destinations embedded in graph nodes
-        # self.dest_dict = {"home":(22.9, 4.21), "cafeteria":(127, 140), "clinic":(63.3, 130), "reccenter":(73.7, 113), "office":(114, 117)}
-        
-        # self.location_req = rospy.Subscriber('/gps_request', String, self.request_callback, queue_size=10)
-
         # Listen for cart position changes
         self.pose_sub = rospy.Subscriber('/limited_pose', PoseStamped, self.pose_callback, queue_size=10)
         
@@ -122,25 +117,6 @@ class global_planner(object):
                 self.global_graph.node[node]['active'] = True
         except:
             rospy.logerr("Unable to launch graph file pointed to in the constants file in .../cart_planning/launch")
-    
-    #If we receive a request for a destination
-    def request_callback(self, msg):
-        """ If a stringed destination (i.e. 'cafeteria') is received under /destination_request
-        calculate a path to it.
-
-        Args:
-            msg (ROS String Message): The destination represented as a ROS string message
-        """
-
-        # ROS coordinates of the destination
-        dest_pos = self.dest_dict[msg.data]
-
-        # Prepare a point of the destination and send it off for calculation
-        point = Point()
-        point.x = dest_pos[0]
-        point.y = dest_pos[1]
-
-        self.calc_nav(point)
 
     def calc_nav(self, point):
         """ Main navigation calculation function, main job is to calculate the path.
@@ -216,6 +192,7 @@ class global_planner(object):
 
             # Publish the local points so Mind.py can begin the navigation
             self.path_pub.publish(points_arr)
+            
         except nx.NetworkXNoPath:
             rospy.logerr("Unable to find a path to the desired destination")
             rospy.logerr("Debug info: Starting Node: " + str(self.current_cart_node) + " End node: " + str(destination_point))
@@ -515,6 +492,8 @@ class global_planner(object):
         self.gps_path_pub.publish(gps_path)
 
     def output_pos_gps(self, event):
+        """
+        """
         if self.navigating:
             package_point = LocalPointsArray()
             cart_pos = self.current_pos.pose

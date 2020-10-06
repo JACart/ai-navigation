@@ -256,17 +256,14 @@ class LocalPlanner(object):
         self.current_state.reached_destination = True
         notify_server = String()
 
-        # If we have reached the destination notify the server
-        if not self.current_state.is_navigating:
-            if self.current_state.reached_destination and self.path_valid:
-                self.arrived_pub.publish(notify_server)
-
         # Let operator know why current path has stopped
         if self.path_valid:
-            rospy.loginfo("Reached Destination")
+            rospy.loginfo("Reached Destination succesfully without interruption")
+            self.arrived_pub.publish(notify_server)
         else:
             rospy.loginfo("Already at destination, or there may be no path to get to the destination or navigation was interrupted.")
         
+        # Update the internal state of the vehicle
         self.vehicle_state_pub.publish(self.current_state)
         msg = VelAngle()
         msg.vel = 0
