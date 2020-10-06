@@ -192,7 +192,7 @@ class global_planner(object):
 
             # Publish the local points so Mind.py can begin the navigation
             self.path_pub.publish(points_arr)
-            
+
         except nx.NetworkXNoPath:
             rospy.logerr("Unable to find a path to the desired destination")
             rospy.logerr("Debug info: Starting Node: " + str(self.current_cart_node) + " End node: " + str(destination_point))
@@ -492,7 +492,9 @@ class global_planner(object):
         self.gps_path_pub.publish(gps_path)
 
     def output_pos_gps(self, event):
-        """
+        """ Outputs the cart location in GPS and publishes. This uses the GPS Util for an approximate solution 
+        rather than GPS which can be relatively inaccurate.
+        
         """
         if self.navigating:
             package_point = LocalPointsArray()
