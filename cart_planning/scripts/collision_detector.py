@@ -55,6 +55,7 @@ class CollisionDetector(object):
         self.inner_radius = 0
         self.outer_radius = 0
         self.circle_center = [0, 0]
+        self.right_turn = False
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
         self.pos_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.position_callback, queue_size=10)
@@ -122,6 +123,8 @@ class CollisionDetector(object):
             outer_arc = self.display_arc(self.circle_center, self.outer_radius, id=11)
             marker_array.markers.append(inner_arc)
             marker_array.markers.append(outer_arc)
+
+            self.right_turn = False
             
 
         # Turning right
@@ -135,6 +138,8 @@ class CollisionDetector(object):
             outer_arc = self.display_arc(self.circle_center, self.outer_radius, id=18, right_turn=True)
             marker_array.markers.append(inner_arc)
             marker_array.markers.append(outer_arc)
+
+            self.right_turn = True
         
         self.display_array.publish(marker_array)
         
@@ -150,8 +155,11 @@ class CollisionDetector(object):
             circle_obstacle_dist = self.distance(obstacle.pos.point.x, obstacle.pos.point.y, 
             self.circle_center[0], self.circle_center[1])
 
+            '''if self.right_turn:
+                    rospy.logwarn("Inner: " + str(self.inner_radius) + " Outer: " + str(self.outer_radius) + " Object Radius: " + str(circle_obstacle_dist))'''
+
             # Determine if the obstacle is within bounds of the inner and outer arc
-            potential_collision = (self.inner_radius - obstacle_size) < circle_obstacle_dist < (self.outer_radius + obstacle_size)
+            potential_collision = (abs(self.inner_radius) - obstacle_size) < circle_obstacle_dist < (abs(self.outer_radius) + obstacle_size)
             #rospy.loginfo("Collision: " + str(potential_collision) + " Context: Inner Radius: " + str(self.inner_radius) + " Outer: " + str(self.outer_radius) + str(circle_obstacle_dist))
             # More conditions can be added here for determining collision criteria
             if potential_collision:
@@ -212,7 +220,7 @@ class CollisionDetector(object):
         bound_display.color.a = 1.0
         bound_display.action = Marker.ADD
         
-        # Obtain the angle range necessary for a certain arc length
+        # Obtain the angle range necessary for a certain arc length in this case 20
         ang = 20/(2*radius)
         
         # Setup arc display range
