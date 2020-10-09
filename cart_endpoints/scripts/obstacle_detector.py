@@ -145,7 +145,7 @@ class ObstacleDetector(object):
             ray_dist = arr[i]
 
             # Only care about 3 meters ahead, limit to front 180
-            if ray_dist <= 3 and ( (cur_angle < (-math.pi/2)) or (cur_angle > (math.pi/2)) ):
+            if ray_dist <= 10 and ( (cur_angle < (-math.pi/2)) or (cur_angle > (math.pi/2)) ):
                 #rospy.loginfo("We have a contender, angle: " + str(cur_angle) + "")
                 curX, curY = self.get_point(cur_angle, ray_dist)
 
@@ -215,7 +215,7 @@ class ObstacleDetector(object):
             marker.color.r = 0.0
             marker.color.g = 0.0
             marker.color.b = 1.0
-            marker.color.a = 0.5
+            marker.color.a = 1.0
             marker.lifetime = rospy.Duration.from_sec(0.1)
 
             marker.pose.position.x = object_list[i].pos.point.x
