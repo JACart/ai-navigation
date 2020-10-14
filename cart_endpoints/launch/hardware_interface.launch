@@ -28,8 +28,8 @@
     <group if="$(arg pose)">
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
     </group>
-    <!--<include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>-->
     <group if="$(arg obstacle_detection)">
+        <include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
         <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>

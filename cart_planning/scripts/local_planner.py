@@ -90,6 +90,9 @@ class LocalPlanner(object):
         # Staus update to server
         self.arrived_pub = rospy.Publisher('/arrived', String, queue_size=10)
 
+        # Steering angle PieChart display
+        self.steering_pub = rospy.Publisher('/steering_angle', Float32, queue_size=10)
+
         # Publish the ETA
         self.eta_pub = rospy.Publisher('/eta', UInt64, queue_size=10)
         self.eta_timer = rospy.Timer(rospy.Duration(10), self.calc_eta)
@@ -112,7 +115,7 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id).lower()] = msg.emergency_stop
+        self.stop_requests[str(msg.sender_id.data).lower()] = msg.emergency_stop
 
     def vel_callback(self, msg):
         if msg.data < 1.0:
@@ -280,6 +283,7 @@ class LocalPlanner(object):
         pose = self.global_pose
         twist = self.global_twist
         current_spd = twist.linear.x
+
         msg = VelAngle()
         if self.debug:
             self.delay_print -= 1
@@ -290,6 +294,11 @@ class LocalPlanner(object):
         msg.vel = a #Speed we want from pure pursuit controller
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd
+
+        display_angle = Float32()
+        display_angle.data = msg.angle
+
+        self.steering_pub.publish(display_angle)
 
         # Check if any node wants us to stop
         stop_msg = Bool()
