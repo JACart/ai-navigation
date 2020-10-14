@@ -129,8 +129,8 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
         Collision Bounds: true
+        Detected Collisions: true
         GPS Request Location: true
         Grid: true
         LaserScan: true
@@ -199,7 +199,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         front_left_caster:
           Alpha: 1
           Show Axes: false
@@ -402,26 +401,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 96.4629288
+      Angle: 0.00499997009
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.785398185
+      Scale: 12.0098667
       Target Frame: base_link
-      Value: Orbit (rviz)
-      Yaw: 0.785398185
+      Value: TopDownOrtho (rviz)
+      X: 13.1506519
+      Y: -1.53516412
     Saved: ~
 Window Geometry:
   Camera:
