@@ -12,27 +12,27 @@ class MotorEndpoint(object):
 
     def __init__(self):
         global cart_port
-        self.killswitch = False
         self.current_speed = 0.0
-        self.goal_speed = 0.0
-        self.goal_angle = 0.0
         self.new_vel = True
         self.debug = False
-        self.angle_adjust = 0
         self.stop = False
+        self.gentle_stop = False
         self.delay_print = 0
-        self.brake = int(255)
+        self.brake = int(0)
         self.drove_since_braking = True
         self.cmd_msg = None
+        # Time (seconds) to ramp up to full brakes
+        self.brake_time = 3
+        self.node_rate = 5
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
-        try:
+        '''try:
             self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
-            rospy.logerr("Motor_endpoint: " + str(e))
+            rospy.logerr("Motor_endpoint: " + str(e))'''
 
         rospy.loginfo("Speed serial established")
         """
@@ -42,32 +42,32 @@ class MotorEndpoint(object):
                                                   queue_size=10)
         self.stop_subscriber = rospy.Subscriber('/stop_vehicle', Bool,
                                                       self.stop_callback, queue_size=10)
-        self.param_subscriber = rospy.Subscriber('/realtime_a_param_change', Int8, self.param_callback, queue_size=10)
+        self.gentle_stop_subscriber = rospy.Subscriber('/gentle_stop', Bool, self.gentle_callback, queue_size=10)
         
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
         
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(self.node_rate)
 
         while not rospy.is_shutdown():
             if self.cmd_msg is not None:
-                self.send_to_motors()
+                self.endpoint_calc()
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
         self.cmd_msg = planned_vel_angle  
         self.new_vel = True     
 
-    def param_callback(self, msg):
-        self.angle_adjust += (msg.data * 10)
-
     def stop_callback(self, msg):
         self.stop = msg.data
+
+    def gentle_callback(self, msg):
+        self.gentle_stop = msg.data
 
     def debug_callback(self, msg):
         self.debug = msg.data
 
 
-    def send_to_motors(self):
+    def endpoint_calc(self):
         #The first time we get a new target speed and angle we must convert it
         
         if self.new_vel:
@@ -89,11 +89,7 @@ class MotorEndpoint(object):
         if(self.cmd_msg.angle > 45):
             self.cmd_msg.angle = 45
         target_angle = 100 - int(( (self.cmd_msg.angle + 45) / 90 ) * 100)
-        # rospy.loginfo("Angle after range adjustment: " + str(target_angle))
-        #adjust the target angle additionally using a realtime adjustable testing value
-        data = (target_speed,current_speed,target_angle)
-        # rospy.loginfo("Before readied data" + str(data))
-        data = bytearray(b'\x00' * 5)
+        
             
         #if debug printing is requested print speed and angle info
         if self.debug:
@@ -102,31 +98,32 @@ class MotorEndpoint(object):
                 self.delay_print = 5
                 rospy.loginfo("Endpoint Angle: " + str(target_angle))
                 rospy.loginfo("Endpoint Speed: " + str(target_speed))
-            
-        # Check for request to stop vehicle
-        if self.stop:
-            target_speed = (int(-self.brake))
-            if(self.drove_since_braking == True):
-                self.braking_duration = 3
-                self.drove_since_braking = False
-            if(self.braking_duration > 0):
-                self.brake = 255
-                self.braking_duration -= 1
-            else:
-                self.brake = 0
-        else:
-            self.drove_since_braking = True
-            pass
-            #reset the brake force slowly incase a new stop message arises immediatly
 
-        #if the target_speed is negative it actually represents desired braking force
-        
-        if target_speed < 0:
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, 0, abs(target_speed), target_angle)
+        # If an emergency stop
+        if self.stop:
+            # Pass in max 255 for brakes
+            self.brake = 255
+            target_speed = 0
+            rospy.logfatal("HARD BRAKINGGIGNGIGNGNGIGNGIG")
+        elif self.gentle_stop:
+            # This can later be adjusted to have dynamic braking times
+            step_size = 255/(self.node_rate*self.brake_time)
+            self.brake += step_size
+            self.brake = int(min(255, self.brake))
+            self.pack_send(0, self.brake, target_angle)
+            rospy.logfatal("GENTLE STOPPING: " + str(self.brake))
+            target_speed = 0
         else:
-            bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(target_speed), 0, target_angle)
-        # rospy.loginfo("Readied data: " + str(data) + "\n")
-        self.speed_ser.write(data) 
+            rospy.logfatal("No stop flags set")
+            self.brake = 0
+
+
+        self.pack_send(target_speed, int(self.brake), target_angle)
+    
+    def pack_send(self, throttle, brake, steer_angle):
+        data = bytearray(b'\x00' * 5)
+        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle)
+        #self.speed_ser.write(data)
 
 if __name__ == "__main__":
     try:

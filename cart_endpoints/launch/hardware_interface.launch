@@ -15,7 +15,7 @@
    </group> 
 
     <group>
-        <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
+        <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen" require="true"/>
     </group>
     <group if="$(arg health)">
         <node name="cart_health_monitor" pkg="cart_endpoints" type="cart_health_monitor.py" output="screen"/>
