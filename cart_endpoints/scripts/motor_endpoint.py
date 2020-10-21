@@ -28,11 +28,11 @@ class MotorEndpoint(object):
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
-        '''try:
+        try:
             self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
-            rospy.logerr("Motor_endpoint: " + str(e))'''
+            rospy.logerr("Motor_endpoint: " + str(e))
 
         rospy.loginfo("Speed serial established")
         """
@@ -104,17 +104,14 @@ class MotorEndpoint(object):
             # Pass in max 255 for brakes
             self.brake = 255
             target_speed = 0
-            rospy.logfatal("HARD BRAKINGGIGNGIGNGNGIGNGIG")
         elif self.gentle_stop:
             # This can later be adjusted to have dynamic braking times
             step_size = 255/(self.node_rate*self.brake_time)
             self.brake += step_size
             self.brake = int(min(255, self.brake))
             self.pack_send(0, self.brake, target_angle)
-            rospy.logfatal("GENTLE STOPPING: " + str(self.brake))
             target_speed = 0
         else:
-            rospy.logfatal("No stop flags set")
             self.brake = 0
 
 

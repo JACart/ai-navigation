@@ -65,7 +65,7 @@ class ObstacleDetector(object):
         self.obstacles_pub = rospy.Publisher('/obstacles', ObstacleArray, queue_size=10)
         self.display_pub = rospy.Publisher('/obstacle_display', Marker, queue_size=10)
         
-        self.rplidar_sub = rospy.Subscriber('/scan', LaserScan, self.lidar_callback, queue_size=1)
+        self.rplidar_sub = rospy.Subscriber('/scan_rplidar', LaserScan, self.lidar_callback, queue_size=1)
         #self.vehicle_speed_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.speed_check)
         
         r = rospy.Rate(30)

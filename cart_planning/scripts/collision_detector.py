@@ -83,9 +83,9 @@ class CollisionDetector(object):
         # Run collision detection 30 times a second
         r = rospy.Rate(30)
         while not rospy.is_shutdown():
+            self.calc_arcs(self.requested_steering_angle)
             if self.cur_obstacles is not None:
-                # Calculate the inner and outer radius for arcs and the center of their circle
-                self.calc_arcs(self.requested_steering_angle)
+                # Calculate the inner and outer radius for arcs and the center of their circ
                 self.determine_collision()
             r.sleep()
 
