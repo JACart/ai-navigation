@@ -120,7 +120,7 @@ class MotorEndpoint(object):
     def pack_send(self, throttle, brake, steer_angle):
         data = bytearray(b'\x00' * 5)
         bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle)
-        #self.speed_ser.write(data)
+        self.speed_ser.write(data)
 
 if __name__ == "__main__":
     try:
