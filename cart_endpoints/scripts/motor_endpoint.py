@@ -6,7 +6,7 @@ import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool
-cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
 class MotorEndpoint(object):
 
