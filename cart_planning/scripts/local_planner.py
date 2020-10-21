@@ -47,7 +47,7 @@ class LocalPlanner(object):
 
         self.current_state = VehicleState()
 
-        # To allow other nodes to make stop requests
+        # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean), stopfast(boolean)]
         self.stop_requests = {}
 
         # The points to use for a path, typically coming from global planner                                
@@ -63,8 +63,11 @@ class LocalPlanner(object):
         # Current Velocity of cart in Meters per second
         self.speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
 
-        # Allow nodes to make stop requests
+        # Allow nodes to make emergency stop requests
         self.emergency_stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
+
+        # Regular stop sub
+        self.request_stop_sub = rospy.Subscriber('/request_stop', EmergencyStop, self.normal_stop_callback, queue_size=10)
 
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
@@ -78,8 +81,11 @@ class LocalPlanner(object):
         # Show the cubic spline path the cart will be taking in RViz
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
 
-        # Publish stop to Motor Endpoint
+        # Publish hard stop to Motor Endpoint
         self.stop_pub = rospy.Publisher('/stop_vehicle', Bool, queue_size=10)
+
+        # Publish a gentle stop to Motor Endpoint
+        self.gentle_pub = rospy.Publisher('/gentle_stop', Bool, queue_size=10)
 
         # Show the current point along the path the cart is attempting to navigate to in RViz
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
@@ -115,8 +121,11 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id.data).lower()] = msg.emergency_stop
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, True]
 
+    def normal_stop_callback(self, msg):
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, False]
+    
     def vel_callback(self, msg):
         if msg.data < 1.0:
             self.cur_speed = 1.8 # Magic number however this is roughly the observed speed in realtime
@@ -302,13 +311,24 @@ class LocalPlanner(object):
 
         # Check if any node wants us to stop
         stop_msg = Bool()
-        if any(x == True for x in self.stop_requests.values()):
+        gentle_stop = Bool()
+        # Slow, normal stop
+        if any((x[0] == True and x[1] == False)  for x in self.stop_requests.values()):
+            rospy.loginfo("Local Planner making gentle stop request")
+            gentle_stop.data = True
+        else:
+            gentle_stop.data = False
+
+        # Quick Emergency stop
+        if any((x[0] == True and x[1] == True)  for x in self.stop_requests.values()):
             stop_msg.data = True
         else:
             stop_msg.data = False
-            self.motion_pub.publish(msg)
 
         self.stop_pub.publish(stop_msg)
+        self.gentle_pub.publish(gentle_stop)
+
+        self.motion_pub.publish(msg)
 
         state.x = pose.position.x
         state.y = pose.position.y
