@@ -9,7 +9,8 @@
     <arg name="lidar" default="true"/>
 
        <!-- Start lidar code -->
-    <group if="$(arg lidar)">
+       <group if="$(arg lidar)">
+	 <remap from="/scan" to="/scan_velodyne"/>
         <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
         <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
    </group> 
@@ -29,9 +30,10 @@
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
     </group>
     <group if="$(arg obstacle_detection)">
-        <include file="$(find rplidar_ros)/launch/rplidar_a3.launch">
-            <remap from="/scan" to="/scan_rplidar"/>
-        </include>
+      <remap from="/scan" to="/scan_rplidar"/>
+        <include file="$(find cart_endpoints)/launch/rplidar_a3.launch">
+ 		
+	</include>
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
         <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
