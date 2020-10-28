@@ -223,7 +223,7 @@ class CollisionDetector(object):
             if display is not None:
                 collision_array.markers.append(display)
             
-        # If a run detects a clear path, but we are still stopped. allow nav to continue, and we have confidence it is clear
+        # If a run detects a clear path, but we are still stopped. allow nav to continue, and we have confidence is clear (15 spins/3 seconds given rate of 5 hz)
         if clear_path:
             self.cleared_confidence += 1
             if self.stopped and self.cleared_confidence >= 15:
@@ -234,6 +234,7 @@ class CollisionDetector(object):
                 stop_msg.emergency_stop = False
                 stop_msg.sender_id.data = "collision_detector"
                 self.stop_pub.publish(stop_msg)
+                self.gentle_stop_pub.publish(stop_msg)
 
         self.collision_pub.publish(collision_array)
 
