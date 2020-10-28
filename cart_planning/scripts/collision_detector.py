@@ -61,11 +61,13 @@ class CollisionDetector(object):
         self.circle_center = [0, 0]
         self.right_turn = False
 
-        # Minimum allowable distance from front of cart to intercept obstacle
+        # Minimum allowable distance from front of cart to intercept obstacle before emergency stopping
         self.min_obstacle_dist = rospy.get_param('min_obstacle_dist')
-
-        # Minimum allowable transit time to an obstacle allowed
+        # Minimum allowable transit time to an obstacle allowed before emergency stopping
         self.min_obstacle_time = rospy.get_param('min_obstacle_time')
+
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist')
+        self.safe_obstacle_time = rospy.get_param('safe_obstacle_time')
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
         self.pos_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.position_callback, queue_size=10)
@@ -74,6 +76,7 @@ class CollisionDetector(object):
         
         self.display_pub = rospy.Publisher('/corner_display', Marker,queue_size=10)
         self.stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+        self.gentle_stop_pub = rospy.Publisher('/request_stop', EmergencyStop, queue_size=10)
         self.display_boundary_pub = rospy.Publisher('/boundaries', Marker, queue_size=10)
         self.display_array = rospy.Publisher('/boundaries_array', MarkerArray, queue_size=100)
         self.collision_pub = rospy.Publisher('/collision_pub', MarkerArray, queue_size=100)
@@ -184,7 +187,11 @@ class CollisionDetector(object):
             self.display_circle("/base_link", self.front_axle_center, 24, 2, z=1)
 
             if potential_collision:
-                #rospy.logwarn("Looks like a potential collision")
+                # Prepare an emergency stop message
+                stop_msg = EmergencyStop()
+                stop_msg.emergency_stop = True
+                stop_msg.sender_id.data = "collision_detector"
+
                 # Calculate distance from front of cart to obstacle
                 distance = self.distance(obstacle.pos.point.x, obstacle.pos.point.y, 
                 self.front_axle_center[0], self.front_axle_center[1])
@@ -195,10 +202,17 @@ class CollisionDetector(object):
                     self.cleared_confidence = 0
                     if not self.stopped:
                         self.stopped = True
-                        stop_msg = EmergencyStop()
-                        stop_msg.emergency_stop = True
-                        stop_msg.sender_id.data = "collision_detector"
                         self.stop_pub.publish(stop_msg)
+                        rospy.logwarn("Requesting a stop due to possible collision")
+                    # Show a red obstacle, an obstacle worth stopping for
+                    display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)
+                elif distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
+                    #Temporay code duplication
+                    clear_path = False
+                    self.cleared_confidence = 0
+                    if not self.stopped:
+                        self.stopped = True
+                        self.gentle_stop_pub.publish(stop_msg)
                         rospy.logwarn("Requesting a stop due to possible collision")
                     # Show a red obstacle, an obstacle worth stopping for
                     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)

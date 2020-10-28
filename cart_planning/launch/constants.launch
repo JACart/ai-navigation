@@ -19,12 +19,16 @@
         max_ndt_health: 4
         
         <!-- Collision Detection Parameters -->
-        <!-- Minimum distance an obstacle can be from the cart before stopping -->
-        min_obstacle_dist: 3
-        <!-- Time(seconds) away an obstacle can be before stopping-->
-        min_obstacle_time: 1
+        <!-- Minimum distance an obstacle can be from the cart before emergency stopping-->
+        min_obstacle_dist: 0.5
+        <!-- Time(seconds) away an obstacle can be before emergency stopping-->
+        min_obstacle_time: 0.5
 
-        <!-- Vehicle Kinematics -->
+        <!-- Safe distance before a general eased stop -->
+        safe_obstacle_dist: 3
+        safe_obstacle_time: 2
+
+        <!-- Vehicle Kinematics (Meters) -->
         vehicle_width: 1.1938
         vehicle_length: 2.4003 
         wheel_base: 2.4003
