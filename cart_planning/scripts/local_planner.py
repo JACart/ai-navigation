@@ -122,9 +122,11 @@ class LocalPlanner(object):
 
     def stop_callback(self, msg):
         self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, True]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested hard stop: " + str(msg.emergency_stop))
 
     def normal_stop_callback(self, msg):
         self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, False]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested gentle stop: " + str(msg.emergency_stop))
     
     def vel_callback(self, msg):
         if msg.data < 1.0:
@@ -314,7 +316,6 @@ class LocalPlanner(object):
         gentle_stop = Bool()
         # Slow, normal stop
         if any((x[0] == True and x[1] == False)  for x in self.stop_requests.values()):
-            rospy.loginfo("Local Planner making gentle stop request")
             gentle_stop.data = True
         else:
             gentle_stop.data = False
