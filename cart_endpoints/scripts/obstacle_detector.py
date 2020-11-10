@@ -66,6 +66,9 @@ class ObstacleDetector(object):
         self.display_pub = rospy.Publisher('/obstacle_display', Marker, queue_size=10)
         
         self.rplidar_sub = rospy.Subscriber('/scan_rplidar', LaserScan, self.lidar_callback, queue_size=1)
+        self.velodyne_laserscan_sub = rospy.Subscriber('/scan', LaserScan, self.lidar_callback, queue_size=1)
+        # /scan is the topic the pointcloud_to_laserscan node publishes to
+
         #self.vehicle_speed_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.speed_check)
         
         r = rospy.Rate(30)

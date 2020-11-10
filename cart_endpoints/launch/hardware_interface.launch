@@ -12,8 +12,15 @@
        <group if="$(arg lidar)">
 	 <remap from="/scan" to="/scan_velodyne"/>
         <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+        <remap from="/points_raw" to="/cloud_in"/>
         <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
    </group> 
+      
+   <group>
+      <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" output="screen" />
+   </group>
+
+    
 
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
