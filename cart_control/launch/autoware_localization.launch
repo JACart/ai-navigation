@@ -73,7 +73,7 @@
      <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cart_simulator)/testing_description/rviz/autoware_integration.rviz" />
 
     <!-- Relay node, this is a temporary alternative to remapping the velodyne_points topic -->
-    <node name="relay" pkg="topic_tools" type="relay" args="/velodyne_points /points_raw"/>
+     <node name="relay" pkg="topic_tools" type="relay" args="/velodyne_points /points_raw"/>
 
     <!-- Throttle position messages so nodes that need positional updates dont't call to often -->
     <node name="throttle" pkg="topic_tools" type="throttle" args="messages /ndt_pose 60.0 /limited_pose"/>

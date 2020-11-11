@@ -65,8 +65,8 @@ class ObstacleDetector(object):
         self.obstacles_pub = rospy.Publisher('/obstacles', ObstacleArray, queue_size=10)
         self.display_pub = rospy.Publisher('/obstacle_display', Marker, queue_size=10)
         
-        self.rplidar_sub = rospy.Subscriber('/scan_rplidar', LaserScan, self.lidar_callback, queue_size=1)
-        self.velodyne_laserscan_sub = rospy.Subscriber('/scan', LaserScan, self.lidar_callback, queue_size=1)
+        # self.rplidar_sub = rospy.Subscriber('/scan_rplidar', LaserScan, self.lidar_callback, queue_size=1)
+        self.velodyne_laserscan_sub = rospy.Subscriber('/pcd_to_scan', LaserScan, self.lidar_callback, queue_size=1)
         # /scan is the topic the pointcloud_to_laserscan node publishes to
 
         #self.vehicle_speed_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.speed_check)
@@ -147,13 +147,13 @@ class ObstacleDetector(object):
             # Get the X, Y coordinate from the distance and angle form LiDAR
             ray_dist = arr[i]
 
-            # Only care about 3 meters ahead, limit to front 180
-            if ray_dist <= 8 and ( (cur_angle < (-math.pi/2)) or (cur_angle > (math.pi/2)) ):
+            # Only care about 8 meters ahead, limit to front 180
+            if ray_dist <= 8 and ( (cur_angle > (-math.pi/2)) and (cur_angle < (math.pi/2)) ): # and ( (cur_angle < (-math.pi/2)) or (cur_angle > (math.pi/2)) ):
                 #rospy.loginfo("We have a contender, angle: " + str(cur_angle) + "")
                 curX, curY = self.get_point(cur_angle, ray_dist)
 
                 cur_point = Point(curX, curY)
-
+                # rospy.loginfo("Current obs angle: " + str(cur_angle))
                 #Cluster points that are close together, also start new cluster if current cluster is getting large
                 if self.compare_points(cur_point, last_point) and len(cur_cluster) < 70:
                     cur_cluster.append(cur_point)
@@ -184,9 +184,9 @@ class ObstacleDetector(object):
             radius = 0.01 * len(cluster)
             
             #Transform to another frame, in our case map
-            self.t.waitForTransform("/base_link", "/base_laser_link", rospy.Time(0), rospy.Duration(0.01))
+            self.t.waitForTransform("/base_link", "/velodyne", rospy.Time(0), rospy.Duration(0.01))
             global_point = PointStamped()
-            global_point.header.frame_id = "base_laser_link"
+            global_point.header.frame_id = "velodyne"
             global_point.header.stamp = rospy.Time(0)
             global_point.point.x = centerX
             global_point.point.y = centerY
@@ -194,7 +194,7 @@ class ObstacleDetector(object):
 
 
             #Convert our circle from local laser coordinate space to map frame
-            prepared_point = self.t.transformPoint("base_link", global_point)
+            prepared_point = self.t.transformPoint("velodyne", global_point)
 
             #Create new circle around obstacle and add to current list of obstacles
             cur_circle  = Obstacle()
