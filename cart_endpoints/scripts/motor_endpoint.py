@@ -24,6 +24,7 @@ class MotorEndpoint(object):
         # Time (seconds) to ramp up to full brakes
         self.brake_time = 3
         self.node_rate = 5
+        self.stop_done = True
         self.step_size = 255/(self.node_rate*self.brake_time)
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
@@ -63,6 +64,7 @@ class MotorEndpoint(object):
 
     def gentle_callback(self, msg):
         self.gentle_stop = msg.data
+        self.stop_done = False
 
     def debug_callback(self, msg):
         self.debug = msg.data
@@ -107,13 +109,18 @@ class MotorEndpoint(object):
             target_speed = 0
         elif self.gentle_stop:
             # This can later be adjusted to have dynamic braking times
-            self.brake += self.step_size
-            self.brake = int(min(255, self.brake))
+            if self.stop_done:
+                self.brake = 0
+            else:
+                self.brake += self.step_size
+                self.brake = int(min(255, self.brake))
+                if self.brake == 255:
+                    self.stop_done = True
             target_speed = 0
         else:
             self.brake = 0
 
-
+        print(target_speed, self.brake, target_angle)
         self.pack_send(target_speed, self.brake, target_angle)
     
     def pack_send(self, throttle, brake, steer_angle):

@@ -38,12 +38,12 @@ class CollisionDetector(object):
         self.requested_steering_angle = 0
 
         # Vehicle Kinematics
-        self.vehicle_width = rospy.get_param('vehicle_width')
-        self.vehicle_length = rospy.get_param('vehicle_length')
-        self.wheel_base = rospy.get_param('wheel_base')
-        self.front_axle_track = rospy.get_param('front_axle_track')
-        self.rear_axle_track = rospy.get_param('rear_axle_track')
-        self.tire_width = rospy.get_param('tire_width')
+        self.vehicle_width = rospy.get_param('vehicle_width', 1.1938)
+        self.vehicle_length = rospy.get_param('vehicle_length', 2.4003)
+        self.wheel_base = rospy.get_param('wheel_base', 2.4003)
+        self.front_axle_track = rospy.get_param('front_axle_track', .9017)
+        self.rear_axle_track = rospy.get_param('rear_axle_track', .9652)
+        self.tire_width = rospy.get_param('tire_width', .2159)
         self.cur_speed = 0.1
         self.stopped = False
         self.cleared_confidence = 0
@@ -62,12 +62,12 @@ class CollisionDetector(object):
         self.right_turn = False
 
         # Minimum allowable distance from front of cart to intercept obstacle before emergency stopping
-        self.min_obstacle_dist = rospy.get_param('min_obstacle_dist')
+        self.min_obstacle_dist = rospy.get_param('min_obstacle_dist', .5)
         # Minimum allowable transit time to an obstacle allowed before emergency stopping
-        self.min_obstacle_time = rospy.get_param('min_obstacle_time')
+        self.min_obstacle_time = rospy.get_param('min_obstacle_time', .5)
 
-        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist')
-        self.safe_obstacle_time = rospy.get_param('safe_obstacle_time')
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 3)
+        self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
         self.pos_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.position_callback, queue_size=10)
@@ -203,7 +203,7 @@ class CollisionDetector(object):
                     if not self.stopped:
                         self.stopped = True
                         self.stop_pub.publish(stop_msg)
-                        rospy.logwarn("Requesting a stop due to possible collision")
+                        rospy.logwarn("Requesting a fast stop due to possible collision")
                     # Show a red obstacle, an obstacle worth stopping for
                     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)
                 elif distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
@@ -213,7 +213,7 @@ class CollisionDetector(object):
                     if not self.stopped:
                         self.stopped = True
                         self.gentle_stop_pub.publish(stop_msg)
-                        rospy.logwarn("Requesting a stop due to possible collision")
+                        rospy.logwarn("Requesting a slow stop due to possible collision")
                     # Show a red obstacle, an obstacle worth stopping for
                     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)
                 else:

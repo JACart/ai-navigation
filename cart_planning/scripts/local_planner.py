@@ -146,6 +146,7 @@ class LocalPlanner(object):
         # path_valid being set to false will end the previous navigation and new_path being true will trigger the creation of a new path
         self.path_valid = False
         self.new_path = True
+        rospy.loginfo("path received: " + str(msg))
 
     '''
     Creates a path for the cart with a set of local_points
@@ -315,6 +316,7 @@ class LocalPlanner(object):
         stop_msg = Bool()
         gentle_stop = Bool()
         # Slow, normal stop
+        print(self.stop_requests)
         if any((x[0] == True and x[1] == False)  for x in self.stop_requests.values()):
             gentle_stop.data = True
         else:
