@@ -81,12 +81,6 @@ class LocalPlanner(object):
         # Show the cubic spline path the cart will be taking in RViz
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
 
-        # Publish hard stop to Motor Endpoint
-        self.stop_pub = rospy.Publisher('/stop_vehicle', Bool, queue_size=10)
-
-        # Publish a gentle stop to Motor Endpoint
-        self.gentle_pub = rospy.Publisher('/gentle_stop', Bool, queue_size=10)
-
         # Show the current point along the path the cart is attempting to navigate to in RViz
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
 
@@ -313,23 +307,11 @@ class LocalPlanner(object):
         self.steering_pub.publish(display_angle)
 
         # Check if any node wants us to stop
-        stop_msg = Bool()
-        gentle_stop = Bool()
+
         # Slow, normal stop
         print(self.stop_requests)
-        if any((x[0] == True and x[1] == False)  for x in self.stop_requests.values()):
-            gentle_stop.data = True
-        else:
-            gentle_stop.data = False
-
-        # Quick Emergency stop
-        if any((x[0] == True and x[1] == True)  for x in self.stop_requests.values()):
-            stop_msg.data = True
-        else:
-            stop_msg.data = False
-
-        self.stop_pub.publish(stop_msg)
-        self.gentle_pub.publish(gentle_stop)
+        if any([x[0] for x in self.stop_requests.values()]):
+            msg.vel = 0
 
         self.motion_pub.publish(msg)
 

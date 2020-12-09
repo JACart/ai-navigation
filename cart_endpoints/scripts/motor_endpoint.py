@@ -8,6 +8,11 @@ from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
+# STATES:
+MOVING = 0 
+BRAKING = 1
+STOPPED = 2
+
 class MotorEndpoint(object):
 
     def __init__(self):
@@ -23,9 +28,9 @@ class MotorEndpoint(object):
         self.cmd_msg = None
         # Time (seconds) to ramp up to full brakes
         self.brake_time = 3
-        self.node_rate = 5
-        self.stop_done = True
-        self.step_size = 255/(self.node_rate*self.brake_time)
+        self.node_rate = 10
+        self.state = STOPPED
+        self.step_size = 255.0/(self.node_rate*self.brake_time)
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
@@ -42,10 +47,6 @@ class MotorEndpoint(object):
         """
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
-        self.stop_subscriber = rospy.Subscriber('/stop_vehicle', Bool,
-                                                      self.stop_callback, queue_size=10)
-        self.gentle_stop_subscriber = rospy.Subscriber('/gentle_stop', Bool, self.gentle_callback, queue_size=10)
-        
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
         
         rate = rospy.Rate(self.node_rate)
@@ -56,7 +57,16 @@ class MotorEndpoint(object):
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
-        self.cmd_msg = planned_vel_angle  
+        self.cmd_msg = planned_vel_angle
+
+        if self.cmd_msg.vel > 0:
+            self.state = MOVING
+            self.brake = 0 # make sure we take the foot off the brake
+
+        elif self.state == MOVING and self.cmd_msg.vel <= 0:  # Brakes are hit
+            self.state = BRAKING
+            self.brake = 0 # ramp up braking from 0
+            
         self.new_vel = True     
 
     def stop_callback(self, msg):
@@ -75,14 +85,16 @@ class MotorEndpoint(object):
         
         if self.new_vel:
             self.new_vel = False
-            self.cmd_msg.vel *= 50
-            self.cmd_msg.vel_curr *= 50
+            self.cmd_msg.vel *= 50       # Rough conversion from m/s to cart controller units
+            self.cmd_msg.vel_curr *= 50  # Rough conversion from m/s to cart controller units
             if self.cmd_msg.vel > 254:
                 self.cmd_msg.vel = 254
             if self.cmd_msg.vel < -254:
                 self.cmd_msg.vel = -254
             if self.cmd_msg.vel_curr > 254:
                 self.cmd_msg.vel_curr = 254
+            if self.cmd_msg.vel < 0:
+                rospy.logwarn("NEGATIVE VELOCITY REQUESTED FOR THE MOTOR ENDPOINT!")
         target_speed = int(self.cmd_msg.vel) #float64
         current_speed = int(self.cmd_msg.vel_curr) #float64
         #adjust the target_angle range from (-45 <-> 45) to (0 <-> 100)
@@ -102,26 +114,16 @@ class MotorEndpoint(object):
                 rospy.loginfo("Endpoint Angle: " + str(target_angle))
                 rospy.loginfo("Endpoint Speed: " + str(target_speed))
 
-        # If an emergency stop
-        if self.stop:
-            # Pass in max 255 for brakes
-            self.brake = 255
-            target_speed = 0
-        elif self.gentle_stop:
-            # This can later be adjusted to have dynamic braking times
-            if self.stop_done:
-                self.brake = 0
-            else:
-                self.brake += self.step_size
-                self.brake = int(min(255, self.brake))
-                if self.brake == 255:
-                    self.stop_done = True
-            target_speed = 0
-        else:
+        if self.state == STOPPED:
             self.brake = 0
+            target_speed = 0
+        elif self.state == BRAKING:
+            self.brake = float(min(255, self.brake + self.step_size))
+            if self.brake >= 255:  # We have reached maximum braking!
+                self.state = STOPPED
+            target_speed = 0
 
-        print(target_speed, self.brake, target_angle)
-        self.pack_send(target_speed, self.brake, target_angle)
+        self.pack_send(target_speed, int(self.brake), target_angle)
     
     def pack_send(self, throttle, brake, steer_angle):
         data = bytearray(b'\x00' * 5)
