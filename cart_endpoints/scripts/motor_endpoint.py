@@ -6,6 +6,7 @@ import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool
+import time
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
 # STATES:
@@ -30,6 +31,7 @@ class MotorEndpoint(object):
         self.brake_time = 3
         self.node_rate = 10
         self.state = STOPPED
+        self.stopping_time = 0
         self.step_size = 255.0/(self.node_rate*self.brake_time)
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
@@ -59,13 +61,14 @@ class MotorEndpoint(object):
     def motion_callback(self, planned_vel_angle):
         self.cmd_msg = planned_vel_angle
 
-        if self.cmd_msg.vel > 0:
+        if self.cmd_msg.vel > 0 and (self.state == STOPPED or self.state == BRAKING) and (time.time()- self.stopping_time) > 10:
             self.state = MOVING
             self.brake = 0 # make sure we take the foot off the brake
 
         elif self.state == MOVING and self.cmd_msg.vel <= 0:  # Brakes are hit
             self.state = BRAKING
             self.brake = 0 # ramp up braking from 0
+            self.stopping_time = time.time()
             
         self.new_vel = True     
 
