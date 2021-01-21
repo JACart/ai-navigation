@@ -129,10 +129,12 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
+        Collision Bounds: true
+        Detected Collisions: true
+        GPS Request Location: true
         Grid: true
         LaserScan: true
         Look Ahead Point: true
-        Marker: true
         Obstacle Marker: true
         Points Map: true
         Points Raw: true
@@ -147,8 +149,8 @@ Visualization Manager:
     - Alpha: 0.300000012
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.01653934
-        Min Value: -3.03090096
+        Max Value: 12.5851154
+        Min Value: -3.1748414
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -328,9 +330,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 47
+      Max Intensity: 67
       Min Color: 0; 0; 0
-      Min Intensity: 47
+      Min Intensity: 1
       Name: LaserScan
       Position Transformer: XYZ
       Queue Size: 10
@@ -354,7 +356,23 @@ Visualization Manager:
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /display_gps
-      Name: Marker
+      Name: GPS Request Location
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /boundaries_array
+      Name: Collision Bounds
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /collision_pub
+      Name: Detected Collisions
       Namespaces:
         {}
       Queue Size: 100
@@ -383,7 +401,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
+      Angle: 0.00499997009
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
@@ -393,11 +411,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 7.50715828
-      Target Frame: map
+      Scale: 12.0098667
+      Target Frame: base_link
       Value: TopDownOrtho (rviz)
-      X: 15.720089
-      Y: 6.38741922
+      X: 13.1506519
+      Y: -1.53516412
     Saved: ~
 Window Geometry:
   Camera:

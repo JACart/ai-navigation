@@ -72,7 +72,7 @@ class CartHealth(object):
         """
         stop_msg = EmergencyStop()
         stop_msg.emergency_stop = stop
-        stop_msg.sender_id = sender_id
+        stop_msg.sender_id.data = sender_id
         self.emergency_stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":

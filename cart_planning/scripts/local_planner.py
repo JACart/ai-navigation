@@ -47,7 +47,7 @@ class LocalPlanner(object):
 
         self.current_state = VehicleState()
 
-        # To allow other nodes to make stop requests
+        # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean), stopfast(boolean)]
         self.stop_requests = {}
 
         # The points to use for a path, typically coming from global planner                                
@@ -63,8 +63,11 @@ class LocalPlanner(object):
         # Current Velocity of cart in Meters per second
         self.speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
 
-        # Allow nodes to make stop requests
+        # Allow nodes to make emergency stop requests
         self.emergency_stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
+
+        # Regular stop sub
+        self.request_stop_sub = rospy.Subscriber('/request_stop', EmergencyStop, self.normal_stop_callback, queue_size=10)
 
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
@@ -78,9 +81,6 @@ class LocalPlanner(object):
         # Show the cubic spline path the cart will be taking in RViz
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10, latch=True)
 
-        # Publish stop to Motor Endpoint
-        self.stop_pub = rospy.Publisher('/stop_vehicle', Bool, queue_size=10)
-
         # Show the current point along the path the cart is attempting to navigate to in RViz
         self.target_pub = rospy.Publisher('/target_point', Marker, queue_size=10)
 
@@ -89,6 +89,9 @@ class LocalPlanner(object):
 
         # Staus update to server
         self.arrived_pub = rospy.Publisher('/arrived', String, queue_size=10)
+
+        # Steering angle PieChart display
+        self.steering_pub = rospy.Publisher('/steering_angle', Float32, queue_size=10)
 
         # Publish the ETA
         self.eta_pub = rospy.Publisher('/eta', UInt64, queue_size=10)
@@ -112,8 +115,13 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id).lower()] = msg.emergency_stop
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, True]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested hard stop: " + str(msg.emergency_stop))
 
+    def normal_stop_callback(self, msg):
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, False]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested gentle stop: " + str(msg.emergency_stop))
+    
     def vel_callback(self, msg):
         if msg.data < 1.0:
             self.cur_speed = 1.8 # Magic number however this is roughly the observed speed in realtime
@@ -132,6 +140,7 @@ class LocalPlanner(object):
         # path_valid being set to false will end the previous navigation and new_path being true will trigger the creation of a new path
         self.path_valid = False
         self.new_path = True
+        rospy.loginfo("path received: " + str(msg))
 
     '''
     Creates a path for the cart with a set of local_points
@@ -280,6 +289,7 @@ class LocalPlanner(object):
         pose = self.global_pose
         twist = self.global_twist
         current_spd = twist.linear.x
+
         msg = VelAngle()
         if self.debug:
             self.delay_print -= 1
@@ -291,15 +301,19 @@ class LocalPlanner(object):
         msg.angle = (delta*180)/math.pi
         msg.vel_curr = current_spd
 
-        # Check if any node wants us to stop
-        stop_msg = Bool()
-        if any(x == True for x in self.stop_requests.values()):
-            stop_msg.data = True
-        else:
-            stop_msg.data = False
-            self.motion_pub.publish(msg)
+        display_angle = Float32()
+        display_angle.data = msg.angle
 
-        self.stop_pub.publish(stop_msg)
+        self.steering_pub.publish(display_angle)
+
+        # Check if any node wants us to stop
+
+        # Slow, normal stop
+        print(self.stop_requests)
+        if any([x[0] for x in self.stop_requests.values()]):
+            msg.vel = 0
+
+        self.motion_pub.publish(msg)
 
         state.x = pose.position.x
         state.y = pose.position.y

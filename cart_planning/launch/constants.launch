@@ -13,9 +13,27 @@
         <!-- Global Planner graph file parameter -->
         graph_file: "/home/jeffercize/catkin_ws/src/ai-navigation/EastCampusLiteV6.gml"
 
-        <!-- Maximum safety parameters -->
+        <!-- Safety Parameters -->
         <!-- These are reactive in the sense that if the max_speed is reached the cart will emergency stop -->
         max_speed: 5
         max_ndt_health: 4
+        
+        <!-- Collision Detection Parameters -->
+        <!-- Minimum distance an obstacle can be from the cart before emergency stopping-->
+        min_obstacle_dist: 0.5
+        <!-- Time(seconds) away an obstacle can be before emergency stopping-->
+        min_obstacle_time: 0.5
+
+        <!-- Safe distance before a general eased stop -->
+        safe_obstacle_dist: 3
+        safe_obstacle_time: 2
+
+        <!-- Vehicle Kinematics (Meters) -->
+        vehicle_width: 1.1938
+        vehicle_length: 2.4003 
+        wheel_base: 2.4003
+        front_axle_track: 0.9017
+        rear_axle_track: 0.9652
+        tire_width: 0.2159
     </rosparam>
 </launch>
