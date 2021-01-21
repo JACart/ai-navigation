@@ -14,6 +14,7 @@ MOVING = 0
 BRAKING = 1
 STOPPED = 2
 
+
 class MotorEndpoint(object):
 
     def __init__(self):
