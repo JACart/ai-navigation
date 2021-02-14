@@ -15,7 +15,7 @@ import copy
 import tf
 
 #Messages
-from navigation_msgs.msg import EmergencyStop, VehicleState, Obstacle, ObstacleArray
+from navigation_msgs.msg import VehicleState, Obstacle, ObstacleArray
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped
 from autoware_msgs.msg import NDTStat
 from std_msgs.msg import Header
@@ -60,8 +60,7 @@ class ObstacleDetector(object):
 
         # Max distance between points to consider for clustering
         self.dist_threshold = 0.10
-        
-        self.emergency_stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+
         self.obstacles_pub = rospy.Publisher('/obstacles', ObstacleArray, queue_size=10)
         self.display_pub = rospy.Publisher('/obstacle_display', Marker, queue_size=10)
         
