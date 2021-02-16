@@ -66,8 +66,8 @@ class CollisionDetector(object):
         # Minimum allowable transit time to an obstacle allowed before emergency stopping
         self.min_obstacle_time = rospy.get_param('min_obstacle_time', .5)
 
-        #self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 3)
-        #self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 3)
+        self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
         self.pos_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.position_callback, queue_size=10)
@@ -196,7 +196,8 @@ class CollisionDetector(object):
                 self.front_axle_center[0], self.front_axle_center[1])
                 # Calculate rough time to obstacle impact (seconds)
                 impact_time = distance/self.cur_speed
-                if distance < self.min_obstacle_dist or impact_time < self.min_obstacle_time:
+                #if distance < self.min_obstacle_dist or impact_time < self.min_obstacle_time:
+                if distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
                     clear_path = False
                     self.cleared_confidence = 0
                     if not self.stopped:
