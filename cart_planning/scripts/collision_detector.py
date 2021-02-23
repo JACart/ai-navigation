@@ -75,7 +75,7 @@ class CollisionDetector(object):
         self.cur_speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, queue_size=10)
         
         self.display_pub = rospy.Publisher('/corner_display', Marker,queue_size=10)
-        self.stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+        self.stop_pub = rospy.Publisher('/stop', EmergencyStop, queue_size=10)
         self.display_boundary_pub = rospy.Publisher('/boundaries', Marker, queue_size=10)
         self.display_array = rospy.Publisher('/boundaries_array', MarkerArray, queue_size=100)
         self.collision_pub = rospy.Publisher('/collision_pub', MarkerArray, queue_size=100)

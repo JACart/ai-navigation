@@ -235,7 +235,7 @@ if __name__ == "__main__":
     except:
         rospy.loginfo('Was unable to connect to the server')
     
-    stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+    stop_pub = rospy.Publisher('/stop', EmergencyStop, queue_size=10)
     req_pub = rospy.Publisher('/destination_request', String, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)

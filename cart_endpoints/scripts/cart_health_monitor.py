@@ -18,7 +18,7 @@ class CartHealth(object):
         self.max_speed = rospy.get_param('max_speed')
         self.max_ndt_health = rospy.get_param('max_ndt_health')
 
-        self.stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+        self.stop_pub = rospy.Publisher('/stop', EmergencyStop, queue_size=10)
 
         self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, self.status_update)
         self.ndt_stat_sub = rospy.Subscriber('/ndt_stat', NDTStat, self.ndt_stat_cb)

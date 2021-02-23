@@ -65,7 +65,7 @@ class LocalPlanner(object):
         self.speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
 
         # Allow nodes to make stop requests
-        self.stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
+        self.stop_sub = rospy.Subscriber('/stop', EmergencyStop, self.stop_callback, queue_size=10)
 
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
