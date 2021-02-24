@@ -13,7 +13,7 @@ import cv2
 from cv_bridge import CvBridge
 from std_msgs.msg import Int8, UInt64, String, Bool
 from geometry_msgs.msg import PoseStamped
-from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop, LatLongPoint
+from navigation_msgs.msg import GoalWaypoint, VehicleState, Stop, LatLongPoint
 from sensor_msgs.msg import NavSatFix, Image
 from rospy.numpy_msg import numpy_msg
 
@@ -76,7 +76,7 @@ def on_dest(data):
 @sio.on('pull-over',namespace='/ros')
 def on_pull_over():
     rospy.loginfo("Recieved Pull Over")
-    stop_msg = EmergencyStop()
+    stop_msg = Stop()
     stop_msg.stop = True
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
@@ -84,7 +84,7 @@ def on_pull_over():
 @sio.on('resume-driving',namespace='/ros')
 def on_resume():
     rospy.loginfo("Received a resume signal")
-    stop_msg = EmergencyStop()
+    stop_msg = Stop()
     stop_msg.stop = False
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
@@ -92,7 +92,7 @@ def on_resume():
 @sio.on('stop',namespace='/ros')
 def on_stop(data):
     rospy.loginfo("Received a stop signal")
-    stop_msg = EmergencyStop()
+    stop_msg = Stop()
     stop_msg.stop = True
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)    
@@ -158,7 +158,7 @@ def send_unsafe():
 # 0 is for internal usage but is currently unused
 def pullover_callback(msg):
     if msg.data:
-        stop_msg = EmergencyStop()
+        stop_msg = Stop()
         stop_msg.stop = True
         stop_msg.sender_id = 2
         stop_pub.publish(stop_msg)
@@ -170,7 +170,7 @@ def passenger_safe_callback(msg):
     if msg.data:
         send_ready()
     else:
-        stop_msg = EmergencyStop()
+        stop_msg = Stop()
         stop_msg.stop = True
         stop_msg.sender_id = 2
         stop_pub.publish(stop_msg)
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     except:
         rospy.loginfo('Was unable to connect to the server')
     
-    stop_pub = rospy.Publisher('/stop', EmergencyStop, queue_size=10)
+    stop_pub = rospy.Publisher('/stop', Stop, queue_size=10)
     req_pub = rospy.Publisher('/destination_request', String, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)

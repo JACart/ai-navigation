@@ -17,7 +17,7 @@ import numpy as np
 
 from std_msgs.msg import Header, Float32
 from visualization_msgs.msg import MarkerArray
-from navigation_msgs.msg import ObstacleArray, Obstacle, EmergencyStop, VelAngle
+from navigation_msgs.msg import ObstacleArray, Obstacle, Stop, VelAngle
 from geometry_msgs.msg import PoseStamped, PolygonStamped, Point32, Point
 from visualization_msgs.msg import Marker
 
@@ -75,7 +75,7 @@ class CollisionDetector(object):
         self.cur_speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, queue_size=10)
         
         self.display_pub = rospy.Publisher('/corner_display', Marker,queue_size=10)
-        self.stop_pub = rospy.Publisher('/stop', EmergencyStop, queue_size=10)
+        self.stop_pub = rospy.Publisher('/stop', Stop, queue_size=10)
         self.display_boundary_pub = rospy.Publisher('/boundaries', Marker, queue_size=10)
         self.display_array = rospy.Publisher('/boundaries_array', MarkerArray, queue_size=100)
         self.collision_pub = rospy.Publisher('/collision_pub', MarkerArray, queue_size=100)
@@ -187,7 +187,7 @@ class CollisionDetector(object):
 
             if potential_collision:
                 # Prepare an emergency stop message
-                stop_msg = EmergencyStop()
+                stop_msg = Stop()
                 stop_msg.stop = True
                 stop_msg.sender_id.data = "collision_detector"
 
@@ -230,7 +230,7 @@ class CollisionDetector(object):
                 self.cleared_confidence = 0
                 rospy.logwarn("Clearing collision, continuing navigation")
                 self.stopped = False
-                stop_msg = EmergencyStop()
+                stop_msg = Stop()
                 stop_msg.stop = False
                 stop_msg.sender_id.data = "collision_detector"
                 self.stop_pub.publish(stop_msg)
