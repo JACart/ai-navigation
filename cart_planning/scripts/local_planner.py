@@ -113,8 +113,8 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop]
-        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.emergency_stop))
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop))
  
     def vel_callback(self, msg):
         if msg.data < 1.0:

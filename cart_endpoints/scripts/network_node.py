@@ -77,7 +77,7 @@ def on_dest(data):
 def on_pull_over():
     rospy.loginfo("Recieved Pull Over")
     stop_msg = EmergencyStop()
-    stop_msg.emergency_stop = True
+    stop_msg.stop = True
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
 
@@ -85,7 +85,7 @@ def on_pull_over():
 def on_resume():
     rospy.loginfo("Received a resume signal")
     stop_msg = EmergencyStop()
-    stop_msg.emergency_stop = False
+    stop_msg.stop = False
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)
     
@@ -93,7 +93,7 @@ def on_resume():
 def on_stop(data):
     rospy.loginfo("Received a stop signal")
     stop_msg = EmergencyStop()
-    stop_msg.emergency_stop = True
+    stop_msg.stop = True
     stop_msg.sender_id = 1
     stop_pub.publish(stop_msg)    
  
@@ -159,7 +159,7 @@ def send_unsafe():
 def pullover_callback(msg):
     if msg.data:
         stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = True
+        stop_msg.stop = True
         stop_msg.sender_id = 2
         stop_pub.publish(stop_msg)
         send_unsafe()
@@ -171,7 +171,7 @@ def passenger_safe_callback(msg):
         send_ready()
     else:
         stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = True
+        stop_msg.stop = True
         stop_msg.sender_id = 2
         stop_pub.publish(stop_msg)
         send_unsafe()

@@ -71,7 +71,7 @@ class CartHealth(object):
             sender_id(String): Unique identifier of function or node making the request 
         """
         stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = stop
+        stop_msg.stop = stop
         stop_msg.sender_id.data = sender_id
         self.stop_pub.publish(stop_msg)
 

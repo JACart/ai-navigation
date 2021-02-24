@@ -188,7 +188,7 @@ class CollisionDetector(object):
             if potential_collision:
                 # Prepare an emergency stop message
                 stop_msg = EmergencyStop()
-                stop_msg.emergency_stop = True
+                stop_msg.stop = True
                 stop_msg.sender_id.data = "collision_detector"
 
                 # Calculate distance from front of cart to obstacle
@@ -231,7 +231,7 @@ class CollisionDetector(object):
                 rospy.logwarn("Clearing collision, continuing navigation")
                 self.stopped = False
                 stop_msg = EmergencyStop()
-                stop_msg.emergency_stop = False
+                stop_msg.stop = False
                 stop_msg.sender_id.data = "collision_detector"
                 self.stop_pub.publish(stop_msg)
 
