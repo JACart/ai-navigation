@@ -202,7 +202,7 @@ class CollisionDetector(object):
                     self.cleared_confidence = 0
                     if not self.stopped:
                         self.stopped = True
-                        self.distance = distance
+                        stop_msg.distance = distance
                         self.stop_pub.publish(stop_msg)
                         rospy.logwarn("Requesting a fast stop due to possible collision")
                     # Show a red obstacle, an obstacle worth stopping for
@@ -234,7 +234,7 @@ class CollisionDetector(object):
                 stop_msg = Stop()
                 stop_msg.stop = False
                 stop_msg.sender_id.data = "collision_detector"
-                stop_msg.distance = 0 # if cart is restarting, it needs 0 distance to resume
+                stop_msg.distance = 0  # if cart is already stopped, it needs 0 distance to start stop
                 self.stop_pub.publish(stop_msg)
 
         self.collision_pub.publish(collision_array)
