@@ -79,7 +79,7 @@ def on_pull_over():
     stop_msg = Stop()
     stop_msg.stop = True
     stop_msg.sender_id = 1
-    stop_msg.distance = 999
+    stop_msg.distance = -1
     stop_pub.publish(stop_msg)
 
 @sio.on('resume-driving',namespace='/ros')
@@ -88,7 +88,7 @@ def on_resume():
     stop_msg = Stop()
     stop_msg.stop = False
     stop_msg.sender_id = 1
-    stop_msg.distance = 0 # if cart is already stopped, it needs 0 distance to start again
+    stop_msg.distance = -1 # if cart is already stopped, it needs 0 distance to start again
     stop_pub.publish(stop_msg)
     
 @sio.on('stop',namespace='/ros')
@@ -97,7 +97,7 @@ def on_stop(data):
     stop_msg = Stop()
     stop_msg.stop = True
     stop_msg.sender_id = 1
-    stop_msg.distance = 999
+    stop_msg.distance = -1
     stop_pub.publish(stop_msg)    
  
     
@@ -164,7 +164,7 @@ def pullover_callback(msg):
         stop_msg = Stop()
         stop_msg.stop = True
         stop_msg.sender_id = 2
-        stop_msg.distance = 999
+        stop_msg.distance = -1
         stop_pub.publish(stop_msg)
         send_unsafe()
     else:
@@ -177,7 +177,7 @@ def passenger_safe_callback(msg):
         stop_msg = Stop()
         stop_msg.stop = True
         stop_msg.sender_id = 2
-        stop_msg.distance = 999
+        stop_msg.distance = -1
         stop_pub.publish(stop_msg)
         send_unsafe()
 

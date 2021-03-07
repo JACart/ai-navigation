@@ -33,6 +33,7 @@ class MotorEndpoint(object):
         self.state = STOPPED
         self.stopping_time = 0
         self.step_size = 255.0/(self.node_rate*self.brake_time)
+        self.obstacle_distance = -1
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
@@ -61,6 +62,14 @@ class MotorEndpoint(object):
     def motion_callback(self, planned_vel_angle):
         self.cmd_msg = planned_vel_angle
 
+        if self.cmd_msg.vel < 0:
+            # indicates an obstacle
+            self.obstacle_distance = abs(self.cmd_msg.vel)
+            self.cmd_msg.vel = 0
+        else
+            # reset obstacle distance
+            self.obstacle_distance = -1
+
         if self.cmd_msg.vel > 0 and (self.state == STOPPED or self.state == BRAKING) and (time.time()- self.stopping_time) > 10:
             self.state = MOVING
             self.brake = 0 # make sure we take the foot off the brake
@@ -69,7 +78,8 @@ class MotorEndpoint(object):
             self.state = BRAKING
             self.brake = 0 # ramp up braking from 0
             self.stopping_time = time.time()
-            
+
+
         self.new_vel = True     
 
     def debug_callback(self, msg):
@@ -114,6 +124,11 @@ class MotorEndpoint(object):
             self.brake = 0
             target_speed = 0
         elif self.state == BRAKING:
+            if self.obstacle_distance > 0
+                # there exists an obstacle in the cart's path we need to stop for
+                # TODO: replace self.step_size with various #s for testing
+                self.brake = float(min(255, self.brake + self.step_size))
+
             self.brake = float(min(255, self.brake + self.step_size))
             if self.brake >= 255:  # We have reached maximum braking!
                 self.state = STOPPED
