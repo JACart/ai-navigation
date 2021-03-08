@@ -88,7 +88,7 @@ def on_resume():
     stop_msg = Stop()
     stop_msg.stop = False
     stop_msg.sender_id = 1
-    stop_msg.distance = -1 # if cart is already stopped, it needs 0 distance to start again
+    stop_msg.distance = -1
     stop_pub.publish(stop_msg)
     
 @sio.on('stop',namespace='/ros')

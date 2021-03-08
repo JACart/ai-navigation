@@ -74,9 +74,9 @@ class CartHealth(object):
         stop_msg.stop = stop
         stop_msg.sender_id.data = sender_id
         if stop:
-            stop_msg.distance = 999
+            stop_msg.distance = -1
         else:
-            stop_msg.distance = 0 # if cart is already stopped, it needs 0 distance to start again
+            stop_msg.distance = -1
         self.stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":

@@ -234,7 +234,7 @@ class CollisionDetector(object):
                 stop_msg = Stop()
                 stop_msg.stop = False
                 stop_msg.sender_id.data = "collision_detector"
-                stop_msg.distance = -1  # if cart is already stopped, it needs 0 distance to start stop
+                stop_msg.distance = -1
                 self.stop_pub.publish(stop_msg)
 
         self.collision_pub.publish(collision_array)
