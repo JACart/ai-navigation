@@ -114,7 +114,7 @@ class LocalPlanner(object):
 
     def stop_callback(self, msg):
         self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop, msg.distance]
-        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop) + "with distance:" + str(msg.distance))
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop) + " with distance: " + str(msg.distance))
  
     def vel_callback(self, msg):
         if msg.data < 1.0:

@@ -79,7 +79,6 @@ class MotorEndpoint(object):
             self.brake = 0 # ramp up braking from 0
             self.stopping_time = time.time()
 
-
         self.new_vel = True     
 
     def debug_callback(self, msg):
@@ -146,7 +145,7 @@ class MotorEndpoint(object):
             # else:
                 # TODO: test different step sizes
             step = self.step_size
-            self.brake = float(min(255, self.brake + self.step_size))
+            self.brake = float(min(255, self.brake + step))
             if self.brake >= 255:  # We have reached maximum braking!
                 self.state = STOPPED
             target_speed = 0
