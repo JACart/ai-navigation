@@ -66,7 +66,7 @@ class MotorEndpoint(object):
             # indicates an obstacle
             self.obstacle_distance = abs(self.cmd_msg.vel)
             self.cmd_msg.vel = 0
-        else
+        else:
             # reset obstacle distance
             self.obstacle_distance = -1
 
