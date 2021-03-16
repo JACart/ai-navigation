@@ -125,14 +125,12 @@ class MotorEndpoint(object):
         elif self.state == BRAKING:
             if self.obstacle_distance > 0:
                 # there exists an obstacle in the cart's path we need to stop for
-                # TODO: replace self.step_size with various #s for testing
-                # currently it is 8.5 == 255/(node_rate=10 * brake_time=3)
 
                 obstacle_brake_time = obstacle_distance/self.cmd_msg.vel_curr
                 step = 255.0/(self.node_rate*obstacle_brake_time)
                 self.brake = float(min(255, self.brake + step))
             else:
-                
+                # TODO: we may want to adjust step_size for comfortable braking
                 self.brake = float(min(255, self.brake + self.step_size))
             if self.brake >= 255:  # We have reached maximum braking!
                 self.state = STOPPED
