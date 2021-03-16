@@ -123,29 +123,17 @@ class MotorEndpoint(object):
             self.brake = 0
             target_speed = 0
         elif self.state == BRAKING:
-            # if self.obstacle_distance > 0:
-            #     # there exists an obstacle in the cart's path we need to stop for
-            #     # TODO: replace self.step_size with various #s for testing
-            #     # currently it is 8.5 == 255/(node_rate=10 * brake_time=3)
+            if self.obstacle_distance > 0:
+                # there exists an obstacle in the cart's path we need to stop for
+                # TODO: replace self.step_size with various #s for testing
+                # currently it is 8.5 == 255/(node_rate=10 * brake_time=3)
 
-            #     # comfortable break for an object further away
-            #     step = self.step_size
-            #     # adjust step depending on the distance of the obstacle
-            #     if self.obstacle_distance < 1:
-            #         # fastest break for a close object
-            #         step = 15
-            #     elif self.obstacle_distance < 3:
-            #         step = 10
-            #     elif self.obstacle_distance < 5:
-            #         step = 8
-            #     else:
-            #         # comfortable break for an object further away
-            #         step = 6
-            #     self.brake = float(min(255, self.brake + step))
-            # else:
-                # TODO: test different step sizes
-            step = self.step_size
-            self.brake = float(min(255, self.brake + step))
+                brake = obstacle_distance/self.cmd_msg.vel_curr
+                step = 255.0/(self.node_rate*brake)
+                self.brake = float(min(255, self.brake + step))
+            else:
+                
+                self.brake = float(min(255, self.brake + self.step_size))
             if self.brake >= 255:  # We have reached maximum braking!
                 self.state = STOPPED
             target_speed = 0
