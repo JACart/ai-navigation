@@ -128,8 +128,8 @@ class MotorEndpoint(object):
                 # TODO: replace self.step_size with various #s for testing
                 # currently it is 8.5 == 255/(node_rate=10 * brake_time=3)
 
-                brake = obstacle_distance/self.cmd_msg.vel_curr
-                step = 255.0/(self.node_rate*brake)
+                obstacle_brake_time = obstacle_distance/self.cmd_msg.vel_curr
+                step = 255.0/(self.node_rate*obstacle_brake_time)
                 self.brake = float(min(255, self.brake + step))
             else:
                 
