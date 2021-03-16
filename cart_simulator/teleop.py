@@ -37,37 +37,39 @@ class teleop(object):
         anglestr = 'Center wheels '
         stdscr.nodelay(True)
         rate = rospy.Rate(10) 
-        stdscr.addstr(0,0,'Move with WASD, X for hard stop and Y for centering the wheel')
+        stdscr.addstr(0,0,'Move with WASD, W = 1, A = 0, S = 2, D = 4, X = 6, Y = 8')
         stdscr.addstr(1,0,'CTRL-C to exit')
-        stdscr.addstr(3,0,'TURNING       WHEEL ANGLE')
-        stdscr.addstr(6,0,'FORWARD MOVEMENT')
+        #stdscr.addstr(3,0,'TURNING       WHEEL ANGLE')
+        #stdscr.addstr(6,0,'FORWARD MOVEMENT')
         while not rospy.is_shutdown():
             keyval = stdscr.getch()
 
             if keyval == self.prev_key:
                 continue
             if keyval == w:
-                self.msg.vel_curr = 0.01
-                self.msg.vel = 2.0
-                velstr = "Full throttle "
-            elif keyval == a:
-                if self.msg.angle + angle_step <= angle_max:
-                    self.msg.angle += angle_step
-                    anglestr = "Turn left     "
-            elif keyval == s:
-                self.msg.vel_curr = 0.4
-                self.msg.vel = 0.01
-                velstr = "No throttle   "
-            elif keyval == d:
-                if self.msg.angle - angle_step >= -angle_max:
-                    self.msg.angle -= angle_step
-                    anglestr = "Turn right    "
-            elif keyval == x:
+                self.msg.vel_curr = 2.7
                 self.msg.vel = -1.0
-                velstr = "Hard stop     "
+                velstr = "obstacle 1m"
+            elif keyval == a:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -0
+                velstr = "comfortable stop"
+            elif keyval == s:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -2.0
+                velstr = "obstacle 2m"
+            elif keyval == d:
+            self.msg.vel_curr = 2.7
+                self.msg.vel = -4.0
+                velstr = "obstacle 4m"
+            elif keyval == x:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -6.0
+                velstr = "obstacle 6m"
             elif keyval == y:
-                self.msg.angle = 0.0
-                anglestr = "Center wheel  "
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -8.0
+                velstr = "obstacle 8m"
         
             self.prev_key = keyval
             self.motion_pub.publish(self.msg)
