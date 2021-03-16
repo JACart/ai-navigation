@@ -37,7 +37,7 @@ class teleop(object):
         anglestr = 'Center wheels '
         stdscr.nodelay(True)
         rate = rospy.Rate(10) 
-        stdscr.addstr(0,0,'Move with WASD, W = 1, A = 0, S = 2, D = 4, X = 6, Y = 8')
+        stdscr.addstr(0,0,'Move with WASD, W = 1, A = no obstacle, S = 2, D = 4, X = 6, Y = 8')
         stdscr.addstr(1,0,'CTRL-C to exit')
         #stdscr.addstr(3,0,'TURNING       WHEEL ANGLE')
         #stdscr.addstr(6,0,'FORWARD MOVEMENT')
