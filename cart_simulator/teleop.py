@@ -43,8 +43,8 @@ class teleop(object):
         stdscr.nodelay(True)
         rate = rospy.Rate(10) 
         stdscr.addstr(0,0,'Move with WASD, X for hard stop and Y for centering the wheel')
-        stdscr.addstr(1,0,'p= comfortable stop, o= obstacle 2m, i= obstacle 5m, l = start at 2.7')
-        stdscr.addstr(2,0,'u= obstacle in 15m (wont stop, outside set safe range)')
+        stdscr.addstr(1,0,'p= comfortable stop, o= obstacle 2m, i= obstacle 5m')
+        stdscr.addstr(2,0,'u= obstacle in 8m, l = start at 2.7s')
         stdscr.addstr(3,0,'CTRL-C to exit')
         stdscr.addstr(4,0,'TURNING       WHEEL ANGLE')
         stdscr.addstr(6,0,'FORWARD MOVEMENT')
@@ -90,9 +90,8 @@ class teleop(object):
                 velstr = "obstacle in 5m - stop              "
             elif keyval == u:
                 self.msg.vel_curr = 1
-                self.msg.vel = -15
-                velstr = "obstacle in 15m - should not stop"
-                # collision_detector only stops for obstacles within 10 ft
+                self.msg.vel = -8
+                velstr = "obstacle in 8m - stop              "
             elif keyval == l:
                 self.msg.vel_curr = 0.01
                 self.msg.vel = 2.7
