@@ -4,7 +4,6 @@ import serial
 import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
-from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool
 import time
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
@@ -72,13 +71,6 @@ class MotorEndpoint(object):
             self.stopping_time = time.time()
             
         self.new_vel = True     
-
-    def stop_callback(self, msg):
-        self.stop = msg.data
-
-    def gentle_callback(self, msg):
-        self.gentle_stop = msg.data
-        self.stop_done = False
 
     def debug_callback(self, msg):
         self.debug = msg.data

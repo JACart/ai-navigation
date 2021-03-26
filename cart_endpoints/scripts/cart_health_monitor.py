@@ -2,7 +2,7 @@
 
 import socket
 import rospy
-from navigation_msgs.msg import VehicleState, EmergencyStop
+from navigation_msgs.msg import VehicleState, Stop
 from geometry_msgs.msg import TwistStamped
 from autoware_msgs.msg import NDTStat
 from std_msgs.msg import Bool, Float32
@@ -18,7 +18,7 @@ class CartHealth(object):
         self.max_speed = rospy.get_param('max_speed')
         self.max_ndt_health = rospy.get_param('max_ndt_health')
 
-        self.emergency_stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+        self.stop_pub = rospy.Publisher('/stop', Stop, queue_size=10)
 
         self.vehicle_state_sub = rospy.Subscriber('/vehicle_state', VehicleState, self.status_update)
         self.ndt_stat_sub = rospy.Subscriber('/ndt_stat', NDTStat, self.ndt_stat_cb)
@@ -70,10 +70,10 @@ class CartHealth(object):
             stop(Boolean): Make a request to stop(True) or continue(False)
             sender_id(String): Unique identifier of function or node making the request 
         """
-        stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = stop
+        stop_msg = Stop()
+        stop_msg.stop = stop
         stop_msg.sender_id.data = sender_id
-        self.emergency_stop_pub.publish(stop_msg)
+        self.stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":
     try:

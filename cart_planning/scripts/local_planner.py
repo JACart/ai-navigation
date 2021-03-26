@@ -3,7 +3,7 @@
 import math
 import rospy
 import time
-from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState, EmergencyStop
+from navigation_msgs.msg import WaypointsArray, VelAngle, LocalPointsArray, VehicleState, Stop
 from nav_msgs.msg import Path
 from std_msgs.msg import Header, Float32, String, Int8, Bool, UInt64
 from geometry_msgs.msg import PoseStamped, Point, TwistStamped, Pose, Twist
@@ -48,6 +48,7 @@ class LocalPlanner(object):
         self.current_state = VehicleState()
 
         # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean), stopfast(boolean)]
+        # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean)]
         self.stop_requests = {}
 
         # The points to use for a path, typically coming from global planner                                
@@ -63,11 +64,8 @@ class LocalPlanner(object):
         # Current Velocity of cart in Meters per second
         self.speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, self.vel_callback)
 
-        # Allow nodes to make emergency stop requests
-        self.emergency_stop_sub = rospy.Subscriber('/emergency_stop', EmergencyStop, self.stop_callback, queue_size=10)
-
-        # Regular stop sub
-        self.request_stop_sub = rospy.Subscriber('/request_stop', EmergencyStop, self.normal_stop_callback, queue_size=10)
+        # Allow nodes to make stop requests
+        self.stop_sub = rospy.Subscriber('/stop', Stop, self.stop_callback, queue_size=10)
 
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
@@ -115,13 +113,9 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, True]
-        rospy.loginfo(str(msg.sender_id.data).lower() + " requested hard stop: " + str(msg.emergency_stop))
-
-    def normal_stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.emergency_stop, False]
-        rospy.loginfo(str(msg.sender_id.data).lower() + " requested gentle stop: " + str(msg.emergency_stop))
-    
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop))
+ 
     def vel_callback(self, msg):
         if msg.data < 1.0:
             self.cur_speed = 1.8 # Magic number however this is roughly the observed speed in realtime
