@@ -5,7 +5,7 @@ import rospy
 from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool
 import time
-cart_port = '/dev/ttyUSB0' #hardcoded depending on computer   SHOULD BE CHANGED BACK TO USB9 BEFORE COMMIT
+cart_port = '/dev/ttyUSB9' #hardcoded depending on computer   SHOULD BE CHANGED BACK TO USB9 BEFORE COMMIT
 
 
 
