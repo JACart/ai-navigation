@@ -25,6 +25,9 @@
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
     </group>
+    <group>
+        <node name="heartbeat_node" pkg="cart_endpoints" type="heartbeat_node.py" output="screen"/>
+    </group>
     <group if="$(arg health)">
         <node name="cart_health_monitor" pkg="cart_endpoints" type="cart_health_monitor.py" output="screen"/>
     </group>
