@@ -7,7 +7,7 @@ from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool
 import time
-cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
@@ -34,12 +34,15 @@ class MotorEndpoint(object):
         self.state = STOPPED
         self.stopping_time = 0
         self.step_size = 255.0/(self.node_rate*self.brake_time)
+        self.heartbeat = b''  # Byte array for reading heartbeat from arduino
+        self.delta_time = 0.0
+        self.prev_time  = 0.0
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
         try:
-            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -55,8 +58,16 @@ class MotorEndpoint(object):
         rate = rospy.Rate(self.node_rate)
 
         while not rospy.is_shutdown():
+            self.message = None
+            
             if self.cmd_msg is not None:
                 self.endpoint_calc()
+            self.prev_time = time.time()
+            self.heartbeat = self.arduino_ser.read_until()
+            self.delta_time = time.time() - self.prev_time
+            print("Heartbeat message:")
+            print(self.heartbeat + "| Time since last message: ")
+            print(time.time() - self.prev_time)
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
@@ -83,7 +94,7 @@ class MotorEndpoint(object):
     def debug_callback(self, msg):
         self.debug = msg.data
 
-
+    
     def endpoint_calc(self):
         #The first time we get a new target speed and angle we must convert it
         
@@ -132,7 +143,7 @@ class MotorEndpoint(object):
     def pack_send(self, throttle, brake, steer_angle):
         data = bytearray(b'\x00' * 5)
         bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle)
-        self.speed_ser.write(data)
+        self.arduino_ser.write(data)
 
 if __name__ == "__main__":
     try:
