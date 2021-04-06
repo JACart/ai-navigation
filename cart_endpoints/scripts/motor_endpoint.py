@@ -5,9 +5,9 @@ import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
-from std_msgs.msg import Int8, Bool
+from std_msgs.msg import Int8, Bool, String
 import time
-cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
@@ -54,6 +54,7 @@ class MotorEndpoint(object):
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
+        self.heart_pub = rospy.Publisher('/heartbeat', String, queue_size=10)
         
         rate = rospy.Rate(self.node_rate)
 
@@ -62,12 +63,14 @@ class MotorEndpoint(object):
             
             if self.cmd_msg is not None:
                 self.endpoint_calc()
-            self.prev_time = time.time()
+#            self.prev_time = time.time()
             self.heartbeat = self.arduino_ser.read_until()
-            self.delta_time = time.time() - self.prev_time
-            print("Heartbeat message:")
-            print(self.heartbeat + "| Time since last message: ")
-            print(time.time() - self.prev_time)
+            self.heart_pub.publish(self.heartbeat)
+#            self.delta_time = time.time() - self.prev_time
+#            print("Heartbeat message:")
+#            print(self.heartbeat + "| Time since last message: ")
+#            print(time.time() - self.prev_time)
+
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
