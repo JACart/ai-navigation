@@ -44,7 +44,9 @@ class MotorEndpoint(object):
         try:
             self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
+            print("==========================================================================")
             print( "Motor_endpoint: " + str(e))
+            print("==========================================================================")
             rospy.logerr("Motor_endpoint: " + str(e))
 
         rospy.loginfo("Speed serial established")
