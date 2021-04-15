@@ -44,13 +44,13 @@
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
         <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
-    <include file="$(find video_stream_opencv)/launch/camera.launch">
-            <!--This is referring to the zed camera facing the passenger-->
+    <!-- <include file="$(find video_stream_opencv)/launch/camera.launch">
+            This is referring to the zed camera facing the passenger
             <arg name = "camera_name" value="zed"/>
             <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Leopard_ZED-video-index0
 " />
             <arg name="visualize" value="$(arg visualize_pose)" />
-        </include>
+        </include> -->
     <include file="$(find video_stream_opencv)/launch/camera.launch">
             <arg name="camera_name" value="front_facing"/>
             <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0" />
