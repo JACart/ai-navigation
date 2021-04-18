@@ -8,7 +8,6 @@ from std_msgs.msg import Int8, Bool
 import time
 import math
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
-#cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
