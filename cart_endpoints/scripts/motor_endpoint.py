@@ -87,6 +87,7 @@ class MotorEndpoint(object):
             # reset obstacle distance and brake time
             self.obstacle_distance = -1
             self.brake_time_used = 0
+            self.full_stop_count = 0
 
         if self.vel > 0 and (self.state == STOPPED or self.state == BRAKING) and (time.time()- self.stopping_time) > 10:
             self.state = MOVING
@@ -96,7 +97,7 @@ class MotorEndpoint(object):
             self.state = BRAKING
             self.brake = 0 # ramp up braking from 0
             self.stopping_time = time.time()
-
+            
         self.new_vel = True     
 
     def debug_callback(self, msg):

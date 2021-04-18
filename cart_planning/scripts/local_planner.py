@@ -301,7 +301,6 @@ class LocalPlanner(object):
         self.steering_pub.publish(display_angle)
 
         # Check if any node wants us to stop
-        print(self.stop_requests)
         for x in self.stop_requests.values():
             if x[0]: # stop requested
                 msg.vel = 0
