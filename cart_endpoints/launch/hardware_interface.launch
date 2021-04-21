@@ -17,7 +17,11 @@
    </group> 
       
    <group>
-      <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen" />
+      <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen">
+        <param name="min_height" type="double" value="-1.0" />
+        <param name="max_height" type="double" value="0" />
+        <param name="range_min" type="double" value="0.8" />
+      </node>
    </group>
 
     

@@ -303,7 +303,6 @@ class LocalPlanner(object):
         # Check if any node wants us to stop
 
         # Slow, normal stop
-        print(self.stop_requests)
         if any([x[0] for x in self.stop_requests.values()]):
             msg.vel = 0
 
