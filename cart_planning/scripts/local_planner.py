@@ -301,10 +301,11 @@ class LocalPlanner(object):
         self.steering_pub.publish(display_angle)
 
         # Check if any node wants us to stop
-
-        # Slow, normal stop
-        if any([x[0] for x in self.stop_requests.values()]):
-            msg.vel = 0
+        for x in self.stop_requests.values():
+            if x[0]: # stop requested
+                msg.vel = 0
+                if x[1] > 0: # obstacle distance is given
+                    msg.vel = -x[1] # give distance as a negative
 
         self.motion_pub.publish(msg)
 
