@@ -15,7 +15,3 @@ echo "Adding static route to LIDAR IP"
 sudo route add 192.168.1.201 enp0s31f6
 
 echo "Try running the velodyne manager now"
-
-sleep 5
-
-nmcli radio wifi on
