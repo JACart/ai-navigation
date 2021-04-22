@@ -30,6 +30,11 @@ class teleop(object):
         d = 100
         x = 120
         y = 121
+        p = 112
+        o = 111
+        i = 105
+        u = 117
+        l = 108
     
         angle_max = 70
         angle_step = 0.5
@@ -38,9 +43,12 @@ class teleop(object):
         stdscr.nodelay(True)
         rate = rospy.Rate(10) 
         stdscr.addstr(0,0,'Move with WASD, X for hard stop and Y for centering the wheel')
-        stdscr.addstr(1,0,'CTRL-C to exit')
-        stdscr.addstr(3,0,'TURNING       WHEEL ANGLE')
+        stdscr.addstr(1,0,'p= comfortable stop, o= obstacle 2m, i= obstacle 5m')
+        stdscr.addstr(2,0,'u= obstacle in 10m, l = start at 2.7s')
+        stdscr.addstr(3,0,'CTRL-C to exit')
+        stdscr.addstr(4,0,'TURNING       WHEEL ANGLE')
         stdscr.addstr(6,0,'FORWARD MOVEMENT')
+
         while not rospy.is_shutdown():
             keyval = stdscr.getch()
 
@@ -68,11 +76,31 @@ class teleop(object):
             elif keyval == y:
                 self.msg.angle = 0.0
                 anglestr = "Center wheel  "
-        
+            elif keyval == p:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = 0
+                velstr = "comfortable stop          "
+            elif keyval == o:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -2
+                velstr = "obstacle in 2m - stop              "
+            elif keyval == i:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -5
+                velstr = "obstacle in 5m - stop              "
+            elif keyval == u:
+                self.msg.vel_curr = 2.7
+                self.msg.vel = -10
+                velstr = "obstacle in 10m - stop              "
+            elif keyval == l:
+                self.msg.vel_curr = 0.01
+                self.msg.vel = 2.7
+                velstr = "start moving at 2.7 m/s"
+
             self.prev_key = keyval
             self.motion_pub.publish(self.msg)
             outstr = anglestr +  velstr + str(self.msg.angle)
-            stdscr.addstr(4,0,anglestr + str(self.msg.angle))
+            stdscr.addstr(5,0,anglestr + str(self.msg.angle))
             stdscr.addstr(7,0,velstr)
             rate.sleep()
 

@@ -73,6 +73,7 @@ class CartHealth(object):
         stop_msg = Stop()
         stop_msg.stop = stop
         stop_msg.sender_id.data = sender_id
+        stop_msg.distance = -1
         self.stop_pub.publish(stop_msg)
 
 if __name__ == "__main__":

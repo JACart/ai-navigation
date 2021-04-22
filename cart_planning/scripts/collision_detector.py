@@ -66,7 +66,7 @@ class CollisionDetector(object):
         # Minimum allowable transit time to an obstacle allowed before emergency stopping
         self.min_obstacle_time = rospy.get_param('min_obstacle_time', .5)
 
-        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 3)
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 10)
         self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
@@ -202,6 +202,7 @@ class CollisionDetector(object):
                     self.cleared_confidence = 0
                     if not self.stopped:
                         self.stopped = True
+                        stop_msg.distance = distance
                         self.stop_pub.publish(stop_msg)
                         rospy.logwarn("Requesting a fast stop due to possible collision")
                     # Show a red obstacle, an obstacle worth stopping for
@@ -233,6 +234,7 @@ class CollisionDetector(object):
                 stop_msg = Stop()
                 stop_msg.stop = False
                 stop_msg.sender_id.data = "collision_detector"
+                stop_msg.distance = -1
                 self.stop_pub.publish(stop_msg)
 
         self.collision_pub.publish(collision_array)
