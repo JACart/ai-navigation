@@ -18,8 +18,8 @@ done
 # Start everything 
 
 sudo modprobe -r uvcvideo
-echo "Configuring Velodyne..."
-./velodyne_setup.sh
+#echo "Configuring Velodyne..."
+#./velodyne_setup.sh
 echo "Setting up display"
 xinput map-to-output "G2Touch Multi-Touch by G2TSP" HDMI-0
 wait

@@ -16,16 +16,6 @@
         <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
    </group> 
       
-   <group>
-      <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen">
-        <param name="min_height" type="double" value="-1.0" />
-        <param name="max_height" type="double" value="0" />
-        <param name="range_min" type="double" value="0.8" />
-      </node>
-   </group>
-
-    
-
     <group>
         <node name="motor_endpoint" pkg="cart_endpoints" type="motor_endpoint.py" output="screen"/>
     </group>
@@ -41,10 +31,13 @@
         <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
     </group>
     <group if="$(arg obstacle_detection)">
-      <remap from="/scan" to="/scan_rplidar"/>
-        <include file="$(find cart_endpoints)/launch/rplidar_a3.launch">
- 		
-	</include>
+   
+      <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen">
+        <param name="min_height" type="double" value="-1.0" />
+        <param name="max_height" type="double" value="0" />
+        <param name="range_min" type="double" value="0.8" />
+      </node>
+
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
         <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
