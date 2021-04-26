@@ -66,7 +66,7 @@ class CollisionDetector(object):
         # Minimum allowable transit time to an obstacle allowed before emergency stopping
         self.min_obstacle_time = rospy.get_param('min_obstacle_time', .5)
 
-        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 10)
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 6)
         self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)

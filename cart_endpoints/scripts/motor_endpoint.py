@@ -36,7 +36,7 @@ class MotorEndpoint(object):
         self.step_size = 255.0/(self.node_rate*self.brake_time)
         self.obstacle_distance = -1
         self.brake_time_used = 0
-        self.comfortable_stop_dist = 10.0
+        self.comfortable_stop_dist = 4.0
         # init local values to store & change msg params
         self.vel_curr = 0
         self.vel_curr_cart_units = 0
@@ -80,9 +80,6 @@ class MotorEndpoint(object):
             # indicates an obstacle
             self.obstacle_distance = abs(self.vel)
             self.vel = 0
-            # reset brake time used
-            self.brake_time_used = 0
-            self.full_stop_count = 0
         else:
             # reset obstacle distance and brake time
             self.obstacle_distance = -1
@@ -153,34 +150,29 @@ class MotorEndpoint(object):
                 self.brake_time_used += (1.0/self.node_rate) # 1 sec / rate per sec (10)
                 obstacle_brake_time = self.obstacle_distance/self.vel_curr - (1.0/self.node_rate) # we decrease by one node rate initially to account for rounding
                 
-                y = (0.05) * ((5100) ** (self.brake_time_used/obstacle_brake_time))
-
-                rospy.loginfo("Brake Time: " + str(obstacle_brake_time + (1.0/self.node_rate)))
-                rospy.loginfo("obs distance: " + str(self.obstacle_distance ))
-                rospy.loginfo("vel curr: " + str(self.vel_curr))
-                rospy.loginfo("brake time used: " + str(self.brake_time_used))
-                rospy.loginfo("y: " + str(y))
+                y = (0.1) * ((2550) ** (self.brake_time_used/obstacle_brake_time))
 
                 if (y >= 255):
                     self.full_stop_count += 1
 
                 self.brake = float(min(255, math.ceil(y)))
-                rospy.loginfo("Brake: " + str(int(self.brake)))
             else:
                 # comfortable stop, no obstacle/deadline given
 
                 self.brake_time_used += (1.0/self.node_rate) # 1 sec / rate per sec (10)
-                brake_time = self.comfortable_stop_dist/self.vel_curr - (1.0/self.node_rate) # we decrease by one node rate initially to account for rounding
+                brake_time = self.comfortable_stop_dist - (1.0/self.node_rate) # we decrease by one node rate initially to account for rounding
                 
-                y = (0.05) * ((5100) ** (self.brake_time_used/brake_time))
+                y = (0.1) * ((2550) ** (self.brake_time_used/brake_time))
 
                 if (y >= 255):
                     self.full_stop_count += 1
 
                 self.brake = float(min(255, math.ceil(y)))
-                rospy.loginfo("Brake: " + str(self.brake))
             if self.brake >= 255 and self.full_stop_count > 10:  # We have reached maximum braking!
                 self.state = STOPPED
+                # reset brake time used
+                self.brake_time_used = 0
+                self.full_stop_count = 0
             target_speed = 0
 
         self.pack_send(target_speed, int(self.brake), target_angle)
