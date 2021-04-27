@@ -7,7 +7,7 @@ from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool, String
 import time
-cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
@@ -37,6 +37,7 @@ class MotorEndpoint(object):
         self.heartbeat = b''  # Byte array for reading heartbeat from arduino
         self.delta_time = 0.0
         self.prev_time  = 0.0
+        self.first_heartbeat = True
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
@@ -59,19 +60,37 @@ class MotorEndpoint(object):
         self.heart_pub = rospy.Publisher('/heartbeat', String, queue_size=10)
         
         rate = rospy.Rate(self.node_rate)
-
+        
         while not rospy.is_shutdown():
             self.message = None
             
             if self.cmd_msg is not None:
                 self.endpoint_calc()
-#            self.prev_time = time.time()
-            self.heartbeat = self.arduino_ser.read_until()
+            self.prev_time = time.time()
+            
+            try:
+                self.heartbeat = self.arduino_ser.read_until()
+                
+            except Exception as e:
+                print("==========================================================================")
+                print("             THE ARDUINO HAS BEEN DISCONNECTED, ABORT, ABORT              ")
+                print("==========================================================================")
+                    
             self.heart_pub.publish(self.heartbeat)
-#            self.delta_time = time.time() - self.prev_time
-#            print("Heartbeat message:")
-#            print(self.heartbeat + "| Time since last message: ")
-#            print(time.time() - self.prev_time)
+            self.delta_time = time.time() - self.prev_time
+            print("Heartbeat message:")
+            print(self.heartbeat + "| Time since last message: ")
+            heartbeat_delta_t = time.time() - self.prev_time
+            
+            # This check is here because the time between the first and 2nd heartbeat is always ~2.4s
+            # I believe this is because of the rest of the setup taking place at the same time
+            if not self.first_heartbeat: 
+                if heartbeat_delta_t >= 2.0:
+                    print("==========================================================================")
+                    print("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
+                    print("==========================================================================")
+                    
+            print(heartbeat_delta_t)
 
             rate.sleep()
 
