@@ -17,7 +17,7 @@ import numpy as np
 
 from std_msgs.msg import Header, Float32
 from visualization_msgs.msg import MarkerArray
-from navigation_msgs.msg import ObstacleArray, Obstacle, EmergencyStop, VelAngle
+from navigation_msgs.msg import ObstacleArray, Obstacle, Stop, VelAngle
 from geometry_msgs.msg import PoseStamped, PolygonStamped, Point32, Point
 from visualization_msgs.msg import Marker
 
@@ -66,7 +66,7 @@ class CollisionDetector(object):
         # Minimum allowable transit time to an obstacle allowed before emergency stopping
         self.min_obstacle_time = rospy.get_param('min_obstacle_time', .5)
 
-        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 3)
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 6)
         self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
@@ -75,8 +75,7 @@ class CollisionDetector(object):
         self.cur_speed_sub = rospy.Subscriber('/estimated_vel_mps', Float32, queue_size=10)
         
         self.display_pub = rospy.Publisher('/corner_display', Marker,queue_size=10)
-        self.stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
-        self.gentle_stop_pub = rospy.Publisher('/request_stop', EmergencyStop, queue_size=10)
+        self.stop_pub = rospy.Publisher('/stop', Stop, queue_size=10)
         self.display_boundary_pub = rospy.Publisher('/boundaries', Marker, queue_size=10)
         self.display_array = rospy.Publisher('/boundaries_array', MarkerArray, queue_size=100)
         self.collision_pub = rospy.Publisher('/collision_pub', MarkerArray, queue_size=100)
@@ -188,8 +187,8 @@ class CollisionDetector(object):
 
             if potential_collision:
                 # Prepare an emergency stop message
-                stop_msg = EmergencyStop()
-                stop_msg.emergency_stop = True
+                stop_msg = Stop()
+                stop_msg.stop = True
                 stop_msg.sender_id.data = "collision_detector"
 
                 # Calculate distance from front of cart to obstacle
@@ -197,25 +196,27 @@ class CollisionDetector(object):
                 self.front_axle_center[0], self.front_axle_center[1])
                 # Calculate rough time to obstacle impact (seconds)
                 impact_time = distance/self.cur_speed
-                if distance < self.min_obstacle_dist or impact_time < self.min_obstacle_time:
+                #if distance < self.min_obstacle_dist or impact_time < self.min_obstacle_time:
+                if distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
                     clear_path = False
                     self.cleared_confidence = 0
                     if not self.stopped:
                         self.stopped = True
+                        stop_msg.distance = distance
                         self.stop_pub.publish(stop_msg)
                         rospy.logwarn("Requesting a fast stop due to possible collision")
                     # Show a red obstacle, an obstacle worth stopping for
                     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)
-                elif distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
-                    #Temporay code duplication
-                    clear_path = False
-                    self.cleared_confidence = 0
-                    if not self.stopped:
-                        self.stopped = True
-                        self.gentle_stop_pub.publish(stop_msg)
-                        rospy.logwarn("Requesting a slow stop due to possible collision")
-                    # Show a red obstacle, an obstacle worth stopping for
-                    display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)
+                # elif distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
+                #     #Temporay code duplication
+                #     clear_path = False
+                #     self.cleared_confidence = 0
+                #     if not self.stopped:
+                #         self.stopped = True
+                #         self.gentle_stop_pub.publish(stop_msg)
+                #         rospy.logwarn("Requesting a slow stop due to possible collision")
+                #     # Show a red obstacle, an obstacle worth stopping for
+                #     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y, color=0.0)
                 else:
                     # Show a yellow obstacle, obstacle that has potential
                     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y)
@@ -230,11 +231,11 @@ class CollisionDetector(object):
                 self.cleared_confidence = 0
                 rospy.logwarn("Clearing collision, continuing navigation")
                 self.stopped = False
-                stop_msg = EmergencyStop()
-                stop_msg.emergency_stop = False
+                stop_msg = Stop()
+                stop_msg.stop = False
                 stop_msg.sender_id.data = "collision_detector"
+                stop_msg.distance = -1
                 self.stop_pub.publish(stop_msg)
-                self.gentle_stop_pub.publish(stop_msg)
 
         self.collision_pub.publish(collision_array)
 
