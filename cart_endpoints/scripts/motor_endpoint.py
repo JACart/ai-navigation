@@ -90,8 +90,8 @@ class MotorEndpoint(object):
                     
             self.heart_pub.publish(self.heartbeat)
             self.delta_time = time.time() - self.prev_time
-            print("Heartbeat message:")
-            print(self.heartbeat + "| Time since last message: ")
+            rospy.loginfo("Heartbeat message:")
+            rospy.loginfo(self.heartbeat + "| Time since last message: ")
             heartbeat_delta_t = time.time() - self.prev_time
             
             # This check is here because the time between the first and 2nd heartbeat is always ~2.4s
