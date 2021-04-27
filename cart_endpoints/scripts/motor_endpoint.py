@@ -57,9 +57,9 @@ class MotorEndpoint(object):
         try:
             self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
-            print("==========================================================================")
-            print( "Motor_endpoint: " + str(e))
-            print("==========================================================================")
+            rospy.loginfo("==========================================================================")
+            rospy.loginfo( "Motor_endpoint: " + str(e))
+            rospy.loginfo("==========================================================================")
             rospy.logerr("Motor_endpoint: " + str(e))
 
         rospy.loginfo("Speed serial established")
@@ -84,9 +84,9 @@ class MotorEndpoint(object):
                 self.heartbeat = self.arduino_ser.read_until()
                 
             except Exception as e:
-                print("==========================================================================")
-                print("             THE ARDUINO HAS BEEN DISCONNECTED, ABORT, ABORT              ")
-                print("==========================================================================")
+                rospy.logerr("==========================================================================")
+                rospy.logerr("             THE ARDUINO HAS BEEN DISCONNECTED, ABORT, ABORT              ")
+                rospy.logerr("==========================================================================")
                     
             self.heart_pub.publish(self.heartbeat)
             self.delta_time = time.time() - self.prev_time
@@ -98,11 +98,11 @@ class MotorEndpoint(object):
             # I believe this is because of the rest of the setup taking place at the same time
             if not self.first_heartbeat: 
                 if heartbeat_delta_t >= 2.0:
-                    print("==========================================================================")
-                    print("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
-                    print("==========================================================================")
+                    rospy.loginfo("==========================================================================")
+                    rospy.loginfo("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
+                    rospy.loginfo("==========================================================================")
                     
-            print(heartbeat_delta_t)
+            rospy.loginfo(heartbeat_delta_t)
 
             rate.sleep()
 
