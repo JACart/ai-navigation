@@ -1,3 +1,4 @@
 std_msgs/Header header
-bool emergency_stop
+bool stop
 std_msgs/String sender_id
+float64 distance

@@ -13,7 +13,7 @@ add_message_files(
     LatLongPoint.msg
     WaypointsArray.msg
     VelAngle.msg
-    EmergencyStop.msg
+    Stop.msg
     SampleData.msg
     Landmarks.msg
     GoalWaypoint.msg

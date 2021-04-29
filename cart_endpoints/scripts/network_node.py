@@ -13,7 +13,7 @@ import cv2
 from cv_bridge import CvBridge
 from std_msgs.msg import Int8, UInt64, String, Bool
 from geometry_msgs.msg import PoseStamped
-from navigation_msgs.msg import GoalWaypoint, VehicleState, EmergencyStop, LatLongPoint
+from navigation_msgs.msg import GoalWaypoint, VehicleState, Stop, LatLongPoint
 from sensor_msgs.msg import NavSatFix, Image
 from rospy.numpy_msg import numpy_msg
 
@@ -76,25 +76,28 @@ def on_dest(data):
 @sio.on('pull-over',namespace='/ros')
 def on_pull_over():
     rospy.loginfo("Recieved Pull Over")
-    stop_msg = EmergencyStop()
-    stop_msg.emergency_stop = True
+    stop_msg = Stop()
+    stop_msg.stop = True
     stop_msg.sender_id = 1
+    stop_msg.distance = -1
     stop_pub.publish(stop_msg)
 
 @sio.on('resume-driving',namespace='/ros')
 def on_resume():
     rospy.loginfo("Received a resume signal")
-    stop_msg = EmergencyStop()
-    stop_msg.emergency_stop = False
+    stop_msg = Stop()
+    stop_msg.stop = False
     stop_msg.sender_id = 1
+    stop_msg.distance = -1
     stop_pub.publish(stop_msg)
     
 @sio.on('stop',namespace='/ros')
 def on_stop(data):
     rospy.loginfo("Received a stop signal")
-    stop_msg = EmergencyStop()
-    stop_msg.emergency_stop = True
+    stop_msg = Stop()
+    stop_msg.stop = True
     stop_msg.sender_id = 1
+    stop_msg.distance = -1
     stop_pub.publish(stop_msg)    
  
     
@@ -158,9 +161,10 @@ def send_unsafe():
 # 0 is for internal usage but is currently unused
 def pullover_callback(msg):
     if msg.data:
-        stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = True
+        stop_msg = Stop()
+        stop_msg.stop = True
         stop_msg.sender_id = 2
+        stop_msg.distance = -1
         stop_pub.publish(stop_msg)
         send_unsafe()
     else:
@@ -170,9 +174,10 @@ def passenger_safe_callback(msg):
     if msg.data:
         send_ready()
     else:
-        stop_msg = EmergencyStop()
-        stop_msg.emergency_stop = True
+        stop_msg = Stop()
+        stop_msg.stop = True
         stop_msg.sender_id = 2
+        stop_msg.distance = -1
         stop_pub.publish(stop_msg)
         send_unsafe()
 
@@ -191,36 +196,36 @@ def status_update(data):
 last_front_pub = -1
 last_passenger_pub = -1
 
-def passenger_image_callback(img_msg):
-    global last_passenger_pub
-    cur_time = time.time()
-    if cur_time > last_passenger_pub + 1:
-        bridge = CvBridge() 
-        image_raw = np.frombuffer(img_msg.data, dtype=np.uint8)
-        image_raw.shape = (img_msg.height, img_msg.width, 3)
-        image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
-        h,w = image_raw.shape[:2]
-        # Crop image and get the image width and height  
-        cropped = image_raw[0:h, 0:672]  
-        final_image = cv2.flip(cropped, -1)
-        dim = (400, 400)
-        f2 = cv2.resize(final_image, dim, interpolation=cv2.INTER_AREA)
-        retval, buffer = cv2.imencode('.jpg', f2)    
-        send('passenger-video',base64.b64encode(buffer) )
-        last_passenger_pub = cur_time
+# def passenger_image_callback(img_msg):
+#     global last_passenger_pub
+#     cur_time = time.time()
+#     if cur_time > last_passenger_pub + 1:
+#         bridge = CvBridge() 
+#         image_raw = np.frombuffer(img_msg.data, dtype=np.uint8)
+#         image_raw.shape = (img_msg.height, img_msg.width, 3)
+#         image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
+#         h,w = image_raw.shape[:2]
+#         # Crop image and get the image width and height  
+#         cropped = image_raw[0:h, 0:672]  
+#         final_image = cv2.flip(cropped, -1)
+#         dim = (400, 400)
+#         f2 = cv2.resize(final_image, dim, interpolation=cv2.INTER_AREA)
+#         retval, buffer = cv2.imencode('.jpg', f2)    
+#         send('passenger-video',base64.b64encode(buffer) )
+#         last_passenger_pub = cur_time
     
 
 
-def front_image_callback(img_msg):
-    global last_front_pub
-    cur_time = time.time()
-    if cur_time > last_front_pub + 1:
-        cur_time = time.time()
-        bridge = CvBridge() 
-        image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
-        retval, buffer = cv2.imencode('.jpg', image_raw)    
-        send('cart-video', base64.b64encode(buffer))
-        last_front_pub = cur_time
+# def front_image_callback(img_msg):
+#     global last_front_pub
+#     cur_time = time.time()
+#     if cur_time > last_front_pub + 1:
+#         cur_time = time.time()
+#         bridge = CvBridge() 
+#         image_raw = bridge.imgmsg_to_cv2(img_msg, desired_encoding="mono8")
+#         retval, buffer = cv2.imencode('.jpg', image_raw)    
+#         send('cart-video', base64.b64encode(buffer))
+#         last_front_pub = cur_time
 
 def eta_callback(msg):
     send('arrived-time', msg.data)
@@ -235,7 +240,7 @@ if __name__ == "__main__":
     except:
         rospy.loginfo('Was unable to connect to the server')
     
-    stop_pub = rospy.Publisher('/emergency_stop', EmergencyStop, queue_size=10)
+    stop_pub = rospy.Publisher('/stop', Stop, queue_size=10)
     req_pub = rospy.Publisher('/destination_request', String, queue_size=10)
     location_speech_pub = rospy.Publisher('/location_speech', Bool, queue_size=10)
     gps_request_pub = rospy.Publisher('/gps_request', LatLongPoint, queue_size=10)
@@ -243,8 +248,8 @@ if __name__ == "__main__":
     safety_exit_pub = rospy.Publisher('/safety_exit', Bool, queue_size=10)
     
 
-    rospy.Subscriber('/zed/image_raw', Image, passenger_image_callback)
-    rospy.Subscriber('/front_facing/image_raw', Image, front_image_callback)
+    # rospy.Subscriber('/zed/image_raw', Image, passenger_image_callback)
+    # rospy.Subscriber('/front_facing/image_raw', Image, front_image_callback)
     rospy.Subscriber('/current_position', Int8, send_position_index)
     rospy.Subscriber('/vehicle_state', VehicleState, status_update)
     rospy.Subscriber('/pullover', Bool, pullover_callback)
