@@ -7,7 +7,7 @@ from navigation_msgs.msg import VelAngle
 from navigation_msgs.msg import EmergencyStop
 from std_msgs.msg import Int8, Bool, String
 import time
-cart_port = '/dev/ttyUSB0' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
@@ -42,6 +42,7 @@ class MotorEndpoint(object):
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
+        self.serial_connected = True
         try:
             self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
@@ -49,6 +50,7 @@ class MotorEndpoint(object):
             print( "Motor_endpoint: " + str(e))
             print("==========================================================================")
             rospy.logerr("Motor_endpoint: " + str(e))
+            serial_connected = False
 
         rospy.loginfo("Speed serial established")
         """
@@ -62,6 +64,20 @@ class MotorEndpoint(object):
         rate = rospy.Rate(self.node_rate)
         
         while not rospy.is_shutdown():
+            
+            if not self.serial_connected:
+                print("==========================================================================")
+                print("                       RETRYING SERIAL CONNECTION                         ")
+                print("==========================================================================")
+                try:
+                    self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+                    self.serial_connected = True
+                except Exception as e:
+                    rospy.logerr("Motor_endpoint: " + str(e))
+                    self.serial_connected = False
+                    rate.sleep()
+                    continue
+            
             self.message = None
             
             if self.cmd_msg is not None:
@@ -70,11 +86,13 @@ class MotorEndpoint(object):
             
             try:
                 self.heartbeat = self.arduino_ser.read_until()
-                
             except Exception as e:
                 print("==========================================================================")
-                print("             THE ARDUINO HAS BEEN DISCONNECTED, ABORT, ABORT              ")
+                print("                    THE ARDUINO HAS BEEN DISCONNECTED                     ")
                 print("==========================================================================")
+                self.serial_connected = False
+                rate.sleep()
+                continue
                     
             self.heart_pub.publish(self.heartbeat)
             self.delta_time = time.time() - self.prev_time
