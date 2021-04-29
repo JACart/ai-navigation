@@ -47,8 +47,8 @@ class LocalPlanner(object):
 
         self.current_state = VehicleState()
 
-        # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean), stopfast(boolean)]
-        # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean)]
+        # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean), distance]
+        # If distance == -1, there is no obstacle
         self.stop_requests = {}
 
         # The points to use for a path, typically coming from global planner                                
@@ -113,8 +113,8 @@ class LocalPlanner(object):
         self.global_pose = msg.pose
 
     def stop_callback(self, msg):
-        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop]
-        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop))
+        self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop, msg.distance]
+        rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop) + " with distance: " + str(msg.distance))
  
     def vel_callback(self, msg):
         if msg.data < 1.0:
@@ -301,11 +301,11 @@ class LocalPlanner(object):
         self.steering_pub.publish(display_angle)
 
         # Check if any node wants us to stop
-
-        # Slow, normal stop
-        print(self.stop_requests)
-        if any([x[0] for x in self.stop_requests.values()]):
-            msg.vel = 0
+        for x in self.stop_requests.values():
+            if x[0]: # stop requested
+                msg.vel = 0
+                if x[1] > 0: # obstacle distance is given
+                    msg.vel = -x[1] # give distance as a negative
 
         self.motion_pub.publish(msg)
 

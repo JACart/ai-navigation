@@ -20,7 +20,7 @@ import paho.mqtt.client as mqtt
 import json
 
 # Add openpose to system PATH and import
-sys.path.append('/home/jeffercize/catkin_ws/src/openpose/build/python');
+sys.path.append('/home/jacart/catkin_ws/src/openpose/build/python');
 from openpose import pyopenpose as op
 
 #######################
@@ -48,7 +48,7 @@ trip_live = False
 ##############
 # Custom Params (refer to include/openpose/flags.hpp for more parameters)
 params = dict()
-params["model_folder"] = "/home/jeffercize/catkin_ws/src/openpose/models/"
+params["model_folder"] = "/home/jacart/catkin_ws/src/openpose/models/"
 
 # Starting OpenPose
 opWrapper = op.WrapperPython()

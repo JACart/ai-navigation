@@ -6,6 +6,7 @@ import bitstruct
 from navigation_msgs.msg import VelAngle
 from std_msgs.msg import Int8, Bool
 import time
+import math
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
 # STATES:
@@ -33,6 +34,15 @@ class MotorEndpoint(object):
         self.state = STOPPED
         self.stopping_time = 0
         self.step_size = 255.0/(self.node_rate*self.brake_time)
+        self.obstacle_distance = -1
+        self.brake_time_used = 0
+        self.comfortable_stop_dist = 4.0
+        # init local values to store & change msg params
+        self.vel_curr = 0
+        self.vel_curr_cart_units = 0
+        self.vel = 0
+        self.vel_cart_units = 0
+        self.angle = 0
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
@@ -61,11 +71,26 @@ class MotorEndpoint(object):
     def motion_callback(self, planned_vel_angle):
         self.cmd_msg = planned_vel_angle
 
-        if self.cmd_msg.vel > 0 and (self.state == STOPPED or self.state == BRAKING) and (time.time()- self.stopping_time) > 10:
+        # set local velocity from msg values
+        self.vel_curr = self.cmd_msg.vel_curr
+        self.vel = self.cmd_msg.vel
+        self.angle = self.cmd_msg.angle
+
+        if self.vel < 0:
+            # indicates an obstacle
+            self.obstacle_distance = abs(self.vel)
+            self.vel = 0
+        else:
+            # reset obstacle distance and brake time
+            self.obstacle_distance = -1
+            self.brake_time_used = 0
+            self.full_stop_count = 0
+
+        if self.vel > 0 and (self.state == STOPPED or self.state == BRAKING) and (time.time()- self.stopping_time) > 10:
             self.state = MOVING
             self.brake = 0 # make sure we take the foot off the brake
 
-        elif self.state == MOVING and self.cmd_msg.vel <= 0:  # Brakes are hit
+        elif self.state == MOVING and self.vel <= 0:  # Brakes are hit
             self.state = BRAKING
             self.brake = 0 # ramp up braking from 0
             self.stopping_time = time.time()
@@ -77,31 +102,36 @@ class MotorEndpoint(object):
 
 
     def endpoint_calc(self):
-        #The first time we get a new target speed and angle we must convert it
-        
         if self.new_vel:
+            #The first time we get a new target speed and angle we must convert it        
+            self.vel_cart_units = self.vel
+            self.vel_curr_cart_units = self.vel_curr
+
             self.new_vel = False
-            self.cmd_msg.vel *= 50       # Rough conversion from m/s to cart controller units
-            self.cmd_msg.vel_curr *= 50  # Rough conversion from m/s to cart controller units
-            if self.cmd_msg.vel > 254:
-                self.cmd_msg.vel = 254
-            if self.cmd_msg.vel < -254:
-                self.cmd_msg.vel = -254
-            if self.cmd_msg.vel_curr > 254:
-                self.cmd_msg.vel_curr = 254
-            if self.cmd_msg.vel < 0:
+
+            self.vel_cart_units *= 50       # Rough conversion from m/s to cart controller units
+            self.vel_curr_cart_units *= 50  # Rough conversion from m/s to cart controller units
+            if self.vel_cart_units > 254:
+                self.vel_cart_units = 254
+            if self.vel_cart_units < -254:
+                self.vel_cart_units = -254
+            if self.vel_curr_cart_units > 254:
+                self.vel_curr_cart_units = 254
+            if self.vel_cart_units < 0:
                 rospy.logwarn("NEGATIVE VELOCITY REQUESTED FOR THE MOTOR ENDPOINT!")
-        target_speed = int(self.cmd_msg.vel) #float64
-        current_speed = int(self.cmd_msg.vel_curr) #float64
+        
+        target_speed = int(self.vel_cart_units) #float64
+        current_speed = int(self.vel_curr_cart_units) #float64
+
         #adjust the target_angle range from (-45 <-> 45) to (0 <-> 100)
         # rospy.loginfo("Angle before adjustment: " + str(self.cmd_msg.angle))
-        if(self.cmd_msg.angle < -45):
-            self.cmd_msg.angle = -45
-        if(self.cmd_msg.angle > 45):
-            self.cmd_msg.angle = 45
-        target_angle = 100 - int(( (self.cmd_msg.angle + 45) / 90 ) * 100)
+
+        if(self.angle < -45):
+            self.angle = -45
+        if(self.angle > 45):
+            self.angle = 45
+        target_angle = 100 - int(( (self.angle + 45) / 90 ) * 100)
         
-            
         #if debug printing is requested print speed and angle info
         if self.debug:
             self.delay_print -= 1
@@ -114,9 +144,35 @@ class MotorEndpoint(object):
             self.brake = 0
             target_speed = 0
         elif self.state == BRAKING:
-            self.brake = float(min(255, self.brake + self.step_size))
-            if self.brake >= 255:  # We have reached maximum braking!
+            if self.obstacle_distance > 0:
+                # there exists an obstacle in the cart's path we need to stop for
+               
+                self.brake_time_used += (1.0/self.node_rate) # 1 sec / rate per sec (10)
+                obstacle_brake_time = self.obstacle_distance/self.vel_curr - (1.0/self.node_rate) # we decrease by one node rate initially to account for rounding
+                
+                y = (0.1) * ((2550) ** (self.brake_time_used/obstacle_brake_time))
+
+                if (y >= 255):
+                    self.full_stop_count += 1
+
+                self.brake = float(min(255, math.ceil(y)))
+            else:
+                # comfortable stop, no obstacle/deadline given
+
+                self.brake_time_used += (1.0/self.node_rate) # 1 sec / rate per sec (10)
+                brake_time = self.comfortable_stop_dist - (1.0/self.node_rate) # we decrease by one node rate initially to account for rounding
+                
+                y = (0.1) * ((2550) ** (self.brake_time_used/brake_time))
+
+                if (y >= 255):
+                    self.full_stop_count += 1
+
+                self.brake = float(min(255, math.ceil(y)))
+            if self.brake >= 255 and self.full_stop_count > 10:  # We have reached maximum braking!
                 self.state = STOPPED
+                # reset brake time used
+                self.brake_time_used = 0
+                self.full_stop_count = 0
             target_speed = 0
 
         self.pack_send(target_speed, int(self.brake), target_angle)
