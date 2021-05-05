@@ -6,11 +6,8 @@ import bitstruct
 from navigation_msgs.msg import VelAngle
 from std_msgs.msg import Int8, Bool, String
 import time
-<<<<<<< HEAD
-=======
 import math
->>>>>>> b916fc857aee0d56be1bbeaf568c156079106406
-cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
+cart_port = '/dev/arduino' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
