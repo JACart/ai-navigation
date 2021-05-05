@@ -58,9 +58,9 @@ class MotorEndpoint(object):
         try:
             self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
-            print("==========================================================================")
-            print( "Motor_endpoint: " + str(e))
-            print("==========================================================================")
+            rospy.loginfo("==========================================================================")
+            rospy.loginfo( "Motor_endpoint: " + str(e))
+            rospy.loginfo("==========================================================================")
             rospy.logerr("Motor_endpoint: " + str(e))
             serial_connected = False
 
@@ -108,19 +108,19 @@ class MotorEndpoint(object):
                     
             self.heart_pub.publish(self.heartbeat)
             self.delta_time = time.time() - self.prev_time
-            print("Heartbeat message:")
-            print(self.heartbeat + "| Time since last message: ")
+            rospy.loginfo("Heartbeat message:")
+            rospy.loginfo(self.heartbeat + "| Time since last message: ")
             heartbeat_delta_t = time.time() - self.prev_time
             
             # This check is here because the time between the first and 2nd heartbeat is always ~2.4s
             # I believe this is because of the rest of the setup taking place at the same time
             if not self.first_heartbeat: 
                 if heartbeat_delta_t >= 2.0:
-                    print("==========================================================================")
-                    print("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
-                    print("==========================================================================")
+                    rospy.loginfo("==========================================================================")
+                    rospy.loginfo("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
+                    rospy.loginfo("==========================================================================")
                     
-            print(heartbeat_delta_t)
+            rospy.loginfo(heartbeat_delta_t)
 
             rate.sleep()
 
