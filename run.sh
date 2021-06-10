@@ -17,7 +17,7 @@ done
 
 # Start everything 
 
-sudo modprobe -r uvcvideo
+#sudo modprobe -r uvcvideo
 #echo "Configuring Velodyne..."
 #./velodyne_setup.sh
 echo "Setting up display"

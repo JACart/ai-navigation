@@ -67,8 +67,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </group>
 
     <node name="$(arg node_name)" pkg="zed_wrapper" type="zed_wrapper_node" output="screen" required="true"><!-- launch-prefix="valgrind" -->
-        <rosparam file="$(find cart_endpoints)/params/zed.yaml" command="load" />
-        <rosparam file="$(find zed_wrapper)/params/$(arg camera_model).yaml" command="load" />
+        <rosparam file="$(find cart_endpoints)/zed_params/common.yaml" command="load" />
+        <rosparam file="$(find cart_endpoints)/zed_params/$(arg camera_model).yaml" command="load" />
 
         <!-- Camera name -->
         <param name="general/camera_name"               value="$(arg camera_name)" />
