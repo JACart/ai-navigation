@@ -40,12 +40,10 @@ if [ -z "$fake_pose_flag" ]
 then
     # launch pose
     echo "Starting pose tracking"
-    gnome-terminal --tab -e 'roslaunch cart_endpoints zed.launch'
-    sleep 5
-    gnome-terminal --tab -e 'python ../jacart-zed/pose/pose_tracking.py'
-
+    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch; exec bash"'
 else
     # launch fake pose
     echo "Starting fake pose tracking"
-    gnome-terminal --tab -e 'python ../jacart-zed/pose/fake_pose_tracking.py'
+    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch fake:=true; exec bash"'
+
 fi
