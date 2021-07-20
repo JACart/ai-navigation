@@ -7,7 +7,7 @@ from navigation_msgs.msg import VelAngle
 from std_msgs.msg import Int8, Bool, String
 import time
 import math
-cart_port = '/dev/arduino' #hardcoded depending on computer
+cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 
 # STATES:
 MOVING = 0 
@@ -56,7 +56,7 @@ class MotorEndpoint(object):
         #Connect to arduino for sending speed
         self.serial_connected = True
         try:
-            self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0, timeout=.01)
         except Exception as e:
             rospy.loginfo("==========================================================================")
             rospy.loginfo( "Motor_endpoint: " + str(e))
@@ -105,22 +105,22 @@ class MotorEndpoint(object):
                 self.serial_connected = False
                 rate.sleep()
                 continue
-                    
-            self.heart_pub.publish(self.heartbeat)
-            self.delta_time = time.time() - self.prev_time
-            rospy.loginfo("Heartbeat message:")
-            rospy.loginfo(self.heartbeat + "| Time since last message: ")
-            heartbeat_delta_t = time.time() - self.prev_time
-            
-            # This check is here because the time between the first and 2nd heartbeat is always ~2.4s
-            # I believe this is because of the rest of the setup taking place at the same time
-            if not self.first_heartbeat: 
-                if heartbeat_delta_t >= 2.0:
-                    rospy.loginfo("==========================================================================")
-                    rospy.loginfo("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
-                    rospy.loginfo("==========================================================================")
-                    
-            rospy.loginfo(heartbeat_delta_t)
+            if self.heartbeat != "":
+                self.heart_pub.publish(self.heartbeat)
+                self.delta_time = time.time() - self.prev_time
+                rospy.loginfo("Heartbeat message:")
+                rospy.loginfo(self.heartbeat + "| Time since last message: ")
+                heartbeat_delta_t = time.time() - self.prev_time
+                
+                # This check is here because the time between the first and 2nd heartbeat is always ~2.4s
+                # I believe this is because of the rest of the setup taking place at the same time
+                if not self.first_heartbeat: 
+                    if heartbeat_delta_t >= 2.0:
+                        rospy.loginfo("==========================================================================")
+                        rospy.loginfo("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
+                        rospy.loginfo("==========================================================================")
+                        
+                rospy.loginfo(heartbeat_delta_t)
 
             rate.sleep()
 
