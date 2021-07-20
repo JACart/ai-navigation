@@ -9,6 +9,9 @@
     <arg name="lidar" default="true"/>
     <arg name="use_front_camera" default="true"/>
 
+
+    <include file="$(find cart_endpoints)/launch/zed.launch"/>
+
        <!-- Start lidar code -->
     <group if="$(arg lidar)">
         <remap from="/scan" to="/scan_velodyne"/>
