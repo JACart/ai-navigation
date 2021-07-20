@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="graph_file" default="$(find cart_planning)/data/EastCampusLiteV6.gml"/>
+    <arg name="graph_file" default="$(find cart_planning)/data/home_loopV2.gml"/>
     <!-- Global Planner graph file parameter -->
     <rosparam param="graph_file" subst_value="True">$(arg graph_file)</rosparam>
 
