@@ -1,23 +1,27 @@
 #!/bin/bash
 
 # Check for fake pose flag
-fake_pose_flag=''
+pose_flag=''
+online_flag=''
 
 print_usage() {
-  printf "Usage: -p activates fake_pose\n"
+  printf "Usage: -p activates pose, -o for online\n"
 }
 
-while getopts 'p' flag; do
+while getopts ':op' flag; do
   case "${flag}" in
-    p) fake_pose_flag='true' ;;
-    *) print_usage
+    p) pose_flag='pose' 
+    ;;
+    o) online_flag='online' 
+    ;;
+    \?) print_usage
        exit 1 ;;
   esac
 done
 
 # Start everything 
 
-sudo modprobe -r uvcvideo
+#sudo modprobe -r uvcvideo
 #echo "Configuring Velodyne..."
 #./velodyne_setup.sh
 echo "Setting up display"
@@ -26,26 +30,24 @@ wait
 sleep 2
 echo "Launching Navigation Code..."
 gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true; exec bash"'
-sleep 5
-# echo "Starting pose tracking server..."
-# gnome-terminal --tab -e 'sh -c "cd ~; cd Desktop/pose-tracking; npm start; exec bash"'
-sleep 5
+sleep 10
 echo "Starting local server..."
-# gnome-terminal --tab -e 'sh -c "cd ~; cd Desktop/jakart-local-server; HTTPS=true npm start; exec bash"'
+#gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start pose online; exec bash"'
+#gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start pose; exec bash"'
+echo 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash"'
+gnome-terminal --tab -e "sh -c \"cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash\""
 echo "Starting UI"
-# gnome-terminal --tab -e 'sh -c "cd ~; cd Desktop/jakart-cart-ui; HTTPS=true npm start; exec bash"'
+gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/cart-ui; npm start; exec bash"'
 
 # Pose tracking
-if [ -z "$fake_pose_flag" ]
+if [ -n "$pose_flag" ]
 then
     # launch pose
     echo "Starting pose tracking"
-    gnome-terminal --tab -e 'roslaunch zed_wrapper zed.launch'
-    sleep 5
-    gnome-terminal --tab -e 'python ../jacart-zed/pose/pose_tracking.py'
-
-else
-    # launch fake pose
-    echo "Starting fake pose tracking"
-    gnome-terminal --tab -e 'python ../jacart-zed/pose/fake_pose_tracking.py'
+    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch; exec bash"'
+#else
+#    # launch fake pose
+#    echo "Starting fake pose tracking"
+#    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch fake:=true; exec bash"'
+#
 fi

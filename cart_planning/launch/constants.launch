@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 
 <launch>
+    <arg name="graph_file" default="$(find cart_planning)/data/home_loopV2.gml"/>
+    <!-- Global Planner graph file parameter -->
+    <rosparam param="graph_file" subst_value="True">$(arg graph_file)</rosparam>
+
     <rosparam>
         <!-- GPS Util Params -->
         anchor_gps: [38.433939, -78.862157]
@@ -9,9 +13,6 @@
         anchor_local: [0, 0]
         test_loc_gps: [38.433170, -78.860981]
         test_loc_local: [67.6, 115]
-
-        <!-- Global Planner graph file parameter -->
-        graph_file: "/home/jacart/catkin_ws/src/ai-navigation/EastCampusLiteV6.gml"
 
         <!-- Safety Parameters -->
         <!-- These are reactive in the sense that if the max_speed is reached the cart will emergency stop -->

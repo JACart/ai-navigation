@@ -7,6 +7,7 @@
     <arg name="visualize_pose" default="false"/>
     <arg name="obstacle_detection" default="true"/>
     <arg name="lidar" default="true"/>
+    <arg name="use_front_camera" default="true"/>
 
        <!-- Start lidar code -->
     <group if="$(arg lidar)">
@@ -44,15 +45,16 @@
         <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
         <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
-    <!-- <include file="$(find video_stream_opencv)/launch/camera.launch">
-            This is referring to the zed camera facing the passenger
-            <arg name = "camera_name" value="zed"/>
-            <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Leopard_ZED-video-index0
-" />
-            <arg name="visualize" value="$(arg visualize_pose)" />
-        </include> -->
-    <include file="$(find video_stream_opencv)/launch/camera.launch">
-            <arg name="camera_name" value="front_facing"/>
-            <arg name="video_stream_provider" value="/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0" />
-        </include>
+    <group if="$(arg use_front_camera)">
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+    <param name="video_device" value="/dev/v4l/by-id/usb-HD_USB_Camera_HD_USB_Camera-video-index0" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap"/>
+    <param name="camera_name" value="front_facing"/> <!-- not working becuase wants calib file-->
+  </node>
+</group>
+  
 </launch>
