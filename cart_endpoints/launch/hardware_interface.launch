@@ -17,7 +17,7 @@
         <remap from="/scan" to="/scan_velodyne"/>
         <!--<remap from="/velodyne_points" to="/cloud_in"/>-->
         <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
-        <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/>
+        <!-- <node name="gps_node" pkg="cart_endpoints" type="gps_node.py" output="screen"/> -->
    </group> 
       
     <group>

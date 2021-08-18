@@ -30,14 +30,14 @@ wait
 sleep 2
 echo "Launching Navigation Code..."
 gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true; exec bash"'
-sleep 10
+sleep 4
 echo "Starting local server..."
 #gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start pose online; exec bash"'
 #gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start pose; exec bash"'
 echo 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash"'
 gnome-terminal --tab -e "sh -c \"cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash\""
 echo "Starting UI"
-gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/cart-ui; npm start; exec bash"'
+gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/cart-ui-offline; npm start; exec bash"'
 
 # Pose tracking
 if [ -n "$pose_flag" ]

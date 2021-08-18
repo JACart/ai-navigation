@@ -213,7 +213,7 @@ class LocalPlanner(object):
 
             # Publish the ETA to the destination before we get started
             self.calc_eta(None)
-
+            rate = rospy.Rate(30)
              # Continue to loop while we have not hit the target destination, and the path is still valid
             while last_index > target_ind and self.path_valid and not rospy.is_shutdown():
                 target_speed = self.global_speed            
@@ -248,6 +248,7 @@ class LocalPlanner(object):
                 yaw.append(state.yaw)
                 v.append(state.v)
                 t.append(time)
+                rate.sleep()
         else:
             self.path_valid = False
             rospy.logwarn("It appears the cart is already at the destination")

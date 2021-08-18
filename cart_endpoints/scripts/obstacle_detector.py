@@ -70,7 +70,7 @@ class ObstacleDetector(object):
 
         #self.vehicle_speed_sub = rospy.Subscriber('/estimate_twist', TwistStamped, self.speed_check)
         
-        r = rospy.Rate(30)
+        r = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.curr_lidar_data is not None:
                 #Cluster the raw LaserScan data
