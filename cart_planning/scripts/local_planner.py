@@ -120,7 +120,7 @@ class LocalPlanner(object):
         rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop) + " with distance: " + str(msg.distance))
  
     def speed_callback(self, msg):
-        self.global_speed = msg.speed / 3.6
+        self.global_speed = msg.data / 3.6
         rospy.loginfo("Speed changed to " + str (self.global_speed))
 
     def vel_callback(self, msg):
