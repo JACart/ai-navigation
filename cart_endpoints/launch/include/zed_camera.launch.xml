@@ -19,7 +19,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <launch>
     <!-- Camera Model and Name -->
     <arg name="camera_name"           default="zed" /> <!-- The name you want -->
-    <arg name="camera_model"          default="zed" /> <!-- 'zed' or 'zedm' or 'zed2' -->
+    <arg name="camera_model"          default="zed2i" /> <!-- 'zed' or 'zedm' or 'zed2' -->
     <arg name="node_name"             default="zed_node" />
 
     <!-- Load SVO file -->

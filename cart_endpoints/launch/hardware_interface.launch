@@ -10,7 +10,7 @@
     <arg name="use_front_camera" default="true"/>
 
 
-    <include file="$(find cart_endpoints)/launch/zed.launch"/>
+    <!--<include file="$(find cart_endpoints)/launch/zed.launch"/> -->
 
        <!-- Start lidar code -->
     <group if="$(arg lidar)">
@@ -31,9 +31,9 @@
             <arg name="port" value="9090"/>
         </include>
     </group>
-    <group if="$(arg pose)">
-        <node name="pose_tracking" pkg="cart_endpoints" type="pose_tracking.py"/>
-    </group>
+    <!--<group if="$(arg pose)">
+        <node name="pose_tracking" pkg="cart_endpoints" type="pose_start.sh"/>
+    </group> -->
     <group if="$(arg obstacle_detection)">
    
       <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen">

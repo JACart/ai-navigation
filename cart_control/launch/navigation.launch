@@ -45,7 +45,7 @@
         <arg name="networking" value="$(arg networking)"/>
         <arg name="health" value="$(arg health)"/>
         <arg name="voice" value="$(arg voice)"/>
-        <arg name="pose" value="$(arg pose)"/>
+	<arg name="pose" value="$(arg pose)"/> 
         <arg name="visualize_pose" value="$(arg visualize_pose)"/>
         <arg name="obstacle_detection" value="$(arg obstacle_detection)"/>
         <arg name="lidar" value="$(arg lidar)"/>

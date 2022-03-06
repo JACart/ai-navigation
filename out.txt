@@ -1,0 +1,151 @@
+  PID TTY          TIME CMD
+  630 ?        00:00:21 Isolated Web Co
+ 1266 ?        00:00:02 Isolated Web Co
+ 1280 ?        00:00:00 systemd
+ 1281 ?        00:00:00 (sd-pam)
+ 1297 ?        00:00:00 gnome-keyring-d
+ 1300 ?        00:00:00 cinnamon-sessio
+ 1315 ?        00:00:00 dbus-daemon
+ 1365 ?        00:00:00 ssh-agent
+ 1377 ?        00:00:00 at-spi-bus-laun
+ 1382 ?        00:00:00 dbus-daemon
+ 1384 ?        00:00:01 at-spi2-registr
+ 1396 ?        00:00:02 csd-keyboard
+ 1399 ?        00:00:00 csd-automount
+ 1400 ?        00:00:00 csd-xrandr
+ 1401 ?        00:00:00 csd-background
+ 1403 ?        00:00:00 csd-housekeepin
+ 1405 ?        00:00:00 csd-clipboard
+ 1406 ?        00:00:00 csd-xsettings
+ 1407 ?        00:00:00 csd-screensaver
+ 1408 ?        00:00:00 csd-a11y-settin
+ 1411 ?        00:06:12 pulseaudio
+ 1412 ?        00:00:00 csd-a11y-keyboa
+ 1416 ?        00:00:00 csd-cursor
+ 1418 ?        00:00:00 csd-color
+ 1422 ?        00:00:01 csd-media-keys
+ 1423 ?        00:00:00 csd-wacom
+ 1424 ?        00:00:00 csd-sound
+ 1425 ?        00:00:00 csd-mouse
+ 1426 ?        00:00:00 csd-power
+ 1427 ?        00:00:00 csd-orientation
+ 1428 ?        00:00:00 csd-print-notif
+ 1431 ?        00:00:00 gvfsd
+ 1436 ?        00:00:00 gvfsd-fuse
+ 1438 ?        00:00:00 gvfs-udisks2-vo
+ 1447 ?        00:00:00 gvfs-gphoto2-vo
+ 1451 ?        00:00:00 gvfs-mtp-volume
+ 1455 ?        00:00:00 gvfs-afc-volume
+ 1460 ?        00:00:00 gvfs-goa-volume
+ 1464 ?        00:00:00 goa-daemon
+ 1471 ?        00:00:00 goa-identity-se
+ 1531 ?        00:00:00 dconf-service
+ 1556 ?        00:00:00 cinnamon-launch
+ 1565 ?        00:00:00 csd-printer
+ 1571 ?        00:07:15 cinnamon
+ 1593 ?        00:00:00 polkit-gnome-au
+ 1599 ?        00:00:00 nvidia-prime
+ 1602 ?        00:00:01 nemo-desktop
+ 1603 ?        00:00:04 nm-applet
+ 1604 ?        00:00:00 cinnamon-killer
+ 1605 ?        00:00:00 blueberry-obex-
+ 1633 ?        00:00:00 obexd
+ 1700 ?        00:00:00 gvfsd-trash
+ 1708 ?        00:00:00 gvfsd-metadata
+ 1712 ?        00:00:00 blueberry-tray
+ 1713 ?        00:00:01 cinnamon-screen
+ 1726 ?        00:00:00 python3
+ 1727 ?        00:00:00 rfkill
+ 1782 ?        00:00:01 mintUpdate
+ 1800 ?        00:00:00 applet.py
+ 1806 ?        00:00:00 mintreport-tray
+ 1983 ?        00:02:03 gnome-terminal-
+ 1990 pts/0    00:00:00 bash
+ 4551 ?        00:00:00 ssh-agent
+ 5962 ?        00:00:01 Isolated Web Co
+ 6003 ?        00:00:02 Isolated Web Co
+ 6033 ?        00:00:00 Web Content
+ 6287 ?        00:00:00 Web Content
+ 6702 ?        00:00:00 Web Content
+ 8237 ?        00:00:00 node
+ 8703 ?        00:00:00 gvfsd-http
+ 8708 ?        00:00:02 chrome
+ 8713 ?        00:00:00 cat
+ 8714 ?        00:00:00 cat
+ 8723 ?        00:00:00 chrome_crashpad
+ 8730 ?        00:00:00 chrome_crashpad
+ 8739 ?        00:00:00 chrome
+ 8740 ?        00:00:00 chrome
+ 8741 ?        00:00:00 nacl_helper
+ 8744 ?        00:00:00 chrome
+ 8768 ?        00:00:00 xdg-desktop-por
+ 8770 ?        00:00:01 chrome
+ 8784 ?        00:00:00 chrome
+ 8788 ?        00:00:00 xdg-document-po
+ 8793 ?        00:00:00 xdg-permission-
+ 8810 ?        00:00:00 chrome
+ 8829 ?        00:00:00 sh
+ 8832 ?        00:00:00 pxgsettings
+ 8843 ?        00:00:00 xdg-desktop-por
+ 8876 ?        00:00:00 chrome
+ 8888 ?        00:00:00 chrome
+ 8889 ?        00:00:01 chrome
+ 8928 ?        00:00:00 chrome
+10330 ?        00:00:00 node
+10374 pts/1    00:00:00 ps
+10389 pts/0    00:01:50 vim
+11513 ?        00:32:51 GeckoMain
+11574 ?        00:00:08 Socket Process
+11606 ?        00:00:23 Privileged Cont
+11657 ?        00:00:09 WebExtensions
+13517 ?        00:00:00 sd_dummy
+13520 ?        00:00:00 sd_generic
+13523 ?        00:00:00 sd_espeak-ng
+13529 ?        00:00:00 speech-dispatch
+13555 ?        00:00:04 RDD Process
+14123 ?        00:03:33 Isolated Web Co
+14157 ?        00:00:28 Isolated Web Co
+14205 ?        00:00:25 Isolated Web Co
+14249 ?        00:25:22 Isolated Web Co
+14771 pts/1    00:00:00 bash
+16414 ?        00:00:24 Isolated Web Co
+16598 ?        00:00:25 Isolated Web Co
+16633 ?        00:00:28 Isolated Web Co
+16665 ?        00:00:26 Isolated Web Co
+16693 ?        00:00:26 Isolated Web Co
+16744 ?        00:00:25 Isolated Web Co
+16746 ?        00:00:25 Isolated Web Co
+16748 ?        00:00:29 Isolated Web Co
+16821 ?        00:00:26 Isolated Web Co
+16854 ?        00:00:26 Isolated Web Co
+16900 ?        00:00:26 Isolated Web Co
+16903 ?        00:00:28 Isolated Web Co
+16907 ?        00:00:26 Isolated Web Co
+16994 ?        00:00:26 Isolated Web Co
+16997 ?        00:00:28 Isolated Web Co
+17001 ?        00:00:50 Isolated Web Co
+17069 ?        00:00:26 Isolated Web Co
+17100 ?        00:00:27 Isolated Web Co
+17133 ?        00:00:27 Isolated Web Co
+17235 ?        00:00:25 Isolated Web Co
+17298 ?        00:00:10 Isolated Web Co
+17536 ?        00:00:39 Isolated Web Co
+17570 ?        00:00:02 Isolated Web Co
+17611 ?        00:00:25 Isolated Web Co
+17619 ?        00:00:26 Isolated Web Co
+17678 ?        00:00:02 Isolated Web Co
+17681 ?        00:00:04 Isolated Web Co
+22276 ?        00:00:04 Isolated Web Co
+23127 ?        00:30:26 Isolated Web Co
+26056 ?        00:00:16 Isolated Web Co
+26124 ?        00:04:24 Isolated Web Co
+27782 ?        00:00:05 Isolated Web Co
+27834 ?        00:00:01 Isolated Web Co
+27897 ?        00:00:01 Isolated Web Co
+27931 ?        00:00:00 Isolated Web Co
+27964 ?        00:00:00 Isolated Web Co
+30289 ?        00:00:03 Isolated Web Co
+31189 ?        00:00:01 Isolated Web Co
+31651 ?        00:00:03 Isolated Web Co
+32131 ?        00:00:01 Isolated Web Co
+32264 ?        00:00:01 Isolated Web Co
