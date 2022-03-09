@@ -67,6 +67,9 @@ class LocalPlanner(object):
         # Allow nodes to make stop requests
         self.stop_sub = rospy.Subscriber('/stop', Stop, self.stop_callback, queue_size=10)
 
+        # Allows changes in speed
+        self.set_speed_sub = rospy.Subscriber('/speed', Float32, self.speed_callback)
+
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
 
@@ -116,6 +119,10 @@ class LocalPlanner(object):
         self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop, msg.distance]
         rospy.loginfo(str(msg.sender_id.data).lower() + " requested stop: " + str(msg.stop) + " with distance: " + str(msg.distance))
  
+    def speed_callback(self, msg):
+        self.global_speed = msg.data / 3.6
+        rospy.loginfo("Speed changed to " + str (self.global_speed))
+
     def vel_callback(self, msg):
         if msg.data < 1.0:
             self.cur_speed = 1.8 # Magic number however this is roughly the observed speed in realtime
