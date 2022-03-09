@@ -214,15 +214,16 @@ class CollisionDetector(object):
                         self.prev_obstacle_speed = obstacle_speed
                         
                         if not self.obstacle_detected:
-                            rospy.logwarn("Set obstacle detected to true")
                             new_speed = (3.23 * obstacle_speed) + 4.254
-                            self.speed_pub.publish(math.ceil(new_speed) + 1)
-                            self.obstacle_detected = True
+                            if new_speed < 3 and new_speed > 0:
+                                rospy.logwarn("Set obstacle detected to true")
+                                self.speed_pub.publish(math.ceil(new_speed) + 1)
+                                self.obstacle_detected = True
 
                 self.prev_distance = distance
                 self.prev_time = time.time()
                 #if distance < self.min_obstacle_dist or impact_time < self.min_obstacle_time:
-                if distance < (self.safe_obstacle_dist / 4) or impact_time < (self.safe_obstacle_time / 4):
+                if distance < (self.safe_obstacle_dist / 3) or impact_time < (self.safe_obstacle_time / 3):
                     clear_path = False
                     self.cleared_confidence = 0
                     if not self.stopped:
@@ -248,7 +249,7 @@ class CollisionDetector(object):
             else:
                 if self.obstacle_detected:
                     self.resume_confid += 1
-                    if self.resume_confid > 10:
+                    if self.resume_confid > 8:
                         rospy.logwarn("set obstacle detected to false")
                         self.obstacle_detected = False
                         self.speed_pub.publish(10)
