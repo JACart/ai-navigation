@@ -15,10 +15,13 @@
   <arg name="pose" default="false"/>
   <arg name="obstacle_detection" default="true"/>
   <arg name="visualize_pose" default="false"/>
+  <arg name="map_arg" default="$(env HOME)/AVData/speedBoiMap.pcd"/>
 
   <!-- Configuration for real-world driving -->
   <group if="$(arg realtime)">
-    <include file="$(find cart_control)/launch/autoware_localization.launch"/>
+    <include file="$(find cart_control)/launch/autoware_localization.launch">
+      <arg name="map_arg" value="$(arg map_arg)" />
+    </include>
   </group>
 
   <!-- Configuration for running simulator -->

@@ -43,6 +43,7 @@ class MotorEndpoint(object):
         self.vel = 0
         self.vel_cart_units = 0
         self.angle = 0
+        self.steering_tolerance = 50 # default was 45
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
@@ -126,11 +127,11 @@ class MotorEndpoint(object):
         #adjust the target_angle range from (-45 <-> 45) to (0 <-> 100)
         # rospy.loginfo("Angle before adjustment: " + str(self.cmd_msg.angle))
 
-        if(self.angle < -45):
-            self.angle = -45
-        if(self.angle > 45):
-            self.angle = 45
-        target_angle = 100 - int(( (self.angle + 45) / 90 ) * 100)
+        if(self.angle < -40):
+            self.angle = self.steering_tolerance * -1
+        if(self.angle > 40):
+            self.angle = self.steering_tolerance
+        target_angle = 100 - int(( (self.angle + self.steering_tolerance) / 90 ) * 100)
         
         #if debug printing is requested print speed and angle info
         if self.debug:
@@ -179,7 +180,7 @@ class MotorEndpoint(object):
     
     def pack_send(self, throttle, brake, steer_angle):
         data = bytearray(b'\x00' * 5)
-        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle)
+        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle + 10)
         self.speed_ser.write(data)
 
 if __name__ == "__main__":

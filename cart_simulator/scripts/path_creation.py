@@ -34,7 +34,7 @@ class PathCreation(object):
         self.auto_build = False
 
         # When adding new nodes, auto-connect previous node to new node
-        self.auto_connect = True
+        self.auto_connect = False
         
         # Most recent cart position
         self.recent_pos = None
@@ -100,17 +100,18 @@ class PathCreation(object):
     
     # On receipt of new cart position, check spacing between current point and last
     def pose_callback(self, msg):
-        current_pos = PointStamped()
-        current_pos.point.x = msg.pose.position.x
-        current_pos.point.y = msg.pose.position.y
+        if self.auto_build:
+            current_pos = PointStamped()
+            current_pos.point.x = msg.pose.position.x
+            current_pos.point.y = msg.pose.position.y
         
-        if self.recent_pos is None:
-            self.recent_pos = current_pos
+            if self.recent_pos is None:
+                self.recent_pos = current_pos
         
-        # Place a new point down every specified amount of meters
-        if self.dis(self.recent_pos.point.x, self.recent_pos.point.y, current_pos.point.x, current_pos.point.y) > self.AUTO_POINT_GAP:
-            self.recent_pos = current_pos
-            self.point_callback(current_pos)
+            # Place a new point down every specified amount of meters
+            if self.dis(self.recent_pos.point.x, self.recent_pos.point.y, current_pos.point.x, current_pos.point.y) > self.AUTO_POINT_GAP:
+                self.recent_pos = current_pos
+                self.point_callback(current_pos)
         
     # Add point to the graph
     def add_point(self, x, y):
@@ -258,6 +259,7 @@ class PathCreation(object):
         l = 108
         m = 109
         t = 116
+        q = 113
     
         stdscr.nodelay(True)
         rate = rospy.Rate(60) 
@@ -269,7 +271,8 @@ class PathCreation(object):
                       B - Drive the cart around and auto-build a map\n
                       L - Line tool, allows you to create a line of points on a map\n
                       T - Change connection type(undirected, directed)\n
-                      M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)""")'''
+                      M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)\n
+                      Q - Saves and Quits\n""")'''
 
         while 1:
             if self.display_graph is not None:
@@ -313,6 +316,12 @@ class PathCreation(object):
                      self.road_type = "undirected" 
                 else: 
                     self.road_type = "directed"
+            elif keyval == q:
+                stdscr.addstr("Saving graph")
+                g_name = "Graph: " + str(datetime.datetime.now()) + ".gml"
+                nx.write_gml(self.global_graph, g_name)
+                stdscr.addstr("Graph saved as: " + g_name)
+                exit()
 
             try:
                 stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
@@ -323,10 +332,12 @@ class PathCreation(object):
                         B - Drive the cart around and auto-build a map\n
                         L - Line tool, allows you to create a line of points on a map\n
                         T - Change connection type(undirected, directed)\n
-                        M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)""")
+                        M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)\n
+                        Q - Saves and Quits\n""")
                 stdscr.addstr("Current Point Mode: " + self.point_mode + "\n")
                 stdscr.addstr("Auto-Connect: " + str(self.auto_connect) + "\n")
                 stdscr.addstr("Map auto-build set to: " + str(self.auto_build) + "\n")
+                stdscr.addstr("Road Type: " + str(self.road_type) + "\n")
             except curses.error:
                 pass
             self.prev_key = keyval

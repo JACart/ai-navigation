@@ -1,0 +1,1643 @@
+header: 
+  seq: 41
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 42
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 43
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 44
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 45
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 2.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 46
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 47
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 2.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 48
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 49
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 50
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 51
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 2.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+---
+header: 
+  seq: 52
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---
+header: 
+  seq: 53
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+obstacles: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -0.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 0.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 2.5
+        y: 0.0
+        z: 2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -2.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: -1.5
+    radius: 1.0
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "/base_link"
+    pos: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs:         0
+        frame_id: ''
+      point: 
+        x: 1.5
+        y: 0.0
+        z: 1.5
+    radius: 1.0
+---

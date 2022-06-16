@@ -232,7 +232,7 @@
   xacro:include filename=&quot;/home/student/Autonomous-Navigation/catkin_ws/src/velodyne_lidar/velodyne_description/urdf/VLP-16.urdf.xacro&quot;/&gt;
   
   <VLP-16 hz="10" name="velodyne" parent="base_link" samples="440" topic="/velodyne_points">
-    <origin rpy="0 0 0" xyz="0 0 0.889"/>
+    <origin rpy="0 0 0" xyz="5.0 0 0.889"/>
   </VLP-16>
   <gazebo>
     <plugin filename="libgazebo_ros_diff_drive.so" name="differential_drive_controller">
