@@ -4,7 +4,7 @@ import serial
 import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
-from std_msgs.msg import Int8, Bool
+from std_msgs.msg import Int8, Bool, Float32
 import time
 import math
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
@@ -13,6 +13,9 @@ cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
 MOVING = 0 
 BRAKING = 1
 STOPPED = 2
+
+# Speed Dial Max
+MAX_SPEED_VOLTAGE = 762
 
 
 class MotorEndpoint(object):
@@ -28,6 +31,7 @@ class MotorEndpoint(object):
         self.brake = int(0)
         self.drove_since_braking = True
         self.cmd_msg = None
+        self.arduino_message = ""
         # Time (seconds) to ramp up to full brakes
         self.brake_time = 3
         self.node_rate = 10
@@ -43,13 +47,12 @@ class MotorEndpoint(object):
         self.vel = 0
         self.vel_cart_units = 0
         self.angle = 0
-        self.steering_tolerance = 50 # default was 45
         """ Set up the node. """
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
-        #Connect to arduino for sending speed
+        # Connect to arduino
         try:
-            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            self.serial_port = serial.Serial(cart_port, 57600, write_timeout=0)
         except Exception as e:
             print( "Motor_endpoint: " + str(e))
             rospy.logerr("Motor_endpoint: " + str(e))
@@ -61,11 +64,19 @@ class MotorEndpoint(object):
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
+
+        """
+        Speed changing topics
+        """
+        # self.ui_speed = rospy.Subscriber('/speed_setting', Float32, self.ChangeCartSpeed)
         
+        self.change_vel = rospy.Publisher('/speed', Float32, queue_size=1)
+
         rate = rospy.Rate(self.node_rate)
 
         while not rospy.is_shutdown():
             if self.cmd_msg is not None:
+                self.speed_dial_process()
                 self.endpoint_calc()
             rate.sleep()
 
@@ -127,11 +138,11 @@ class MotorEndpoint(object):
         #adjust the target_angle range from (-45 <-> 45) to (0 <-> 100)
         # rospy.loginfo("Angle before adjustment: " + str(self.cmd_msg.angle))
 
-        if(self.angle < -40):
-            self.angle = self.steering_tolerance * -1
-        if(self.angle > 40):
-            self.angle = self.steering_tolerance
-        target_angle = 100 - int(( (self.angle + self.steering_tolerance) / 90 ) * 100)
+        if(self.angle < -45):
+            self.angle = -45
+        if(self.angle > 45):
+            self.angle = 45
+        target_angle = 100 - int(( (self.angle + 45) / 90 ) * 100)
         
         #if debug printing is requested print speed and angle info
         if self.debug:
@@ -180,8 +191,31 @@ class MotorEndpoint(object):
     
     def pack_send(self, throttle, brake, steer_angle):
         data = bytearray(b'\x00' * 5)
-        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle + 10)
-        self.speed_ser.write(data)
+        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, abs(throttle), brake, steer_angle)
+        self.serial_port.write(data)
+
+    def speed_dial_process(self):
+        string_data = ""
+        try:
+            self.arduino_message = self.serial_port.readLine().decode()
+            if self.arduino_message == "":
+                print("Arduino Message Processed but no contents\n")
+            else:
+                # An array of strings in current format - [Steering, Throttle, Brake, SpeedDial]
+                string_data = self.arduino_message.split(",")
+                self.arduino_message = ""
+            # Only reading SpeedDial data currently
+            speed_dial_data = int(string_data[3])
+            
+            # Conversion Equation
+            speed_normalization = 8 * (speed_dial_data / MAX_SPEED_VOLTAGE)
+            self.change_vel.publish(speed_normalization)
+            
+        except Exception as e:
+            print("Arduino Message was not able to be read!\n")
+    
+    def ChangeCartSpeed(self, msg):
+        self.change_vel.publish(msg.data)
 
 if __name__ == "__main__":
     try:
