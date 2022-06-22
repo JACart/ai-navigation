@@ -15,7 +15,7 @@ BRAKING = 1
 STOPPED = 2
 
 # Speed Dial Max
-MAX_SPEED_VOLTAGE = 762
+MAX_SPEED_VOLTAGE = float(650)
 
 
 class MotorEndpoint(object):
@@ -31,7 +31,7 @@ class MotorEndpoint(object):
         self.brake = int(0)
         self.drove_since_braking = True
         self.cmd_msg = None
-        self.arduino_message = ""
+        self.arduino_message = "Not empty"
         # Time (seconds) to ramp up to full brakes
         self.brake_time = 3
         self.node_rate = 10
@@ -71,9 +71,10 @@ class MotorEndpoint(object):
         # self.ui_speed = rospy.Subscriber('/speed_setting', Float32, self.ChangeCartSpeed)
         
         self.change_vel = rospy.Publisher('/speed', Float32, queue_size=1)
+        # Give serial port 1 second to buffer
+        time.sleep(1)
 
         rate = rospy.Rate(self.node_rate)
-
         while not rospy.is_shutdown():
             if self.cmd_msg is not None:
                 self.speed_dial_process()
@@ -195,25 +196,36 @@ class MotorEndpoint(object):
         self.serial_port.write(data)
 
     def speed_dial_process(self):
-        string_data = ""
+        # Add a speed displacement variable that doesnt send ROS message when
+        # less than 1% difference between previous speed and current speed
+        # basically dont change speed when knob not turning
         try:
-            self.arduino_message = self.serial_port.readLine().decode()
+            #time.sleep(1)
+            self.arduino_message = self.serial_port.readline()
+            #self.arduino_message = self.serial_port.read(self.serial_port.inWaiting() + 32) 
+            # self.serial_port.reset_output_buffer()
+
+            rospy.loginfo("Message recieved: %s", self.arduino_message)
             if self.arduino_message == "":
-                print("Arduino Message Processed but no contents\n")
+                rospy.loginfo("Arduino message processed but no contents\n")
             else:
                 # An array of strings in current format - [Steering, Throttle, Brake, SpeedDial]
-                string_data = self.arduino_message.split(",")
-                self.arduino_message = ""
+                # no longer the case currently returns just string with speed dial data
+                # string_data = self.arduino_message.split(",")
+                rospy.loginfo("I recieved a message\n")
             # Only reading SpeedDial data currently
-            speed_dial_data = int(string_data[3])
+                # rospy.loginfo(arduino_message)
+                speed_dial_data = int(self.arduino_message)
             
             # Conversion Equation
             speed_normalization = 8 * (speed_dial_data / MAX_SPEED_VOLTAGE)
             self.change_vel.publish(speed_normalization)
             
         except Exception as e:
-            print("Arduino Message was not able to be read!\n")
-    
+            # Sleep and try again
+            time.sleep(5)
+            rospy.loginfo("** Exception *** --- Broken Message: %s", self.arduino_message) 
+            print(e) 
     def ChangeCartSpeed(self, msg):
         self.change_vel.publish(msg.data)
 
