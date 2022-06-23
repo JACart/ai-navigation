@@ -72,7 +72,7 @@ class MotorEndpoint(object):
         
         self.change_vel = rospy.Publisher('/speed', Float32, queue_size=1)
         # Give serial port 1 second to buffer
-        time.sleep(1)
+        #time.sleep(1)
 
         rate = rospy.Rate(self.node_rate)
         while not rospy.is_shutdown():
@@ -222,7 +222,7 @@ class MotorEndpoint(object):
             
         except Exception as e:
             # Sleep and try again
-            time.sleep(5)
+            #time.sleep(5)
             rospy.loginfo("** Exception *** --- Broken Message: %s", self.arduino_message) 
             print(e) 
     def ChangeCartSpeed(self, msg):
