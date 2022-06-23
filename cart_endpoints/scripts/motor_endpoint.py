@@ -203,12 +203,7 @@ class MotorEndpoint(object):
             #time.sleep(1)
             self.arduino_message = self.serial_port.readline()
             #self.arduino_message = self.serial_port.read(self.serial_port.inWaiting() + 32) 
-            
-            time.sleep(1)
-            self.arduino_message = self.serial_port.readline()
-            
             # self.serial_port.reset_output_buffer()
-
             rospy.loginfo("Message recieved: %s", self.arduino_message)
             if self.arduino_message == "":
                 rospy.loginfo("Arduino message processed but no contents\n")
@@ -223,7 +218,7 @@ class MotorEndpoint(object):
             
             # Conversion Equation
             speed_normalization = 8 * (speed_dial_data / MAX_SPEED_VOLTAGE)
-            self.change_vel.publish(speed_normalization)
+            # self.change_vel.publish(speed_normalization)
             
         except Exception as e:
             # Sleep and try again
