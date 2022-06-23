@@ -1,4 +1,0 @@
-ac3c7685605cee04ec3a88142b008d17fb211534 ac3c7685605cee04ec3a88142b008d17fb211534 Small Laptop <jacartjmu@gmail.com> 1649180417 -0400	checkout: moving from speed_distancing to sp-ros22
-ac3c7685605cee04ec3a88142b008d17fb211534 6f4eadb15eedcecdbac5b937c7a9616eb9dfd1da Small Laptop <jacartjmu@gmail.com> 1655407184 -0400	commit: Spring 2022 work
-6f4eadb15eedcecdbac5b937c7a9616eb9dfd1da 02be25228c5bfb97cce7cdaf6249dfd9d0fd8323 Small Laptop <jacartjmu@gmail.com> 1655411466 -0400	commit: ZED Object/Obstacle/Pose tracking work for spring semester
-02be25228c5bfb97cce7cdaf6249dfd9d0fd8323 6f4eadb15eedcecdbac5b937c7a9616eb9dfd1da Small Laptop <jacartjmu@gmail.com> 1655413019 -0400	reset: moving to HEAD~1
