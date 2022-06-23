@@ -1,0 +1,23 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = git@github.com:JACart/ai-navigation.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[branch "speed"]
+	remote = origin
+	merge = refs/heads/speed
+[branch "zed2_pose"]
+	remote = origin
+	merge = refs/heads/zed2_pose
+[branch "speed-distancing"]
+	remote = origin
+	merge = refs/heads/speed-distancing
+[branch "speed_distancing"]
+	remote = origin
+	merge = refs/heads/speed_distancing
