@@ -203,6 +203,10 @@ class MotorEndpoint(object):
             #time.sleep(1)
             self.arduino_message = self.serial_port.readline()
             #self.arduino_message = self.serial_port.read(self.serial_port.inWaiting() + 32) 
+            
+            time.sleep(1)
+            self.arduino_message = self.serial_port.readline()
+            
             # self.serial_port.reset_output_buffer()
 
             rospy.loginfo("Message recieved: %s", self.arduino_message)
