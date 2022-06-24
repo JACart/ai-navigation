@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="cam_pos_x_1"    default="0.0"/>          <!-- Position respect to base frame (i.e. "base_link) -->
   <arg name="cam_pos_y_1"    default="-0.102"/>       <!-- Position respect to base frame (i.e. "base_link) -->
   <arg name="cam_pos_z_1"    default="0.5"/>          <!-- Position respect to base frame (i.e. "base_link) -->
-  <arg name="cam_roll_1"     default="3.14"/>          <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_roll_1"     default="0"/>          <!-- Orientation respect to base frame (i.e. "base_link) -->
   <arg name="cam_pitch_1"    default="0.383972"/>          <!-- Orientation respect to base frame (i.e. "base_link) -->
   <arg name="cam_yaw_1"      default="0"/>              <!-- Orientation respect to base frame (i.e. "base_link) -->
   <arg name="svo_file_1"     default="/home/jacart/videos/front.svo" />
@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="cam_pos_x_2"    default="0.0"/>   <!-- Position respect to base frame (i.e. "base_link) -->
   <arg name="cam_pos_y_2"    default="0.102"/> <!-- Position respect to base frame (i.e. "base_link) -->
   <arg name="cam_pos_z_2"    default="0.5"/>   <!-- Position respect to base frame (i.e. "base_link) -->
-  <arg name="cam_roll_2"     default="3.14"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_roll_2"     default="0"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
   <arg name="cam_pitch_2"    default="0.0"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
   <arg name="cam_yaw_2"      default="-3.14"/>
   <arg name="svo_file_2"     default="/home/jacart/videos/passenger.svo" />
@@ -66,7 +66,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <arg name="node_name"     value="$(arg node_name_1)"/>
       <arg name="camera_model"  value="$(arg camera_model_1)"/>
       <arg name="common_params" value="$(arg common_params_1)"/>
-      <arg name="model_params"  value="$(arg model_params_1"/>
+      <arg name="model_params"  value="$(arg model_params_1)"/>
       <arg name="publish_urdf"  value="$(arg publish_urdf)"/>
       <arg name="publish_tf"    value="false"/>
       <arg name="camera_id"     value="0"/>
@@ -87,7 +87,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <arg name="node_name"     value="$(arg node_name_2)"/>
       <arg name="camera_model"  value="$(arg camera_model_2)"/>
       <arg name="common_params" value="$(arg common_params_2)"/>
-      <arg name="model_params"  value="$(arg model_params_2"/>
+      <arg name="model_params"  value="$(arg model_params_2)"/>
       <arg name="publish_urdf"  value="true"/>
       <arg name="publish_tf"    value="false"/>
       <!-- Only the main camera must publish TF! -->
