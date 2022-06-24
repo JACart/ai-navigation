@@ -36,7 +36,7 @@ wait
 # Zed camera launch all new
 echo "Launching Zed camera nodes"
 #gnome-terminal --tab -e 'sh -c "cd ~; roslaunch zed_wrapper jacart_multi_cam.launch node_name_2:=passenger camera_name_2:=passenger_cam node_name_1:=front camera_name_1:=front_cam; exec bash"'
-gnome-terminal --tab -e 'sh -c "cd ~; roslaunch zed_wrapper jacart_multi_cam.launch; exec bash"'
+gnome-terminal --tab -e 'sh -c "cd ~; roslaunch cart_endpoints jacart_multi_cam.launch; exec bash"'
 sleep 4
 # end new Zed launch
 

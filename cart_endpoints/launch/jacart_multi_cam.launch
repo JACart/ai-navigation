@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2020, STEREOLABS.
+
+All rights reserved.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<launch>
+  <arg name="publish_urdf" default="true"/>
+
+  <!-- X is out the front of the cart -->
+  <!-- Y is left/right -->
+  <!-- Z is actually up -->
+
+  <!-- CAMERA 1 (Front) -->
+  <arg name="node_name_1"    default="front"/>
+  <arg name="camera_model_1" default="zed2i"/>
+  <arg name="camera_name_1"  default="front_cam"/>
+  <arg name="common_params_1"  default="$(find cart_endpoints)/zed_params/common_front.yaml"/>
+  <arg name="model_params_1"   default="$(find cart_endpoints)/zed_params/zed2i_front.yaml"/>
+  <arg name="cam_pos_x_1"    default="0.0"/>          <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pos_y_1"    default="-0.102"/>       <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pos_z_1"    default="0.5"/>          <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_roll_1"     default="3.14"/>          <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pitch_1"    default="0.383972"/>          <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_yaw_1"      default="0"/>              <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="svo_file_1"     default="/home/jacart/videos/front.svo" />
+  <arg name="camera_sn_1"    default="37963597"/>
+
+
+  <!-- CAMERA 2 (passenger) -->
+  <arg name="node_name_2"    default="passenger"/>
+  <arg name="camera_model_2" default="zed2i"/>
+  <arg name="camera_name_2"  default="passenger_cam"/>
+  <arg name="common_params_2"  default="$(find cart_endpoints)/zed_params/common_passenger.yaml"/>
+  <arg name="model_params_2"   default="$(find cart_endpoints)/zed_params/zed2i_passenger.yaml"/>
+  <arg name="cam_pos_x_2"    default="0.0"/>   <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pos_y_2"    default="0.102"/> <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pos_z_2"    default="0.5"/>   <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_roll_2"     default="3.14"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pitch_2"    default="0.0"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_yaw_2"      default="-3.14"/>
+  <arg name="svo_file_2"     default="/home/jacart/videos/passenger.svo" />
+  <arg name="camera_sn_2"    default="31061594"/>
+
+
+  <arg name="cloud" default="/$(arg node_name_1)/point_cloud/cloud_registered"/>
+  <arg name="laserscan" default="/front_camera_laserscan"/>
+
+
+
+  <group ns="$(arg camera_name_1)">
+    <include file="$(find cart_endpoints)/launch/include/zed_camera_mod.launch">
+      <arg name="camera_name"   value="$(arg camera_name_1)"/>
+      <arg name="node_name"     value="$(arg node_name_1)"/>
+      <arg name="camera_model"  value="$(arg camera_model_1)"/>
+      <arg name="common_params" value="$(arg common_params_1)"/>
+      <arg name="model_params"  value="$(arg model_params_1"/>
+      <arg name="publish_urdf"  value="$(arg publish_urdf)"/>
+      <arg name="publish_tf"    value="false"/>
+      <arg name="camera_id"     value="0"/>
+      <arg name="serial_number" value="$(arg camera_sn_1)"/>
+      <arg name="cam_pos_x"     value="$(arg cam_pos_x_1)"/>
+      <arg name="cam_pos_y"     value="$(arg cam_pos_y_1)"/>
+      <arg name="cam_pos_z"     value="$(arg cam_pos_z_1)"/>
+      <arg name="cam_roll"      value="$(arg cam_roll_1)"/>
+      <arg name="cam_pitch"     value="$(arg cam_pitch_1)"/>
+      <arg name="cam_yaw"       value="$(arg cam_yaw_1)"/>
+      <arg name="svo_file"      value="$(arg svo_file_1)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg camera_name_2)">
+    <include file="$(find cart_endpoints)/launch/include/zed_camera_mod.launch">
+      <arg name="camera_name"   value="$(arg camera_name_2)"/>
+      <arg name="node_name"     value="$(arg node_name_2)"/>
+      <arg name="camera_model"  value="$(arg camera_model_2)"/>
+      <arg name="common_params" value="$(arg common_params_2)"/>
+      <arg name="model_params"  value="$(arg model_params_2"/>
+      <arg name="publish_urdf"  value="true"/>
+      <arg name="publish_tf"    value="false"/>
+      <!-- Only the main camera must publish TF! -->
+      <arg name="camera_id"     value="1"/>
+      <arg name="serial_number" value="$(arg camera_sn_2)"/>
+      <arg name="cam_pos_x"     value="$(arg cam_pos_x_2)"/>
+      <arg name="cam_pos_y"     value="$(arg cam_pos_y_2)"/>
+      <arg name="cam_pos_z"     value="$(arg cam_pos_z_2)"/>
+      <arg name="cam_roll"      value="$(arg cam_roll_2)"/>
+      <arg name="cam_pitch"     value="$(arg cam_pitch_2)"/>
+      <arg name="cam_yaw"       value="$(arg cam_yaw_2)"/>
+      <arg name="svo_file"      value="$(arg svo_file_2)"/>
+    </include>
+  </group>
+
+  <!-- run pointcloud_to_laserscan node -->
+  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="front_cam_pointcloud_to_laserscan">
+    <remap from="cloud_in" to="/voxel_grid/output"/>
+    <remap from="scan" to="/front_cam_scan"/>
+    <rosparam>
+      target_frame: velodyne
+
+      min_height: -0.6
+      max_height: 1.0
+      range_min: 0.01
+      concurrency_level: 1
+      angle_increment: 0.02616
+    </rosparam>
+  </node>
+  <node name="front_cam_obstacle_detector"   pkg="cart_endpoints" type="zed_obstacle_detector.py"/>
+  <node name="front_cam_obj_det_to_obstacle" pkg="cart_endpoints" type="zed_object_to_obstacle.py"/>
+
+  <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+  <node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
+    <remap from="~input" to="/front_cam/front/point_cloud/cloud_registered" />
+    <rosparam>
+      filter_field_name: x
+      filter_limit_min: 0.01
+      filter_limit_max: 8
+      filter_limit_negative: False
+      leaf_size: 0.1
+    </rosparam>
+  </node>
+
+</launch>
