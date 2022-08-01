@@ -90,7 +90,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <arg name="model_params"  value="$(arg model_params_2)"/>
       <arg name="publish_urdf"  value="true"/>
       <arg name="publish_tf"    value="false"/>
-      <!-- Only the main camera must publish TF! -->
+   
       <arg name="camera_id"     value="1"/>
       <arg name="serial_number" value="$(arg camera_sn_2)"/>
       <arg name="cam_pos_x"     value="$(arg cam_pos_x_2)"/>
