@@ -13,12 +13,12 @@ from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8, Bool, Header
 from geometry_msgs.msg import PointStamped, PoseStamped, Point
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 
 class PathCreation(object):
     def __init__(self):
         rospy.init_node('path_creation_tool')
-        self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
+        self.display_pub = rospy.Publisher('/path_display', MarkerArray, queue_size=10)
         
         # Listen for cart position changes
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size=10)
@@ -57,7 +57,7 @@ class PathCreation(object):
         
         # How many meters between points when auto-build map is toggled on
         self.AUTO_POINT_GAP = 2
-        
+
         #Enter edit mode if there is an existing file provided as an argument, disable auto-tools
         if len(sys.argv) > 1:
             self.auto_connect = False
@@ -262,7 +262,7 @@ class PathCreation(object):
         q = 113
     
         stdscr.nodelay(True)
-        rate = rospy.Rate(60) 
+        rate = rospy.Rate(10)
         '''stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
                       R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
                       C - Connect two points\n 
@@ -349,6 +349,7 @@ class PathCreation(object):
     def display_rviz(self, frame):
         local_display = self.display_graph
         i = 0
+        marker_array = MarkerArray()
         for node in local_display.nodes:
             x = local_display.node[node]['pos'][0]
             y = local_display.node[node]['pos'][1]
@@ -365,7 +366,7 @@ class PathCreation(object):
             marker.color.g = 1.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.4)
+            marker.lifetime = rospy.Duration()
 
             marker.pose.position.x = x
             marker.pose.position.y = y
@@ -374,8 +375,7 @@ class PathCreation(object):
             marker.scale.x = 0.6
             marker.scale.y = 0.6
             marker.scale.z = 0.6
-
-            self.display_pub.publish(marker)
+            marker_array.markers.append(marker)
             i += 1
             
         for edge in local_display.edges:
@@ -407,7 +407,7 @@ class PathCreation(object):
             marker.color.g = 0.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.4)
+            marker.lifetime = rospy.Duration()
 
             marker.points = points
 
@@ -415,8 +415,9 @@ class PathCreation(object):
             marker.scale.y = 0.6
             marker.scale.z = 0
 
-            self.display_pub.publish(marker)
+            marker_array.markers.append(marker)
             i += 1
+        self.display_pub.publish(marker_array)
         
 
 if __name__ == "__main__":
