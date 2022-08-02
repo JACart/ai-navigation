@@ -4,7 +4,7 @@ import serial
 import rospy
 import bitstruct
 from navigation_msgs.msg import VelAngle
-from std_msgs.msg import Int8, Bool
+from std_msgs.msg import Int8, Bool, String
 import time
 import math
 cart_port = '/dev/ttyUSB9' #hardcoded depending on computer
@@ -34,6 +34,12 @@ class MotorEndpoint(object):
         self.state = STOPPED
         self.stopping_time = 0
         self.step_size = 255.0/(self.node_rate*self.brake_time)
+
+        self.heartbeat = b''  # Byte array for reading heartbeat from arduino
+        self.delta_time = 0.0
+        self.prev_time  = 0.0
+        self.first_heartbeat = True
+
         self.obstacle_distance = -1
         self.brake_time_used = 0
         self.comfortable_stop_dist = 4.0
@@ -48,11 +54,15 @@ class MotorEndpoint(object):
         rospy.init_node('motor_endpoint')
         rospy.loginfo("Starting motor node!")
         #Connect to arduino for sending speed
+        self.serial_connected = True
         try:
-            self.speed_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+            self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0, timeout=.01)
         except Exception as e:
-            print( "Motor_endpoint: " + str(e))
+            rospy.loginfo("==========================================================================")
+            rospy.loginfo( "Motor_endpoint: " + str(e))
+            rospy.loginfo("==========================================================================")
             rospy.logerr("Motor_endpoint: " + str(e))
+            serial_connected = False
 
         rospy.loginfo("Speed serial established")
         """
@@ -61,12 +71,57 @@ class MotorEndpoint(object):
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
+        self.heart_pub = rospy.Publisher('/heartbeat', String, queue_size=10)
         
         rate = rospy.Rate(self.node_rate)
-
+        
         while not rospy.is_shutdown():
+            
+            if not self.serial_connected:
+                print("==========================================================================")
+                print("                       RETRYING SERIAL CONNECTION                         ")
+                print("==========================================================================")
+                try:
+                    self.arduino_ser = serial.Serial(cart_port, 57600, write_timeout=0)
+                    self.serial_connected = True
+                except Exception as e:
+                    rospy.logerr("Motor_endpoint: " + str(e))
+                    self.serial_connected = False
+                    rate.sleep()
+                    continue
+            
+            self.message = None
+            
             if self.cmd_msg is not None:
                 self.endpoint_calc()
+            self.prev_time = time.time()
+            
+            try:
+                self.heartbeat = self.arduino_ser.read_until()
+            except Exception as e:
+                print("==========================================================================")
+                print("                    THE ARDUINO HAS BEEN DISCONNECTED                     ")
+                print("==========================================================================")
+                self.serial_connected = False
+                rate.sleep()
+                continue
+            if self.heartbeat != "":
+                self.heart_pub.publish(self.heartbeat)
+                self.delta_time = time.time() - self.prev_time
+                rospy.loginfo("Heartbeat message:")
+                rospy.loginfo(self.heartbeat + "| Time since last message: ")
+                heartbeat_delta_t = time.time() - self.prev_time
+                
+                # This check is here because the time between the first and 2nd heartbeat is always ~2.4s
+                # I believe this is because of the rest of the setup taking place at the same time
+                if not self.first_heartbeat: 
+                    if heartbeat_delta_t >= 2.0:
+                        rospy.loginfo("==========================================================================")
+                        rospy.loginfo("           TIME BETWEEN HEARTBEATS, > 2.0s | Things may be fine           ")
+                        rospy.loginfo("==========================================================================")
+                        
+                rospy.loginfo(heartbeat_delta_t)
+
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
@@ -101,7 +156,7 @@ class MotorEndpoint(object):
     def debug_callback(self, msg):
         self.debug = msg.data
 
-
+    
     def endpoint_calc(self):
         if self.new_vel:
             #The first time we get a new target speed and angle we must convert it        
