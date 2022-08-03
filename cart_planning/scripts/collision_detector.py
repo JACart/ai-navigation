@@ -14,6 +14,7 @@ import rospy
 import math
 import tf
 import numpy as np
+import time
 
 from std_msgs.msg import Header, Float32
 from visualization_msgs.msg import MarkerArray
@@ -32,6 +33,12 @@ class CollisionDetector(object):
         self.cur_obstacles = None
         self.cur_pos = None
         self.target_pos = None
+        self.prev_distance = None
+        self.prev_time = None
+        self.prev_obstacle_speed = 0
+        self.obstacle_detected = False
+
+        self.resume_confid = 0
 
         self.lookahead_local = None
 
@@ -62,12 +69,13 @@ class CollisionDetector(object):
         self.right_turn = False
 
         # Minimum allowable distance from front of cart to intercept obstacle before emergency stopping
-        self.min_obstacle_dist = rospy.get_param('min_obstacle_dist', .5)
+        self.min_obstacle_dist = rospy.get_param('min_obstacle_dist', 2.5)
         # Minimum allowable transit time to an obstacle allowed before emergency stopping
-        self.min_obstacle_time = rospy.get_param('min_obstacle_time', .5)
+        self.min_obstacle_time = rospy.get_param('min_obstacle_time', 2.5)
+        factor = 1.25
 
-        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 6)
-        self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2)
+        self.safe_obstacle_dist = rospy.get_param('safe_obstacle_dist', 6 * factor) # inital 6
+        self.safe_obstacle_time = rospy.get_param('safe_obstacle_time', 2 * factor) # inital 2
 
         self.obstacle_sub = rospy.Subscriber('/obstacles', ObstacleArray, self.obstacle_callback, queue_size=10)
         self.pos_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.position_callback, queue_size=10)
@@ -79,6 +87,8 @@ class CollisionDetector(object):
         self.display_boundary_pub = rospy.Publisher('/boundaries', Marker, queue_size=10)
         self.display_array = rospy.Publisher('/boundaries_array', MarkerArray, queue_size=100)
         self.collision_pub = rospy.Publisher('/collision_pub', MarkerArray, queue_size=100)
+
+        self.speed_pub = rospy.Publisher('/speed', Float32, queue_size=10)
 
         self.obtain_corners()
 
@@ -190,14 +200,37 @@ class CollisionDetector(object):
                 stop_msg = Stop()
                 stop_msg.stop = True
                 stop_msg.sender_id.data = "collision_detector"
-
-                # Calculate distance from front of cart to obstacle
-                distance = self.distance(obstacle.pos.point.x, obstacle.pos.point.y, 
-                self.front_axle_center[0], self.front_axle_center[1])
-                # Calculate rough time to obstacle impact (seconds)
+                distance = self.distance(obstacle.pos.point.x, obstacle.pos.point.y, self.front_axle_center[0], self.front_axle_center[1])
                 impact_time = distance/self.cur_speed
+
+                self.followable_obstacles = [o for o in cur_obstacle_list if o.followable]
+                if self.followable_obstacles:
+                    # Calculate distance from front of cart to obstacle
+                    distance = self.distance(self.followable_obstacles[0].pos.point.x, self.followable_obstacles[0].pos.point.y, 
+                    #distance = self.distance(obstacle.pos.point.x, obstacle.pos.point.y, 
+                    self.front_axle_center[0], self.front_axle_center[1])
+                    # Calculate rough time to obstacle impact (seconds)
+                    impact_time = distance/self.cur_speed
+
+                    if self.prev_distance is not None and self.prev_time is not None:
+                        obstacle_speed = (self.prev_distance - distance) / (self.prev_time - time.time())
+                        # rospy.logwarn("[collision_detector] ********* ********8Obstacle speed: " + str(obstacle_speed))
+                        if obstacle_speed < 10 and obstacle_speed > -10 and obstacle_speed != 0 and abs(obstacle_speed - self.prev_obstacle_speed) < 2:
+                            # rospy.logwarn("Obstacle speed: " + str(obstacle_speed))
+                            
+                            self.prev_obstacle_speed = obstacle_speed
+                            
+                            if not self.obstacle_detected:
+                                new_speed = (3.23 * obstacle_speed) + 4.254
+                                if new_speed < 3 and new_speed > 0:
+                                    rospy.logwarn("Set obstacle detected to true")
+                                    self.speed_pub.publish(math.ceil(new_speed) + 1)
+                                    self.obstacle_detected = True
+
+                    self.prev_distance = distance
+                    self.prev_time = time.time()
                 #if distance < self.min_obstacle_dist or impact_time < self.min_obstacle_time:
-                if distance < self.safe_obstacle_dist or impact_time < self.safe_obstacle_time:
+                if distance < (self.safe_obstacle_dist / 3) or impact_time < (self.safe_obstacle_time / 3):
                     clear_path = False
                     self.cleared_confidence = 0
                     if not self.stopped:
@@ -220,7 +253,15 @@ class CollisionDetector(object):
                 else:
                     # Show a yellow obstacle, obstacle that has potential
                     display = self.show_colliding_obstacle(obstacle.pos.point.x, obstacle.pos.point.y)
-            
+            else:
+                if self.obstacle_detected:
+                    self.resume_confid += 1
+                    if self.resume_confid > 8:
+                        rospy.logwarn("set obstacle detected to false")
+                        self.obstacle_detected = False
+                        self.speed_pub.publish(10)
+                        self.resume_confid = 0
+
             if display is not None:
                 collision_array.markers.append(display)
             

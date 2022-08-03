@@ -9,10 +9,10 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-k = 0.1  # look forward gain
+k = 0.1    # look forward gain
 Lfc = 3.0  # look-ahead distance
-Kp = 1.0  # speed propotional gain
-dt = 0.1  # [s]
+Kp = 1.0   # speed propotional gain
+dt = 0.1   # [s]
 L = 1.676  # [m] wheel base of vehicle
 
 
@@ -111,7 +111,7 @@ def main():
     T = 100.0  # max simulation time
 
     # initial state
-    state = State(x=-0.0, y=-3.0, yaw=0.0, v=0.0)
+    state = State(x=-0.0, y=-4.0, yaw=0.0, v=0.0)
 
     lastIndex = len(cx) - 1
     time = 0.0

@@ -7,10 +7,10 @@
     <arg name="visualize_pose" default="false"/>
     <arg name="obstacle_detection" default="true"/>
     <arg name="lidar" default="true"/>
-    <arg name="use_front_camera" default="true"/>
+    <arg name="use_front_camera" default="false"/>
 
 
-    <include file="$(find cart_endpoints)/launch/zed.launch"/>
+    <!--<include file="$(find cart_endpoints)/launch/zed.launch"/>-->
 
        <!-- Start lidar code -->
     <group if="$(arg lidar)">
@@ -36,13 +36,14 @@
     </group>
     <group if="$(arg obstacle_detection)">
    
-      <node name="pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen">
+      <node name="lidar_pointcloud_to_laserscan_node" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" args="cloud_in:=/velodyne_points scan:=/pcd_to_scan" output="screen">
         <param name="min_height" type="double" value="-1.0" />
         <param name="max_height" type="double" value="0" />
         <param name="range_min" type="double" value="0.8" />
       </node>
 
-        <node name="obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
+        <node name="lidar_obstacle_detector" pkg="cart_endpoints" type="obstacle_detector.py" output="screen"/>
+        <node name="obstacle_merger"    pkg="cart_endpoints" type="obstacle_merger.py"/>
         <node name="collision_detector" pkg="cart_planning" type="collision_detector.py" output="screen"/>
     </group>
     <group if="$(arg use_front_camera)">

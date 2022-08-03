@@ -114,6 +114,7 @@ class LocalPlanner(object):
         
     def pose_callback(self, msg):
         self.global_pose = msg.pose
+        # self.global_pose.position.x = self.global_pose.position.x - .6
 
     def stop_callback(self, msg):
         self.stop_requests[str(msg.sender_id.data).lower()] = [msg.stop, msg.distance]

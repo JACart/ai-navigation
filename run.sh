@@ -3,16 +3,19 @@
 # Check for fake pose flag
 pose_flag=''
 online_flag=''
+full_map=''
 
 print_usage() {
-  printf "Usage: -p activates pose, -o for online\n"
+  printf "Usage: -p activates pose, -o for online, -f for full map\n"
 }
 
-while getopts ':op' flag; do
+while getopts ':fop' flag; do
   case "${flag}" in
     p) pose_flag='pose' 
     ;;
     o) online_flag='online' 
+    ;;
+    f) full_map='true'
     ;;
     \?) print_usage
        exit 1 ;;
@@ -24,30 +27,55 @@ done
 #sudo modprobe -r uvcvideo
 #echo "Configuring Velodyne..."
 #./velodyne_setup.sh
-echo "Setting up display"
-xinput map-to-output "G2Touch Multi-Touch by G2TSP" HDMI-0
+
+# echo "Setting up display"
+# xinput map-to-output "G2Touch Multi-Touch by G2TSP" HDMI-0 -  Not using anymore (03/22)
 wait
+
+
+# Zed camera launch all new
+echo "Launching Zed camera nodes"
+#gnome-terminal --tab -e 'sh -c "cd ~; roslaunch zed_wrapper jacart_multi_cam.launch node_name_2:=passenger camera_name_2:=passenger_cam node_name_1:=front camera_name_1:=front_cam; exec bash"'
+gnome-terminal --tab -e 'sh -c "cd ~; roslaunch cart_endpoints jacart_multi_cam.launch; exec bash"'
+sleep 4
+# end new Zed launch
+
+
 sleep 2
 echo "Launching Navigation Code..."
-gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true; exec bash"'
+if [ -n "$full_map" ]
+then
+  gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true map_arg:=/home/jacart/AVData/final_map_condensed_5-22.pcd; exec bash"'
+else 
+
+  gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true map_arg:=/home/jacart/AVData/speedBoiMap.pcd; exec bash"'
+fi
+
 sleep 4
 echo "Starting local server..."
-#gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start pose online; exec bash"'
-#gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start pose; exec bash"'
 echo 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash"'
+sleep 2
 gnome-terminal --tab -e "sh -c \"cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash\""
 echo "Starting UI"
 gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/cart-ui-offline; npm start; exec bash"'
+echo "Starting TTS/STT"
+gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/offline-speech-recognition; python3 stt.py; exec bash"'
+gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/offline-speech-recognition; python3 tts.py; exec bash"'
 
 # Pose tracking
 if [ -n "$pose_flag" ]
 then
     # launch pose
-    echo "Starting pose tracking"
-    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch; exec bash"'
+    echo "Shim"
+    # echo "Starting pose tracking"
+    # gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch; exec bash"'
 #else
 #    # launch fake pose
 #    echo "Starting fake pose tracking"
 #    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch fake:=true; exec bash"'
 #
 fi
+
+
+
+

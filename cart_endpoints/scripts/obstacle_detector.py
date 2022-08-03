@@ -61,8 +61,8 @@ class ObstacleDetector(object):
         # Max distance between points to consider for clustering
         self.dist_threshold = 0.10
 
-        self.obstacles_pub = rospy.Publisher('/obstacles', ObstacleArray, queue_size=10)
-        self.display_pub = rospy.Publisher('/obstacle_display', Marker, queue_size=10)
+        self.obstacles_pub = rospy.Publisher('/lidar_obstacles', ObstacleArray, queue_size=10)
+        self.display_pub = rospy.Publisher('/lidar_obstacle_display', Marker, queue_size=10)
         
         # self.rplidar_sub = rospy.Subscriber('/scan_rplidar', LaserScan, self.lidar_callback, queue_size=1)
         self.velodyne_laserscan_sub = rospy.Subscriber('/pcd_to_scan', LaserScan, self.lidar_callback, queue_size=1)
@@ -167,6 +167,8 @@ class ObstacleDetector(object):
     #Put circles around our clusters(really segments)
     def circularize(self):
         self.objects = ObstacleArray()
+        self.objects.header.frame_id = "velodyne"
+        self.objects.header.stamp = rospy.Time().now()
 
         for cluster in self.cluster_list:
             cur_circle = Obstacle()
@@ -186,7 +188,7 @@ class ObstacleDetector(object):
             self.t.waitForTransform("/base_link", "/velodyne", rospy.Time(0), rospy.Duration(0.01))
             global_point = PointStamped()
             global_point.header.frame_id = "velodyne"
-            global_point.header.stamp = rospy.Time(0)
+            global_point.header.stamp = rospy.Time().now()
             global_point.point.x = centerX
             global_point.point.y = centerY
             global_point.point.z = 0.0
@@ -197,8 +199,11 @@ class ObstacleDetector(object):
 
             #Create new circle around obstacle and add to current list of obstacles
             cur_circle  = Obstacle()
+            cur_circle.header.frame_id = "velodyne"
+            cur_circle.header.stamp = rospy.Time().now()
             cur_circle.pos = prepared_point
             cur_circle.radius = radius
+            cur_circle.followable = True
             
             self.objects.obstacles.append(cur_circle)
 

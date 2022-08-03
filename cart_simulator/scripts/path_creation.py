@@ -13,12 +13,12 @@ from navigation_msgs.msg import VelAngle
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8, Bool, Header
 from geometry_msgs.msg import PointStamped, PoseStamped, Point
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 
 class PathCreation(object):
     def __init__(self):
         rospy.init_node('path_creation_tool')
-        self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
+        self.display_pub = rospy.Publisher('/path_display', MarkerArray, queue_size=10)
         
         # Listen for cart position changes
         self.pose_sub = rospy.Subscriber('/ndt_pose', PoseStamped, self.pose_callback, queue_size=10)
@@ -34,7 +34,7 @@ class PathCreation(object):
         self.auto_build = False
 
         # When adding new nodes, auto-connect previous node to new node
-        self.auto_connect = True
+        self.auto_connect = False
         
         # Most recent cart position
         self.recent_pos = None
@@ -45,6 +45,7 @@ class PathCreation(object):
         # Keep track of global stae of graph(e.g. most recently placed node)
         self.global_graph = nx.DiGraph()
         self.last_node = None
+        self.last_node_right = None
         self.prev_node = None
         self.selected_node = None
         self.node_count = 0
@@ -57,7 +58,7 @@ class PathCreation(object):
         
         # How many meters between points when auto-build map is toggled on
         self.AUTO_POINT_GAP = 2
-        
+
         #Enter edit mode if there is an existing file provided as an argument, disable auto-tools
         if len(sys.argv) > 1:
             self.auto_connect = False
@@ -100,17 +101,18 @@ class PathCreation(object):
     
     # On receipt of new cart position, check spacing between current point and last
     def pose_callback(self, msg):
-        current_pos = PointStamped()
-        current_pos.point.x = msg.pose.position.x
-        current_pos.point.y = msg.pose.position.y
+        if self.auto_build:
+            current_pos = PointStamped()
+            current_pos.point.x = msg.pose.position.x
+            current_pos.point.y = msg.pose.position.y
         
-        if self.recent_pos is None:
-            self.recent_pos = current_pos
+            if self.recent_pos is None:
+                self.recent_pos = current_pos
         
-        # Place a new point down every specified amount of meters
-        if self.dis(self.recent_pos.point.x, self.recent_pos.point.y, current_pos.point.x, current_pos.point.y) > self.AUTO_POINT_GAP:
-            self.recent_pos = current_pos
-            self.point_callback(current_pos)
+            # Place a new point down every specified amount of meters
+            if self.dis(self.recent_pos.point.x, self.recent_pos.point.y, current_pos.point.x, current_pos.point.y) > self.AUTO_POINT_GAP:
+                self.recent_pos = current_pos
+                self.point_callback(current_pos)
         
     # Add point to the graph
     def add_point(self, x, y):
@@ -124,7 +126,7 @@ class PathCreation(object):
             
             
         #Connect previous node to current node
-        if self.node_count > 0 and self.auto_connect is True:
+        if self.node_count > 0 and self.auto_connect is True and self.last_node_right is not None:
             self.add_weighted_edge(self.last_node_right, node_name_r)
             # Create cycle between last and current node if this road is a one lane two way
             if self.road_type == "undirected":
@@ -258,9 +260,10 @@ class PathCreation(object):
         l = 108
         m = 109
         t = 116
+        q = 113
     
         stdscr.nodelay(True)
-        rate = rospy.Rate(60) 
+        rate = rospy.Rate(10)
         '''stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
                       R - to remove a point (Recommended that you remove only the most recent node while auto-connect is on)\n 
                       C - Connect two points\n 
@@ -269,7 +272,8 @@ class PathCreation(object):
                       B - Drive the cart around and auto-build a map\n
                       L - Line tool, allows you to create a line of points on a map\n
                       T - Change connection type(undirected, directed)\n
-                      M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)""")'''
+                      M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)\n
+                      Q - Saves and Quits\n""")'''
 
         while 1:
             if self.display_graph is not None:
@@ -313,6 +317,12 @@ class PathCreation(object):
                      self.road_type = "undirected" 
                 else: 
                     self.road_type = "directed"
+            elif keyval == q:
+                stdscr.addstr("Saving graph")
+                g_name = "Graph: " + str(datetime.datetime.now()) + ".gml"
+                nx.write_gml(self.global_graph, g_name)
+                stdscr.addstr("Graph saved as: " + g_name)
+                exit()
 
             try:
                 stdscr.addstr(0,0,""" A - Add a new point to the current path\n 
@@ -323,10 +333,12 @@ class PathCreation(object):
                         B - Drive the cart around and auto-build a map\n
                         L - Line tool, allows you to create a line of points on a map\n
                         T - Change connection type(undirected, directed)\n
-                        M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)""")
+                        M - Multi_line tool, keep clicking to keep generating a line (Pressing M while already in multi-line mode will reset the state)\n
+                        Q - Saves and Quits\n""")
                 stdscr.addstr("Current Point Mode: " + self.point_mode + "\n")
                 stdscr.addstr("Auto-Connect: " + str(self.auto_connect) + "\n")
                 stdscr.addstr("Map auto-build set to: " + str(self.auto_build) + "\n")
+                stdscr.addstr("Road Type: " + str(self.road_type) + "\n")
             except curses.error:
                 pass
             self.prev_key = keyval
@@ -338,6 +350,7 @@ class PathCreation(object):
     def display_rviz(self, frame):
         local_display = self.display_graph
         i = 0
+        marker_array = MarkerArray()
         for node in local_display.nodes:
             x = local_display.node[node]['pos'][0]
             y = local_display.node[node]['pos'][1]
@@ -354,7 +367,7 @@ class PathCreation(object):
             marker.color.g = 1.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.4)
+            marker.lifetime = rospy.Duration()
 
             marker.pose.position.x = x
             marker.pose.position.y = y
@@ -363,8 +376,7 @@ class PathCreation(object):
             marker.scale.x = 0.6
             marker.scale.y = 0.6
             marker.scale.z = 0.6
-
-            self.display_pub.publish(marker)
+            marker_array.markers.append(marker)
             i += 1
             
         for edge in local_display.edges:
@@ -396,7 +408,7 @@ class PathCreation(object):
             marker.color.g = 0.0
             marker.color.b = 0.0
             marker.color.a = 1.0
-            marker.lifetime = rospy.Duration.from_sec(0.4)
+            marker.lifetime = rospy.Duration()
 
             marker.points = points
 
@@ -404,8 +416,9 @@ class PathCreation(object):
             marker.scale.y = 0.6
             marker.scale.z = 0
 
-            self.display_pub.publish(marker)
+            marker_array.markers.append(marker)
             i += 1
+        self.display_pub.publish(marker_array)
         
 
 if __name__ == "__main__":
