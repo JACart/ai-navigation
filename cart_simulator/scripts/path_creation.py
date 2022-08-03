@@ -45,6 +45,7 @@ class PathCreation(object):
         # Keep track of global stae of graph(e.g. most recently placed node)
         self.global_graph = nx.DiGraph()
         self.last_node = None
+        self.last_node_right = None
         self.prev_node = None
         self.selected_node = None
         self.node_count = 0
@@ -125,7 +126,7 @@ class PathCreation(object):
             
             
         #Connect previous node to current node
-        if self.node_count > 0 and self.auto_connect is True:
+        if self.node_count > 0 and self.auto_connect is True and self.last_node_right is not None:
             self.add_weighted_edge(self.last_node_right, node_name_r)
             # Create cycle between last and current node if this road is a one lane two way
             if self.road_type == "undirected":
