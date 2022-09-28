@@ -4,6 +4,7 @@
 pose_flag=''
 online_flag=''
 full_map=''
+full_flag=''
 
 print_usage() {
   printf "Usage: -p activates pose, -o for online, -f for full map\n"
@@ -17,6 +18,7 @@ while getopts ':fop' flag; do
     ;;
     f) full_map='true'
     ;;
+    f) full_flag='fullmap'
     \?) print_usage
        exit 1 ;;
   esac
@@ -53,9 +55,9 @@ fi
 
 sleep 4
 echo "Starting local server..."
-echo 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash"'
+echo 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag $full_flag; exec bash"'
 sleep 2
-gnome-terminal --tab -e "sh -c \"cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag; exec bash\""
+gnome-terminal --tab -e "sh -c \"cd ~; cd /home/jacart/catkin_ws/src/local-server; npm start $pose_flag $online_flag $full_flag; exec bash\""
 echo "Starting UI"
 gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/cart-ui-offline; npm start; exec bash"'
 echo "Starting TTS/STT"
