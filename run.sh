@@ -19,6 +19,7 @@ while getopts ':fop' flag; do
     f) full_map='true'
     ;;
     f) full_flag='fullmap'
+    ;;
     \?) print_usage
        exit 1 ;;
   esac
