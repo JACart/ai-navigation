@@ -16,9 +16,9 @@ while getopts ':fop' flag; do
     ;;
     o) online_flag='online' 
     ;;
-    f) full_map='true'
-    ;;
-    f) full_flag='fullmap'
+    f) 
+      full_map='true'
+      full_flag='fullmap'
     ;;
     \?) print_usage
        exit 1 ;;
