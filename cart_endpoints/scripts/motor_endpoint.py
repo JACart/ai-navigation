@@ -73,11 +73,12 @@ class MotorEndpoint(object):
         # Give serial port 1 second to buffer
         #time.sleep(1)
 
+
         rate = rospy.Rate(self.node_rate)
         while not rospy.is_shutdown():
-            if self.cmd_msg is not None:
-                self.speed_dial_process()
-                self.endpoint_calc()
+            #if self.cmd_msg is not None:
+            self.speed_dial_process()
+            self.endpoint_calc()
             rate.sleep()
 
     def motion_callback(self, planned_vel_angle):
@@ -195,6 +196,7 @@ class MotorEndpoint(object):
         self.serial_port.write(data)
         
     def speed_dial_process(self):
+        rospy.logwarn("I MADE IT HERE")
         try:
             #time.sleep(1)
             self.arduino_message = self.serial_port.readline()
@@ -206,11 +208,12 @@ class MotorEndpoint(object):
             else:
                 # An array of strings in current format - [Steering, Throttle, Brake, SpeedDial]
                 # no longer the case currently returns just string with speed dial data
-                # string_data = self.arduino_message.split(",")
+                string_data = self.arduino_message.split(",")
                 rospy.loginfo("I recieved a message\n")
-            # Only reading SpeedDial data currently
+                # Only reading SpeedDial data currently
                 # rospy.loginfo(arduino_message)
-                speed_dial_data = int(self.arduino_message)
+                rospy.loginfo("Steering: %s - Throttle: %s - Brake: %s - Confidence: %s", string_data[0], string_data[1], string_data[2], string_data[3])
+                # speed_dial_data = int(self.arduino_message)
 
             # Conversion Equation
             speed_normalization = 8 * (speed_dial_data / MAX_SPEED_VOLTAGE)
