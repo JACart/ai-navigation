@@ -11,7 +11,7 @@ print_usage() {
   printf "Usage: -p activates pose, -o for online, -f for full map\n"
 }
 
-while getopts ':fop' flag; do
+while getopts ':fopr' flag; do
   case "${flag}" in
     p) pose_flag='pose' 
     ;;
