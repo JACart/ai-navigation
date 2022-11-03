@@ -19,8 +19,9 @@ add_message_files(
     GoalWaypoint.msg
     LocalPointsArray.msg
     VehicleState.msg
-	Obstacle.msg
-	ObstacleArray.msg
+	  Obstacle.msg
+	  ObstacleArray.msg
+    CartOverride.msg
     LatLongArray.msg
 )
  generate_messages(
