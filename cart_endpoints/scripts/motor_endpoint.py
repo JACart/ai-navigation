@@ -231,6 +231,7 @@ class MotorEndpoint(object):
                 self.full_stop_count = 0
             target_speed = 0
 
+        print("T:{} B:{} A:{}\n".format(target_speed, int(self.brake), target_angle))
         self.pack_send(target_speed, int(self.brake), target_angle)
     
     def pack_send(self, throttle, brake, steer_angle):
