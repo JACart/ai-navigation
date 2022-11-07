@@ -66,8 +66,8 @@ gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/local-server
 echo "Starting UI"
 gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/cart-ui-offline; npm start; exec bash"' -t "Cart UI"
 echo "Starting TTS/STT"
-gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/offline-speech-recognition; python3 stt.py; exec bash"' -t "STT"
-gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/offline-speech-recognition; python3 tts.py; exec bash"' -t "TTS"
+# gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/offline-speech-recognition; python3 stt.py; exec bash"' -t "STT"
+# gnome-terminal --tab -e 'sh -c "cd ~; cd /home/jacart/catkin_ws/src/offline-speech-recognition; python3 tts.py; exec bash"' -t "TTS"
 
 # Pose tracking
 if [ -n "$pose_flag" ]
