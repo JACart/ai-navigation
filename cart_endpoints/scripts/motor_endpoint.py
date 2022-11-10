@@ -3,7 +3,7 @@
 import serial
 import rospy
 import bitstruct
-from navigation_msgs.msg import VelAngle
+from navigation_msgs.msg import VelAngle, CartOverride
 from std_msgs.msg import Int8, Bool, String
 import time
 import math
@@ -34,6 +34,10 @@ class MotorEndpoint(object):
         self.state = STOPPED
         self.stopping_time = 0
         self.step_size = 255.0/(self.node_rate*self.brake_time)
+        
+        # Override vars
+        self.steering_jitter = False
+        self.sudden_brake = False
 
         self.heartbeat = b''  # Byte array for reading heartbeat from arduino
         self.delta_time = 0.0
@@ -70,6 +74,7 @@ class MotorEndpoint(object):
         """
         self.motion_subscriber = rospy.Subscriber('/nav_cmd', VelAngle, self.motion_callback,
                                                   queue_size=10)
+        self.motion_override_subscriber = rospy.Subscriber('/nav_cmd_override', CartOverride, self.motion_override_callback, queue_size=10)
         self.debug_subscriber = rospy.Subscriber('/realtime_debug_change', Bool, self.debug_callback, queue_size=10)
         self.heart_pub = rospy.Publisher('/heartbeat', String, queue_size=10)
         
@@ -153,6 +158,10 @@ class MotorEndpoint(object):
             
         self.new_vel = True     
 
+    def motion_override_callback(self, msg):
+        self.steering_jitter = msg.steering_jitter
+        self.sudden_brake = msg.sudden_brake
+
     def debug_callback(self, msg):
         self.debug = msg.data
 
@@ -233,6 +242,15 @@ class MotorEndpoint(object):
 
         print("T:{} B:{} A:{}\n".format(target_speed, int(self.brake), target_angle))
         self.pack_send(target_speed, int(self.brake), target_angle)
+        if self.sudden_brake and self.state == MOVING:
+            self.pack_send(self.current_speed, 17, self.angle)
+            rospy.logerr("STOPPING ON PURPOSE")
+            self.sudden_brake = False
+        elif self.steering_jitter and self.state == MOVING: # self.target angle breaks the cart. 
+            #self.pack_send(self.current_speed, int(self.brake), self.angle + 10)
+            self.pack_send(self.current_speed, int(self.brake), self.target_angle - 10)
+            rospy.logerr("SWERVING ON PURPOSE")
+            self.steering_jitter = False
     
     def pack_send(self, throttle, brake, steer_angle):
         data = bytearray(b'\x00' * 5)
