@@ -11,7 +11,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, TwistStamped
 from navigation_msgs.msg import LocalPointsArray, LatLongPoint, LatLongArray, VehicleState
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String, Header, Float32
 from tf.transformations import euler_from_quaternion
@@ -46,11 +46,15 @@ class global_planner(object):
         
         # Get file pathing through ROS parameter server and load it
         
-        self.graph_working = rospy.get_param('graph_file')
-        self.graph_broken = rospy.get_param('graph_file2')
-        self.switch_graph = True
+        self.graph_working_path = rospy.get_param('graph_file')
+        self.graph_broken_path  = rospy.get_param('graph_file2')
+        self.switch_graph       = True
 
-        self.load_file(file_name)
+        self.graph_working = self.load_file(self.graph_working_path)
+        self.graph_broken  = self.load_file(self.graph_broken_path)
+
+        self.global_graph = self.graph_working
+        # self.load_file(self.graph_working)
         
         # Current waypoint of cart
         self.current_pos = None
@@ -109,13 +113,15 @@ class global_planner(object):
         # Vizualize the path as a topic
         self.display_path = rospy.Publisher('/display_path', MarkerArray, queue_size=10)
 
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(1)
         while not rospy.is_shutdown():
             # publish path
-            self.display_rviz('/map')
+            self.display_path_rviz('/map')
             rate.sleep()
 
-    def display_rviz(self, frame):
+
+    # TODO: Cleanup file and move to bottom - this function should never be changed
+    def display_path_rviz(self, frame):
         local_display = self.global_graph
         i = 0
         marker_array = MarkerArray()
@@ -198,11 +204,12 @@ class global_planner(object):
         """
 
         try:
-            self.global_graph = nx.read_gml(file_name)
-            for node in self.global_graph:
-                self.global_graph.node[node]['active'] = True
+            new_graph = nx.read_gml(file_name)
+            for node in new_graph:
+                new_graph.node[node]['active'] = True
         except:
             rospy.logerr("Unable to launch graph file pointed to in the constants file in .../cart_planning/launch")
+        return new_graph
 
     def calc_nav(self, point):
         """ Main navigation calculation function, main job is to calculate the path.
@@ -519,12 +526,12 @@ class global_planner(object):
             msg (PointStamped): The Clicked Point coming from the publish in RViz
         """
 
-        # if self.switch_graph:
-        #     self.switch_graph = False
-        #     self.load_graph(self.graph_working)
-        # else:
-        #     self.switch_graph = True
-        #     self.load_graph(self.graph_broken)
+        if self.switch_graph:
+            self.switch_graph = False
+            self.global_graph = self.graph_working
+        else:
+            self.switch_graph = True
+            self.global_graph = self.graph_broken
         self.calc_nav(msg.point)
 
     def state_change(self, msg):
@@ -606,6 +613,13 @@ class global_planner(object):
         Args:
             msg (ROS LatLongPoint Message): Message containing the latitude and longitude to convert and navigate to
         """
+
+        if self.switch_graph:
+            self.switch_graph = False
+            self.global_graph = self.graph_working
+        else:
+            self.switch_graph = True
+            self.global_graph = self.graph_broken
         local_point = Point()
         
         anchor_gps = self.anchor_gps
