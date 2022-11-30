@@ -2,8 +2,10 @@
 
 <launch>
     <arg name="graph_file" default="$(find cart_planning)/data/home_loopV3.gml"/>
+    <arg name="graph_file_broken" default="$(find cart_planning)/data/research_broken_1.gml"/>
     <!-- Global Planner graph file parameter -->
     <rosparam param="graph_file" subst_value="True">$(arg graph_file)</rosparam>
+    <rosparam param="graph_file2" subst_value="True">$(arg graph_file_broken)</rosparam>
 
     <rosparam>
         <!-- GPS Util Params -->

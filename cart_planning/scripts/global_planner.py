@@ -5,6 +5,7 @@ import os
 import copy
 import math
 import time
+import random
 import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -44,7 +45,11 @@ class global_planner(object):
         self.logic_graph = None
         
         # Get file pathing through ROS parameter server and load it
-        file_name = rospy.get_param('graph_file')
+        
+        self.graph_working = rospy.get_param('graph_file')
+        self.graph_broken = rospy.get_param('graph_file2')
+        self.switch_graph = True
+
         self.load_file(file_name)
         
         # Current waypoint of cart
@@ -100,7 +105,88 @@ class global_planner(object):
         self.gps_update_timer = rospy.Timer(rospy.Duration(0.1), self.output_pos_gps)
 
         # self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
-        rospy.spin()
+
+        # Vizualize the path as a topic
+        self.display_path = rospy.Publisher('/display_path', MarkerArray, queue_size=10)
+
+        rate = rospy.Rate(5)
+        while not rospy.is_shutdown():
+            # publish path
+            self.display_rviz('/map')
+            rate.sleep()
+
+    def display_rviz(self, frame):
+        local_display = self.global_graph
+        i = 0
+        marker_array = MarkerArray()
+        for node in local_display.nodes:
+            x = local_display.node[node]['pos'][0]
+            y = local_display.node[node]['pos'][1]
+            
+            marker = Marker()
+            marker.header = Header()
+            marker.header.frame_id = frame
+
+            marker.ns = "Path_NS"
+            marker.id = i
+            marker.type = Marker.CUBE
+            marker.action = 0
+            marker.color.r = 0.0
+            marker.color.g = 1.0
+            marker.color.b = 0.0
+            marker.color.a = 1.0
+            marker.lifetime = rospy.Duration()
+
+            marker.pose.position.x = x
+            marker.pose.position.y = y
+            marker.pose.position.z = 0
+
+            marker.scale.x = 0.6
+            marker.scale.y = 0.6
+            marker.scale.z = 0.6
+            marker_array.markers.append(marker)
+            i += 1
+            
+        for edge in local_display.edges:
+            first_node = local_display.node[edge[0]]
+            second_node = local_display.node[edge[1]]
+            
+            points = []
+            
+            first_point = Point()
+            first_point.x = first_node['pos'][0]
+            first_point.y = first_node['pos'][1]
+            
+            second_point = Point()
+            second_point.x = second_node['pos'][0]
+            second_point.y = second_node['pos'][1]
+            
+            points.append(first_point)
+            points.append(second_point)
+            
+            marker = Marker()
+            marker.header = Header()
+            marker.header.frame_id = frame
+
+            marker.ns = "Path_NS"
+            marker.id = i
+            marker.type = Marker.ARROW
+            marker.action = 0
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.color.a = 1.0
+            marker.lifetime = rospy.Duration()
+
+            marker.points = points
+
+            marker.scale.x = 0.3
+            marker.scale.y = 0.6
+            marker.scale.z = 0
+
+            marker_array.markers.append(marker)
+            i += 1
+        self.display_path.publish(marker_array)
     
     # Load the graph file as the global graph
     def load_file(self, file_name):
@@ -432,6 +518,13 @@ class global_planner(object):
         Args:
             msg (PointStamped): The Clicked Point coming from the publish in RViz
         """
+
+        if self.switch_graph:
+            self.switch_graph = False
+            self.load_graph(self.graph_working)
+        else:
+            self.switch_graph = True
+            self.load_graph(self.graph_broken)
         self.calc_nav(msg.point)
 
     def state_change(self, msg):
