@@ -519,12 +519,12 @@ class global_planner(object):
             msg (PointStamped): The Clicked Point coming from the publish in RViz
         """
 
-        if self.switch_graph:
-            self.switch_graph = False
-            self.load_graph(self.graph_working)
-        else:
-            self.switch_graph = True
-            self.load_graph(self.graph_broken)
+        # if self.switch_graph:
+        #     self.switch_graph = False
+        #     self.load_graph(self.graph_working)
+        # else:
+        #     self.switch_graph = True
+        #     self.load_graph(self.graph_broken)
         self.calc_nav(msg.point)
 
     def state_change(self, msg):
