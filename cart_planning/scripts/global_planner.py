@@ -111,7 +111,7 @@ class global_planner(object):
         # self.display_pub = rospy.Publisher('/path_display', Marker, queue_size=10)
 
         # Vizualize the path as a topic
-        self.display_path = rospy.Publisher('/display_path', MarkerArray, queue_size=10)
+        self.display_path = rospy.Publisher('/global_graph', MarkerArray, queue_size=10)
 
         rate = rospy.Rate(1)
         while not rospy.is_shutdown():
