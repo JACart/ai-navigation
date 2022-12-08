@@ -21,7 +21,7 @@ class RandomMovement(object):
         while not rospy.is_shutdown():
             time.sleep(random.uniform(DELAY_LOWER_BOUND, DELAY_UPPER_BOUND))
             msg = CartOverride()
-            override_type = 1 #random.randint(0,OVERRIDE_MSG_COUNT - 1)
+            override_type = random.randint(0,OVERRIDE_MSG_COUNT - 1)
             if override_type == STEERING_JITTER:
                 msg.steering_jitter = True
             elif override_type == SUDDEN_BRAKE:
