@@ -7,6 +7,7 @@ full_map=''
 full_flag=''
 research_flag=''
 
+
 print_usage() {
   printf "Usage: -p activates pose, -o for online, -f for full map, -r for research\n"
 }
@@ -28,6 +29,7 @@ while getopts ':fopr' flag; do
        exit 1 ;;
   esac
 done
+
 
 # Start everything 
 
@@ -81,6 +83,13 @@ then
 #    echo "Starting fake pose tracking"
 #    gnome-terminal --tab -e 'sh -c "roslaunch --wait jacart-zed pose.launch fake:=true; exec bash"'
 #
+fi
+
+if [ -n "$research_flag" ]
+then
+    echo "Research Enabled. Starting Random Event Node"
+    shift $(( OPTIND - 1 ))
+    gnome-terminal --tab -t "Random Events" -x sh -c 'cd ~; cd /home/jacart/catkin_ws/src/ai-navigation/cart_endpoints/scripts; python nav_cmd_override.py "$1" "$2"; exec bash' sh "$1" "$2"
 fi
 
 

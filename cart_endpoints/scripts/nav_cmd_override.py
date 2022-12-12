@@ -2,18 +2,22 @@ import rospy
 from navigation_msgs.msg import CartOverride
 import time
 import random
+import sys
 
-DELAY_LOWER_BOUND = 25 #* 60  # Lower bound in seconds for random delay
-DELAY_UPPER_BOUND = 26 #* 60  # Upper bound in seconds for random delay
+DELAY_LOWER_BOUND = 2 * 60  # Default lower bound in seconds for random delay
+DELAY_UPPER_BOUND = 3 * 60  # Default upper bound in seconds for random delay
 OVERRIDE_MSG_COUNT = 2      # Total amount of override message
 
 # Override message constants
 STEERING_JITTER = 0
 SUDDEN_BRAKE = 1
 
-class RandomMovement(object):
+class RandomEvents(object):
 
     def __init__(self):
+        if len(sys.argv) == 3:
+            DELAY_LOWER_BOUND = int(sys.argv[1])
+            DELAY_UPPER_BOUND = int(sys.argv[2])
 
         rospy.init_node("nav_cmd_override")
         self.motion_override_pub = rospy.Publisher('/nav_cmd_override', CartOverride, queue_size=10)
@@ -30,6 +34,6 @@ class RandomMovement(object):
 
 if __name__ == "__main__":
     try:
-        RandomMovement()
+        RandomEvents()
     except rospy.ROSInterruptException:
         pass

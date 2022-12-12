@@ -240,15 +240,17 @@ class MotorEndpoint(object):
                 self.full_stop_count = 0
             target_speed = 0
 
-        print("T:{} B:{} A:{}\n".format(target_speed, int(self.brake), target_angle))
         self.pack_send(target_speed, int(self.brake), target_angle)
         if self.sudden_brake and self.state == MOVING:
-            self.pack_send(self.current_speed, 17, target_angle)
+            self.pack_send(self.current_speed, 40, target_angle)
+            #time.sleep(.2)
+            #self.pack_send(self.current_speed, 40, target_angle)
             rospy.logerr("STOPPING ON PURPOSE")
             self.sudden_brake = False
-        elif self.steering_jitter and self.state == MOVING: # self.target angle breaks the cart. 
-            #self.pack_send(self.current_speed, int(self.brake), self.angle + 10)
+        elif self.steering_jitter and self.state == MOVING:
             self.pack_send(self.current_speed, int(self.brake), target_angle - 10)
+            time.sleep(.5)
+            #self.pack_send(self.current_speed, int(self.brake), target_angle + 10)
             rospy.logerr("SWERVING ON PURPOSE")
             self.steering_jitter = False
     

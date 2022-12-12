@@ -46,15 +46,28 @@ class global_planner(object):
         
         # Get file pathing through ROS parameter server and load it
         
-        self.graph_working_path = rospy.get_param('graph_file')
-        self.graph_broken_path  = rospy.get_param('graph_file2')
+        self.graph_working_path     = rospy.get_param('graph_file1')
+        self.graph_broken_path_1    = rospy.get_param('graph_file2') # Gym
+        self.graph_broken_path_2    = rospy.get_param('graph_file3') # Ehall
+        self.graph_broken_path_3    = rospy.get_param('graph_file6') # Loop
+        self.graph_broken_path_4    = rospy.get_param('graph_file5') # bench
+        self.graph_broken_path_5    = rospy.get_param('graph_file7') # Rock new
         self.switch_graph       = True
 
+        self.graphs = []
         self.graph_working = self.load_file(self.graph_working_path)
-        self.graph_broken  = self.load_file(self.graph_broken_path)
-
+        self.graph_broken_1  = self.load_file(self.graph_broken_path_1)
+        self.graph_broken_2  = self.load_file(self.graph_broken_path_2)
+        self.graph_broken_3  = self.load_file(self.graph_broken_path_3)
+        self.graph_broken_4  = self.load_file(self.graph_broken_path_4)
+        self.graph_broken_5  = self.load_file(self.graph_broken_path_5)
+        self.graphs.append(self.graph_working)
+        self.graphs.append(self.graph_broken_1)
+        self.graphs.append(self.graph_broken_2)
+        self.graphs.append(self.graph_broken_3)
+        self.graphs.append(self.graph_broken_4)
+        self.graphs.append(self.graph_broken_5)
         self.global_graph = self.graph_working
-        # self.load_file(self.graph_working)
         
         # Current waypoint of cart
         self.current_pos = None
@@ -608,12 +621,22 @@ class global_planner(object):
             msg (ROS LatLongPoint Message): Message containing the latitude and longitude to convert and navigate to
         """
 
-        if self.switch_graph:
-            self.switch_graph = False
-            self.global_graph = self.graph_working
-        else:
-            self.switch_graph = True
-            self.global_graph = self.graph_broken
+        # prob = random.random()
+        #self.global_graph = random.choice(self.graphs)
+        self.global_graph = self.graphs[4]
+        # if self.switch_graph:
+        #     # GPS calibration
+        #     self.gps_calibrated = False
+        #     self.switch_graph = False
+        #     self.global_graph = self.graph_working
+        # else:
+        #     self.gps_calibrated = False
+        #     self.switch_graph = True
+        #     self.global_graph = self.graph_broken
+
+        # # Sleep timer
+        # time.sleep(5)
+
         local_point = Point()
         
         anchor_gps = self.anchor_gps
