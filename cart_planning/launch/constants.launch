@@ -1,21 +1,15 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="graph_file" default="$(find cart_planning)/data/fixed.gml"/>
-    <arg name="graph_file_broken_cafe" default="$(find cart_planning)/data/research_broken_1.gml"/>
-    <arg name="graph_file_broken_ehall" default="$(find cart_planning)/data/temp_broken/ResearchBroken_EHall.gml"/>
-    <arg name="graph_file_broken_loop" default="$(find cart_planning)/data/temp_broken/ResearchBroken_Loop.gml"/>
-    <arg name="graph_file_broken_loop2" default="$(find cart_planning)/data/temp_broken/ResearchBroken_LoopV2.gml"/>
-    <arg name="graph_file_broken_rock" default="$(find cart_planning)/data/temp_broken/ResearchBroken_Rock.gml"/>
-    <arg name="graph_file_broken_rock2" default="$(find cart_planning)/data/temp_broken/ResearchBroken_RockV2.gml"/>
+    <arg name="graph_file" default="$(find cart_planning)/data/home_loopV3.gml"/>
+    <arg name="graph_file_broken_1" default="$(find cart_planning)/data/temp_broken/NewResearchGraph.gml"/>
+    <arg name="graph_file_broken_2" default="$(find cart_planning)/data/temp_broken/NewResearchGraphV2.gml"/>
+    <arg name="graph_file_broken_3" default="$(find cart_planning)/data/temp_broken/NewResearchGraphV3.gml"/>
     <!-- Global Planner graph file parameter -->
     <rosparam param="graph_file1" subst_value="True">$(arg graph_file)</rosparam>
-    <rosparam param="graph_file2" subst_value="True">$(arg graph_file_broken_cafe)</rosparam>
-    <rosparam param="graph_file3" subst_value="True">$(arg graph_file_broken_ehall)</rosparam>
-    <rosparam param="graph_file4" subst_value="True">$(arg graph_file_broken_loop)</rosparam>
-    <rosparam param="graph_file5" subst_value="True">$(arg graph_file_broken_rock)</rosparam>
-    <rosparam param="graph_file6" subst_value="True">$(arg graph_file_broken_loop2)</rosparam>
-    <rosparam param="graph_file7" subst_value="True">$(arg graph_file_broken_rock2)</rosparam>
+    <rosparam param="graph_file2" subst_value="True">$(arg graph_file_broken_1)</rosparam>
+    <rosparam param="graph_file3" subst_value="True">$(arg graph_file_broken_2)</rosparam>
+    <rosparam param="graph_file4" subst_value="True">$(arg graph_file_broken_3)</rosparam>
 
 
     <rosparam>

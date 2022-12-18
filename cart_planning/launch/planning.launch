@@ -1,9 +1,18 @@
 <?xml version="1.0"?>
 
 <launch>
-    <group>
-        <node name="local_planner" pkg="cart_planning" type="local_planner.py" required="false" output="screen"/>
+    <arg name="research" default="false"/>
 
+    <!--Research Launch-->
+    <group if="$(arg research)">
+        <node name="local_planner" pkg="cart_planning" type="local_planner.py" required="false" output="screen"/>
+        <!-- New Navigation system -->
+        <node name="global_planner" pkg="cart_planning" type="global_planner.py" required="true" args="research" output="screen"/>
+    </group>
+
+    <!--Else: Normal Launch-->
+    <group unless="$(arg research)">
+        <node name="local_planner" pkg="cart_planning" type="local_planner.py" required="false" output="screen"/>
         <!-- New Navigation system -->
         <node name="global_planner" pkg="cart_planning" type="global_planner.py" required="true" output="screen"/>
     </group>

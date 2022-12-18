@@ -56,8 +56,12 @@ if [ -n "$full_map" ]
 then
   gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true map_arg:=/home/jacart/AVData/final_map_condensed_5-22.pcd; exec bash"' -t "Navigation"
 else 
-
-  gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true map_arg:=/home/jacart/AVData/speedBoiMap.pcd; exec bash"' -t "Navigation"
+  if [ -n "$research_flag" ]
+  then
+    gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch research:=true obstacle_detection:=true map_arg:=/home/jacart/AVData/speedBoiMap.pcd; exec bash"' -t "Navigation"
+  else
+    gnome-terminal --tab -e 'sh -c "roslaunch cart_control navigation.launch obstacle_detection:=true map_arg:=/home/jacart/AVData/speedBoiMap.pcd; exec bash"' -t "Navigation"
+  fi
 fi
 
 sleep 4

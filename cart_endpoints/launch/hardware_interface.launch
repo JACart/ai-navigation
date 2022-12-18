@@ -9,7 +9,6 @@
     <arg name="lidar" default="true"/>
     <arg name="use_front_camera" default="false"/>
 
-
     <!--<include file="$(find cart_endpoints)/launch/zed.launch"/>-->
 
        <!-- Start lidar code -->

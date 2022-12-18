@@ -16,6 +16,7 @@
   <arg name="obstacle_detection" default="true"/>
   <arg name="visualize_pose" default="false"/>
   <arg name="map_arg" default="$(env HOME)/AVData/speedBoiMap.pcd"/>
+  <arg name="research" default="false"/>
 
   <!-- Configuration for real-world driving -->
   <group if="$(arg realtime)">
@@ -57,7 +58,9 @@
 
   <!--always launch planning nodes, system constants-->
   <group>
-      <include file="$(find cart_planning)/launch/planning.launch"/>
+      <include file="$(find cart_planning)/launch/planning.launch">
+        <arg name="research" value="$(arg research)"/>
+      </include>
       <include file="$(find cart_planning)/launch/constants.launch"/>
   </group>
 

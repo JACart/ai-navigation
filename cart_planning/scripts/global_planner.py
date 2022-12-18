@@ -9,6 +9,7 @@ import random
 import simple_gps_util
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, TwistStamped
 from navigation_msgs.msg import LocalPointsArray, LatLongPoint, LatLongArray, VehicleState
 from visualization_msgs.msg import Marker, MarkerArray
@@ -20,7 +21,13 @@ class global_planner(object):
     """Global Planner Node that handles global pathfinding to a destination."""
     def __init__(self):
         rospy.init_node('global_planner')
-
+        
+        # Detect research mode from command line. Enables random graph switching. 
+        self.research_mode = False
+        for x in sys.argv:
+            if x == "research":
+                self.research_mode = True
+            
         # Various GPS Utility information
         self.anchor_gps = rospy.get_param('anchor_gps')
         self.anchor_theta = rospy.get_param('anchor_theta')
@@ -45,29 +52,20 @@ class global_planner(object):
         self.logic_graph = None
         
         # Get file pathing through ROS parameter server and load it
-        
-        self.graph_working_path     = rospy.get_param('graph_file1')
-        self.graph_broken_path_1    = rospy.get_param('graph_file2') # Gym
-        self.graph_broken_path_2    = rospy.get_param('graph_file3') # Ehall
-        self.graph_broken_path_3    = rospy.get_param('graph_file6') # Loop
-        self.graph_broken_path_4    = rospy.get_param('graph_file5') # bench
-        self.graph_broken_path_5    = rospy.get_param('graph_file7') # Rock new
-        self.switch_graph       = True
-
         self.graphs = []
-        self.graph_working = self.load_file(self.graph_working_path)
-        self.graph_broken_1  = self.load_file(self.graph_broken_path_1)
-        self.graph_broken_2  = self.load_file(self.graph_broken_path_2)
-        self.graph_broken_3  = self.load_file(self.graph_broken_path_3)
-        self.graph_broken_4  = self.load_file(self.graph_broken_path_4)
-        self.graph_broken_5  = self.load_file(self.graph_broken_path_5)
-        self.graphs.append(self.graph_working)
-        self.graphs.append(self.graph_broken_1)
-        self.graphs.append(self.graph_broken_2)
-        self.graphs.append(self.graph_broken_3)
-        self.graphs.append(self.graph_broken_4)
-        self.graphs.append(self.graph_broken_5)
-        self.global_graph = self.graph_working
+        if not self.research_mode:                                       # Research Mode Disabled
+            self.graph_working_path     = rospy.get_param('graph_file1')
+            self.graphs.append(self.load_file(self.graph_working_path))
+        else:                                                            # Research Mode Enabled
+            self.graph_broken_path_1    = rospy.get_param('graph_file2') # Gym
+            self.graph_broken_path_2    = rospy.get_param('graph_file3') # Ehall
+            self.graph_broken_path_3    = rospy.get_param('graph_file4') # Loop
+
+            self.graphs.append(self.load_file(self.graph_broken_path_1))
+            self.graphs.append(self.load_file(self.graph_broken_path_2))
+            self.graphs.append(self.load_file(self.graph_broken_path_3))
+        # Set global graph
+        self.global_graph = self.graphs[0]
         
         # Current waypoint of cart
         self.current_pos = None
@@ -622,8 +620,9 @@ class global_planner(object):
         """
 
         # prob = random.random()
-        #self.global_graph = random.choice(self.graphs)
-        self.global_graph = self.graphs[4]
+        self.global_graph = random.choice(self.graphs)
+        
+        #self.global_graph = self.graphs[4]
         # if self.switch_graph:
         #     # GPS calibration
         #     self.gps_calibrated = False
