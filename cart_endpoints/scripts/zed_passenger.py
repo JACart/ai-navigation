@@ -5,6 +5,7 @@ import tf2_ros
 from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
+from std_msgs.msg import String
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -15,7 +16,7 @@ Version: 02/2023
 '''
 PASSENGER_EDGE_TOP_X_THRESHOLD = 315
 DRIVER_EDGE_TOP_X_THRESHOLD = 1000
-OUT_COUNT_THRESHOLD = 10
+OUT_COUNT_THRESHOLD = 20 # in frames
 
 class ZedPassenger(object):
     def __init__(self):
@@ -23,9 +24,15 @@ class ZedPassenger(object):
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
         # Name of coordinate frame of the passenger camera
         self.coordinate_frame = rospy.get_param("coordinate_frame", "/passenger_cam_left_camera_frame")
+
+        # private variables
+        self.out_count = 0 # a threshold to determine if a passenger is really outside the vehicle.
+        self.persons = [] # a list to keep track of all the persons detected from the objectdetection
+
+        # Publishers
+        self.out_of_bounds_pub = rospy.Publisher('/zed_passenger/out_of_bounds', String, queue_size=10)
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
-
 
         rospy.init_node('ZedPassenger')
         rospy.loginfo("Started pose tracking node! (S23)")
@@ -34,14 +41,11 @@ class ZedPassenger(object):
         # Transform service that listens to all links between coodrinate frames.
         self.t = tf.TransformListener()
 
-        # private variables
-        self.out_count = 0 # a threshold to determine if a passenger is really outside the vehicle.
-
         r = rospy.Rate(5)
         while not rospy.is_shutdown():
-            #rospy.Subscriber('/passenger_cam/passenger/obj_det/objects', TransformStamped, create_transform_link) # attempting to create transform link
+            #rospy.Subscriber('/passenger_cam/passenger/obj_det/objects', ObjectsStamped, create_transform_link) # attempting to create transform link
             #self.visualize_2dbox()
-
+            self.publish_out()
             r.sleep()
 
     def received_persons(self, msg):
@@ -63,20 +67,25 @@ class ZedPassenger(object):
 
         people_box = msg.objects # a list of all persons detected
 
-        for i, person in enumerate(people_box):
+        for person in people_box:
+            self.persons.append(person)
+    
+    def publish_out(self):
+        while len(self.persons) != 0:
+            person = self.persons.pop(0)
             person_corners = person.bounding_box_2d.corners
             driver_edge = person_corners[1].kp[0]
-            passenger_edge = person_corners[0].kp[0] 
+            passenger_edge = person_corners[0].kp[0]
 
             if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
-                if self.out_count >= OUT_COUNT_THRESHOLD:
-                    print("Passenger %d has been out for more than %d time lapses, send message to UI or queue shutdown" % (i, self.out_count))
                 #print("out")
                 self.out_count+=1
+                if self.out_count >= OUT_COUNT_THRESHOLD:
+                    self.out_of_bounds_pub.publish("Passenger has been out for more than %d time lapses, send message to UI or queue shutdown." % (self.out_count))
             else:
                 self.out_count = 0
-                #print("in")
-    
+            self.out_of_bounds_pub.publish("out count: " + str(self.out_count))
+
     # def visualize_2dbox(self):
     #     self.t.waitForTransform("/map", self.coordinate_frame, rospy.Time(0), rospy.Duration(0.01))
 
@@ -89,8 +98,8 @@ def create_transform_link(data):
     tf2stamp.header.stamp = rospy.Time.now()
     tf2stamp.header.frame_id = 'map'
     tf2stamp.child_frame_id = 'passenger_cam_left_camera_frame'
-    tf2stamp.transform.translation = (0.0, 0.0, 0.0)
-    tf2stamp.transform.rotation = (0.0, 0.0, 0.0)
+    tf2stamp.transform.translation = data.objects[0].position
+    print(tf2stamp)
     tf2broadcast.sendTransform(tf2stamp)
 
 if __name__ == "__main__":
