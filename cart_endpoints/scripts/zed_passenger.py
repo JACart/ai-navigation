@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import rospy
 import tf
+import tf2_ros
 from zed_interfaces.msg import ObjectsStamped
-from geometry_msgs.msg import TwistStamped, Vector3, PointStamped
+from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
+from sensor_msgs.msg import Image
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -17,20 +19,29 @@ OUT_COUNT_THRESHOLD = 10
 
 class ZedPassenger(object):
     def __init__(self):
-        rospy.init_node('ZedPassenger')
-        rospy.loginfo("Started pose tracking node! (S23)")
-
+        # Topic that object detection data from passenger camera is coming from
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
-        print(self.objects_in)
-
+        # Name of coordinate frame of the passenger camera
+        self.coordinate_frame = rospy.get_param("coordinate_frame", "/passenger_cam_left_camera_frame")
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
-        
 
+
+        rospy.init_node('ZedPassenger')
+        rospy.loginfo("Started pose tracking node! (S23)")
+        rospy.loginfo("Coordinate Frame: %s" % (self.coordinate_frame))
+
+        # Transform service that listens to all links between coodrinate frames.
+        self.t = tf.TransformListener()
+
+        # private variables
         self.out_count = 0 # a threshold to determine if a passenger is really outside the vehicle.
-        
+
         r = rospy.Rate(5)
         while not rospy.is_shutdown():
+            #rospy.Subscriber('/passenger_cam/passenger/obj_det/objects', TransformStamped, create_transform_link) # attempting to create transform link
+            #self.visualize_2dbox()
+
             r.sleep()
 
     def received_persons(self, msg):
@@ -60,12 +71,27 @@ class ZedPassenger(object):
             if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
                 if self.out_count >= OUT_COUNT_THRESHOLD:
                     print("Passenger %d has been out for more than %d time lapses, send message to UI or queue shutdown" % (i, self.out_count))
-                print("out")
+                #print("out")
                 self.out_count+=1
             else:
                 self.out_count = 0
-                print("in")
+                #print("in")
+    
+    # def visualize_2dbox(self):
+    #     self.t.waitForTransform("/map", self.coordinate_frame, rospy.Time(0), rospy.Duration(0.01))
 
+def create_transform_link(data):
+    '''
+    Attempting to create a transform link map -> passenger_cam_left_camera_frame to visualize bounding box in Rviz
+    '''
+    tf2broadcast = tf2_ros.TransformBroadcaster()
+    tf2stamp = TransformStamped()
+    tf2stamp.header.stamp = rospy.Time.now()
+    tf2stamp.header.frame_id = 'map'
+    tf2stamp.child_frame_id = 'passenger_cam_left_camera_frame'
+    tf2stamp.transform.translation = (0.0, 0.0, 0.0)
+    tf2stamp.transform.rotation = (0.0, 0.0, 0.0)
+    tf2broadcast.sendTransform(tf2stamp)
 
 if __name__ == "__main__":
     try:

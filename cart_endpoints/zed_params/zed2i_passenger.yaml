@@ -16,7 +16,7 @@ pos_tracking:
     pos_tracking_enabled:       false            # we are adding this feild as a test to see if pose tracking can be published from here
 
 sensors:
-    sensors_timestamp_sync:     false           # Synchronize Sensors messages timestamp with latest received frame
+    sensors_timestamp_sync:     false          # Synchronize Sensors messages timestamp with latest received frame
     publish_imu_tf:             false           # publish `IMU -> <cam_name>_left_camera_frame` TF
 
 object_detection:
