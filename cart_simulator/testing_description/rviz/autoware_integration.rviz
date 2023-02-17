@@ -36,7 +36,7 @@ Panels:
     SyncMode: 0
     SyncSource: Points Map
   - Class: rviz/Displays
-    Help Height: 75
+    Help Height: 216
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -46,8 +46,10 @@ Panels:
         - /Front Objects1
         - /Obstacles1
         - /LaserScan2
+        - /ZedOdDisplay1
+        - /ZedOdDisplay1/Status1
       Splitter Ratio: 0.5
-    Tree Height: 322
+    Tree Height: 181
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -193,6 +195,7 @@ Visualization Manager:
         Front Cam Obstacles: true
         Front Objects: true
         Front PointCloud2: true
+        FrontImage: true
         GPS Request Location: true
         Grid: true
         LaserScan: true
@@ -201,6 +204,7 @@ Visualization Manager:
         Obstacle Marker: true
         Obstacles: true
         Passenger PointCloud2: true
+        PassengerImage: true
         Points Map: true
         Points Raw: true
         Raw Waypoints: true
@@ -592,6 +596,19 @@ Visualization Manager:
       Transport Hint: raw
       Unreliable: false
       Value: true
+    - Class: rviz_plugin_zed_od/ZedOdDisplay
+      Enabled: true
+      Joint Radius: 0.10000000149011612
+      Label Scale: 5
+      Link Size: 0.05000000074505806
+      Name: ZedOdDisplay
+      Show Bounding Boxes: true
+      Show Labels: true
+      Show Skeletons: true
+      Topic: /passenger_cam/passenger/obj_det/objects
+      Transparency: 0.25
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -629,7 +646,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 55.671875
+      Scale: 9.045613288879395
       Target Frame: base_link
       Value: TopDownOrtho (rviz)
       X: 0.04753531143069267

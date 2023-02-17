@@ -5,7 +5,7 @@ import tf2_ros
 from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
+from std_msgs.msg import Bool
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -20,6 +20,8 @@ OUT_COUNT_THRESHOLD = 20 # in frames
 
 class ZedPassenger(object):
     def __init__(self):
+        rospy.init_node('ZedPassenger')
+        
         # Topic that object detection data from passenger camera is coming from
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
         # Name of coordinate frame of the passenger camera
@@ -30,22 +32,21 @@ class ZedPassenger(object):
         self.persons = [] # a list to keep track of all the persons detected from the objectdetection
 
         # Publishers
-        self.out_of_bounds_pub = rospy.Publisher('/zed_passenger/out_of_bounds', String, queue_size=10)
+        self.out_of_bounds_pub = rospy.Publisher('/zed_passenger/out_of_bounds', Bool, queue_size=10)
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
 
-        rospy.init_node('ZedPassenger')
         rospy.loginfo("Started pose tracking node! (S23)")
         rospy.loginfo("Coordinate Frame: %s" % (self.coordinate_frame))
 
         # Transform service that listens to all links between coodrinate frames.
         self.t = tf.TransformListener()
 
-        r = rospy.Rate(5)
+        r = rospy.Rate(5)#loginfo
         while not rospy.is_shutdown():
             #rospy.Subscriber('/passenger_cam/passenger/obj_det/objects', ObjectsStamped, create_transform_link) # attempting to create transform link
             #self.visualize_2dbox()
-            self.publish_out()
+            #self.publish_out()
             r.sleep()
 
     def received_persons(self, msg):
@@ -66,25 +67,52 @@ class ZedPassenger(object):
         '''
 
         people_box = msg.objects # a list of all persons detected
+        self.oob = False
+        person = None
+        for thing in people_box:
+            person = thing
+            break
+        person_corners = person.bounding_box_2d.corners
+        driver_edge = person_corners[1].kp[0]
+        passenger_edge = person_corners[0].kp[0]
+        if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
+            self.oob = True
+        self.out_of_bounds_pub.publish(self.oob)
 
-        for person in people_box:
-            self.persons.append(person)
+        #for person in people_box:
+        #    self.persons.append(person)
     
     def publish_out(self):
+        """
+        While there is input data from zeds unparsed, parse the 
+        zed data, check to see an person is within an predefined 
+        2d bounding box (from the object detection topic), and
+        publishes to (/zed_passenger/out_of_bounds) if the passanger
+        has been out of bounds longer then the maximum allowed time frame.
+        """
+        self.oob = False
+        person = self.persons.pop(0)
+        person_corners = person.bounding_box_2d.corners
+        driver_edge = person_corners[1].kp[0]
+        passenger_edge = person_corners[0].kp[0]
+        if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
+            self.oob = True
+        self.out_of_bounds_pub.publish(self.oob)
+        '''
         while len(self.persons) != 0:
             person = self.persons.pop(0)
             person_corners = person.bounding_box_2d.corners
             driver_edge = person_corners[1].kp[0]
             passenger_edge = person_corners[0].kp[0]
-
             if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
-                #print("out")
-                self.out_count+=1
-                if self.out_count >= OUT_COUNT_THRESHOLD:
-                    self.out_of_bounds_pub.publish("Passenger has been out for more than %d time lapses, send message to UI or queue shutdown." % (self.out_count))
-            else:
-                self.out_count = 0
-            self.out_of_bounds_pub.publish("out count: " + str(self.out_count))
+                oob = True
+               # self.out_count+=1
+                #if self.out_count >= OUT_COUNT_THRESHOLD:
+                #    self.out_of_bounds_pub.publish("Passenger has been out for more than %d time lapses, send message to UI or queue shutdown." % (self.out_count))
+           # else:
+            #    self.out_count = 0
+            #self.out_of_bounds_pub.publish("out count: " + str(self.out_count))
+        self.out_of_bounds_pub.publish(oob)'''
 
     # def visualize_2dbox(self):
     #     self.t.waitForTransform("/map", self.coordinate_frame, rospy.Time(0), rospy.Duration(0.01))
@@ -92,6 +120,7 @@ class ZedPassenger(object):
 def create_transform_link(data):
     '''
     Attempting to create a transform link map -> passenger_cam_left_camera_frame to visualize bounding box in Rviz
+    Currently Depreciated
     '''
     tf2broadcast = tf2_ros.TransformBroadcaster()
     tf2stamp = TransformStamped()
