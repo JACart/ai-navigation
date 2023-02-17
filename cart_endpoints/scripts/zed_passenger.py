@@ -2,6 +2,7 @@
 import rospy
 import tf
 import tf2_ros
+import time
 from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
@@ -28,8 +29,7 @@ class ZedPassenger(object):
         self.coordinate_frame = rospy.get_param("coordinate_frame", "/passenger_cam_left_camera_frame")
 
         # private variables
-        self.out_count = 0 # a threshold to determine if a passenger is really outside the vehicle.
-        self.persons = [] # a list to keep track of all the persons detected from the objectdetection
+        self.persons = {} # a dictionary of all the persons keeping track of consecutive times out of bounds
 
         # Publishers
         self.out_of_bounds_pub = rospy.Publisher('/zed_passenger/out_of_bounds', Bool, queue_size=10)
@@ -66,21 +66,48 @@ class ZedPassenger(object):
               Helpful resource: https://www.stereolabs.com/docs/ros/object-detection/
         '''
 
-        people_box = msg.objects # a list of all persons detected
-        self.oob = False
-        person = None
-        for thing in people_box:
-            person = thing
-            break
-        person_corners = person.bounding_box_2d.corners
-        driver_edge = person_corners[1].kp[0]
-        passenger_edge = person_corners[0].kp[0]
-        if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
-            self.oob = True
-        self.out_of_bounds_pub.publish(self.oob)
+        # people_box = msg.objects # a list of all persons detected
+        # self.oob = False
+        # person = None
+        # for thing in people_box:
+        #     person = thing
+        #     break
+        # person_corners = person.bounding_box_2d.corners
+        # driver_edge = person_corners[1].kp[0]
+        # passenger_edge = person_corners[0].kp[0]
+        # if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
+        #     self.oob = True
+        # self.out_of_bounds_pub.publish(self.oob)
 
-        #for person in people_box:
-        #    self.persons.append(person)
+        people_box = msg.objects
+        for person in people_box:
+            if person.sublabel == "Person" and person.label_id not in self.persons:
+                curr_time = time.time()
+                # dictionary where key is the person_id and value is (out_count_consecutive_times, current_time)
+                self.persons[person.label_id] = (0, curr_time)
+
+            # removes old data from dictionary to only keep track of currently detected people.
+            while len(people_box) < len(self.persons):
+                # removes the data based on oldest updated time
+                sorted_persons = sorted(self.persons.values(), key=lambda x:x[1])
+                print("Sorted persons: ", sorted_persons)
+                lost_person = sorted_persons[0]
+                self.persons.pop(self.persons.keys()[self.persons.values().index(lost_person)])
+
+            person_corners = person.bounding_box_2d.corners
+            driver_edge = person_corners[1].kp[0]
+            passenger_edge = person_corners[0].kp[0]
+            curr_time = time.time()
+
+            if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
+                self.persons[person.label_id] = (self.persons[person.label_id][0] + 1, curr_time)
+            else:
+                self.persons[person.label_id] = (0, curr_time)
+                           
+        print(self.persons)
+        # TO DO: publish data to UI (now we have multi-passenger detection)
+
+
     
     def publish_out(self):
         """
