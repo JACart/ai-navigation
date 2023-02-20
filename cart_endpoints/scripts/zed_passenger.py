@@ -15,9 +15,10 @@ are inside or outside bounding box.
 Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
 Version: 02/2023
 '''
-PASSENGER_EDGE_TOP_X_THRESHOLD = 315
-DRIVER_EDGE_TOP_X_THRESHOLD = 1000
+PASSENGER_EDGE_TOP_X_THRESHOLD = 0.6
+DRIVER_EDGE_TOP_X_THRESHOLD = -0.8
 OUT_COUNT_THRESHOLD = 20 # in frames
+DEPTH_THRESHOLD = 0.75
 
 class ZedPassenger(object):
     def __init__(self):
@@ -54,33 +55,37 @@ class ZedPassenger(object):
               This callback takes in data subscribed from the object detection topic and preforms
               calculations on the data.
 
-              Here is our 2D bounding box representation:
-              
-              0 ------- 1
-              |         |
-              |         |
-              |         |
-              3 ------- 2
-              zed_interfaces/Keypoint2Di[4] corners
+              Here's our 3D box representation:
+
+                      1 ------- 2
+                     /.        /|
+                    0 ------- 3 |
+                    | .       | |
+                    | 5.......| 6
+                    |.        |/
+                    4 ------- 7
+              zed_interfaces/Keypoint3D[8] corners
 
               Helpful resource: https://www.stereolabs.com/docs/ros/object-detection/
         '''
 
-        # people_box = msg.objects # a list of all persons detected
-        # self.oob = False
-        # person = None
-        # for thing in people_box:
-        #     person = thing
-        #     break
-        # person_corners = person.bounding_box_2d.corners
-        # driver_edge = person_corners[1].kp[0]
-        # passenger_edge = person_corners[0].kp[0]
-        # if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
-        #     self.oob = True
-        # self.out_of_bounds_pub.publish(self.oob)
-
         people_box = msg.objects
         for person in people_box:
+            person_corners = person.bounding_box_3d.corners
+            # print("Keypoint 0: ")
+            # print(person_corners[0])
+            # print("Keypoint 1: ")
+            # print(person_corners[1])
+            # print("Keypoint 2: ")
+            # print(person_corners[2])
+            # print("Keypoint 3: ")
+            # print(person_corners[3])
+            driver_edge = person_corners[3].kp[1] # driver's top left side, y point
+            passenger_edge = person_corners[0].kp[1] # passenger's top right side, y point
+            person_depth = person_corners[1].kp[2] # occupant's furthest back point, z position
+
+            # print("Person Depth: %f " % (person_depth))
+
             if person.sublabel == "Person" and person.label_id not in self.persons:
                 curr_time = time.time()
                 # dictionary where key is the person_id and value is (out_count_consecutive_times, current_time)
@@ -90,19 +95,17 @@ class ZedPassenger(object):
             while len(people_box) < len(self.persons):
                 # removes the data based on oldest updated time
                 sorted_persons = sorted(self.persons.values(), key=lambda x:x[1])
-                print("Sorted persons: ", sorted_persons)
+                # print("Sorted persons: ", sorted_persons)
                 lost_person = sorted_persons[0]
                 self.persons.pop(self.persons.keys()[self.persons.values().index(lost_person)])
 
-            person_corners = person.bounding_box_2d.corners
-            driver_edge = person_corners[1].kp[0]
-            passenger_edge = person_corners[0].kp[0]
             curr_time = time.time()
 
-            if passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD:
+            if (passenger_edge >= PASSENGER_EDGE_TOP_X_THRESHOLD or driver_edge <= DRIVER_EDGE_TOP_X_THRESHOLD) and person_depth <= DEPTH_THRESHOLD:
                 self.persons[person.label_id] = (self.persons[person.label_id][0] + 1, curr_time)
             else:
                 self.persons[person.label_id] = (0, curr_time)
+            
                            
         print(self.persons)
         # TO DO: publish data to UI (now we have multi-passenger detection)
