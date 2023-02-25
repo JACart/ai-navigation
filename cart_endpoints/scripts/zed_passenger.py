@@ -72,19 +72,14 @@ class ZedPassenger(object):
         people_box = msg.objects
         for person in people_box:
             person_corners = person.bounding_box_3d.corners
-            # print("Keypoint 0: ")
-            # print(person_corners[0])
-            # print("Keypoint 1: ")
-            # print(person_corners[1])
-            # print("Keypoint 2: ")
-            # print(person_corners[2])
-            # print("Keypoint 3: ")
-            # print(person_corners[3])
             driver_edge = person_corners[3].kp[1] # driver's top left side, y point
             passenger_edge = person_corners[0].kp[1] # passenger's top right side, y point
             person_depth = person_corners[1].kp[2] # occupant's furthest back point, z position
 
             # print("Person Depth: %f " % (person_depth))
+            if person.label_id not in self.persons:
+                # continue
+                pass
 
             if person.sublabel == "Person" and person.label_id not in self.persons:
                 curr_time = time.time()
@@ -108,6 +103,7 @@ class ZedPassenger(object):
             
                            
         print(self.persons)
+
         # TO DO: publish data to UI (now we have multi-passenger detection)
 
 
@@ -152,11 +148,25 @@ def create_transform_link(data):
     Attempting to create a transform link map -> passenger_cam_left_camera_frame to visualize bounding box in Rviz
     Currently Depreciated
     '''
+
+
+    """
+    Frame: passenger_cam_camera_center published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+    Frame: passenger_cam_left_camera_frame published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+    Frame: passenger_cam_left_camera_optical_frame published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+    Frame: passenger_cam_right_camera_frame published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+    Frame: passenger_cam_right_camera_optical_frame published by unknown_publisher(static) Average Delay: 0 Max Delay: 0
+
+
+    THIS SHOULD BE THE TF FRAMES OF THE PASSANGER CAMERA
+    """
+
     tf2broadcast = tf2_ros.TransformBroadcaster()
     tf2stamp = TransformStamped()
     tf2stamp.header.stamp = rospy.Time.now()
     tf2stamp.header.frame_id = 'map'
     tf2stamp.child_frame_id = 'passenger_cam_left_camera_frame'
+    #tf2stamp.child_frame_id = 'passenger_cam_camera_center'
     tf2stamp.transform.translation = data.objects[0].position
     print(tf2stamp)
     tf2broadcast.sendTransform(tf2stamp)
