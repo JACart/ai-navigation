@@ -42,24 +42,23 @@ class Passenger(object):
     def received_persons(self, msg):
         people = msg.objects
         unsafe_person = False
+
+        # Iterate through detected objects
         for person in people:
             person_corners = person.bounding_box_3d.corners
             driver_edge = person_corners[3].kp[1] # driver's top left side, y point
             passenger_edge = person_corners[0].kp[1] # passenger's top right side, y point
             person_depth = person_corners[1].kp[2] # occupant's furthest back point, z position
-            #print("Driver Edge: %f" % (driver_edge))
-            #break
-            #print("Passenger Edge: %f" % (passenger_edge))
-            # filter out non passengers
+
+            # Ignore passengers beyond a certain depth
             if person_depth > DEPTH_THRESHOLD:
                 continue
-            
-            #driver_edge_threshold_int = int(DRIVER_EDGE_TOP_X_THRESHOLD * 1000 )
-            #driver_edge_int = int(d)
 
             # Detect if passengers are crossing threshold. This signifies unsafe.
             if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge > DRIVER_EDGE_TOP_X_THRESHOLD) or (passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
                 unsafe_person = True    
+
+        # Iterate out_count and publish true if passenger has been unsafe for too long. Otherwise publish false.
         if not unsafe_person:
             self.out_counter = 0
         else:
