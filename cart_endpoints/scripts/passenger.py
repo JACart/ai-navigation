@@ -5,6 +5,7 @@ from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool
+from queue import PriorityQueue
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -32,7 +33,7 @@ class Passenger(object):
 
         #Private Variables
         self.out_counter = 0
-
+        self.out_count_pq = PriorityQueue()
         rospy.loginfo("Started pose tracking node! (S23)")
 
         r = rospy.Rate(5)
@@ -40,10 +41,27 @@ class Passenger(object):
             r.sleep()
     
     def received_persons(self, msg):
+        '''
+              This callback takes in data subscribed from the object detection topic and preforms
+              calculations on the data.
+
+              Here's our 3D box representation:
+
+                      1 ------- 2
+                     /.        /|
+                    0 ------- 3 |
+                    | .       | |
+                    | 5.......| 6
+                    |.        |/
+                    4 ------- 7
+              zed_interfaces/Keypoint3D[8] corners
+
+              Helpful resource: https://www.stereolabs.com/docs/ros/object-detection/
+        '''
         people = msg.objects
         unsafe_person = False
 
-        # Iterate through detected objects
+        # Iterate through detected objects, populates PriorityQueue private attribute
         for person in people:
             person_corners = person.bounding_box_3d.corners
             driver_edge = person_corners[3].kp[1] # driver's top left side, y point
@@ -54,21 +72,37 @@ class Passenger(object):
             if person_depth > DEPTH_THRESHOLD:
                 continue
 
-            # Detect if passengers are crossing threshold. This signifies unsafe.
+            # Detect if passengers are crossing threshold. This signifies unsafe. 0 means UNSAFE and 1 means SAFE
             if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge > DRIVER_EDGE_TOP_X_THRESHOLD) or (passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
-                unsafe_person = True    
+                self.out_count_pq.put(0)
+            else:
+                self.out_count_pq.put(1)
 
-        # Iterate out_count and publish true if passenger has been unsafe for too long. Otherwise publish false.
-        if not unsafe_person:
+
+        curr_count = self.out_counter # stores the current counter to keep track of difference
+        #print("Queue at the beginning: ", self.out_count_pq.queue)
+
+        # Loops over all the unsafe poses in the PQ. publishes based on out_count_threshold.
+        while (not self.out_count_pq.empty()) and self.out_count_pq.queue[0] == 0:
+            is_out = self.out_count_pq.get()
+            curr_count += 1
+        
+            if curr_count > OUT_COUNT_THRESHOLD:
+                self.out_of_bounds_pub.publish(True)
+            else:
+                self.out_of_bounds_pub.publish(False)
+
+        # If both counts are the same, no one is out of the vehicle.
+        if self.out_counter == curr_count:
+            self.out_count_pq = PriorityQueue()
             self.out_counter = 0
-        else:
-            self.out_counter += 1
-
-        if self.out_counter > OUT_COUNT_THRESHOLD:
-            self.out_of_bounds_pub.publish(True)
-        else:
             self.out_of_bounds_pub.publish(False)
-        print(self.out_counter)
+        # If both counts are different, someone was out of the vehicle. Update the self.out_counter
+        else:
+            self.out_counter = curr_count
+
+        #print("Queue at the end: ", self.out_count_pq.queue)
+        #print(self.out_counter)
 
 if __name__ == "__main__":
     try:
