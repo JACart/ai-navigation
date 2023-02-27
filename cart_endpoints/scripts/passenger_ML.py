@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+import rospy
+import time
+from zed_interfaces.msg import ObjectsStamped
+from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
+from sensor_msgs.msg import Image
+from std_msgs.msg import Bool
+from queue import PriorityQueue
+import numpy as np
+
+'''
+This ROS node collects passenger data for ML use.
+
+Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
+Version: 02/2023
+'''
+
+class PassengerML(object):
+    def __init__(self):
+        rospy.init_node('PassengerML')
+        
+        # Topic that object detection data from passenger camera is coming from
+        self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
+        
+        # Publishers
+        # self.out_of_bounds_pub = rospy.Publisher('/passenger/out_of_bounds', Bool, queue_size=10)
+
+        # Subscribers:
+        
+        # IMPORTANT: make sure to comment these out if you don't want to collect data
+        # self.in_bounds_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.data_collect_in_bounds, queue_size=10)
+        # self.out_bounds_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.data_collect_out_bounds, queue_size=10)
+
+        #Private Variables
+        self.in_bounds_X_data = []
+        self.in_bounds_y_data = []
+        self.out_bounds_X_data = []
+        self.out_bounds_y_data = []
+
+        rospy.loginfo("Started data collection/ML node! (S23)")
+
+        r = rospy.Rate(5)
+        while not rospy.is_shutdown():
+            r.sleep()
+    
+    def data_collect_in_bounds(self, msg):
+        '''
+        Used to collect passenger data for every callback in the object detection topic.
+        Greddily assigning 1 (SAFE) to data it detects in the cart as I am INSIDE the golf cart moving slightly
+        in a safe manner..
+
+        '''
+        curr_entry = [] # shape (18,3)
+        if msg.objects[0].label == "Person":
+            for i,kp in enumerate(msg.objects[0].skeleton_3d.keypoints):
+                curr_entry.append(kp.kp) # appends keypoint x,y,z values to list.
+            self.in_bounds_y_data.append(1)
+            self.in_bounds_X_data.append(curr_entry)
+        print("X: ", np.array(self.in_bounds_X_data).shape) # shape (num_entries, 18, 3)
+        print("y: ", np.array(self.in_bounds_y_data).shape) # shape (num_entries,)
+
+    def data_collect_out_bounds(self, msg):
+        '''
+        Used to collect passenger data for every callback in the object detection topic.
+        Greddily assigning 0 (UNSAFE) to data it detects in the cart as I am OUTSIDE/partially outside 
+        the golf cart moving slightly in an unsafe manner.
+
+        '''
+        curr_entry = [] # shape (18,3)
+        if msg.objects[0].label == "Person":
+            for i,kp in enumerate(msg.objects[0].skeleton_3d.keypoints):
+                curr_entry.append(kp.kp) # appends keypoint x,y,z values to list.
+            self.out_bounds_y_data.append(0)
+            self.out_bounds_X_data.append(curr_entry)
+        print("X: ", np.array(self.out_bounds_X_data).shape) # shape (num_entries, 18, 3)
+        print("y: ", np.array(self.out_bounds_y_data).shape) # shape (num_entries,)
+
+
+if __name__ == "__main__":
+    try:
+        pml = PassengerML()
+
+        if np.array(pml.in_bounds_X_data).shape[0] > 0:
+            with open('./passenger_ML_data/in_bounds_X_data.npy', 'ab') as f:
+                np.save(f, np.array(pml.in_bounds_X_data))
+            with open('./passenger_ML_data/in_bounds_y_data.npy', 'ab') as f:
+                np.save(f, np.array(pml.in_bounds_y_data))
+
+        if np.array(pml.out_bounds_X_data).shape[0] > 0:
+            with open('./passenger_ML_data/out_bounds_X_data.npy', 'wb') as f:
+                np.save(f, np.array(pml.out_bounds_X_data))
+            with open('./passenger_ML_data/out_bounds_y_data.npy', 'wb') as f:
+                np.save(f, np.array(pml.out_bounds_y_data))
+
+    except rospy.ROSInterruptException:
+        pass
