@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import time
+import sklearn
 from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
@@ -11,7 +12,7 @@ import numpy as np
 '''
 This ROS node collects passenger data for ML use.
 
-Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
+Authors: Daniel Hassler, et. al.
 Version: 02/2023
 '''
 
@@ -28,14 +29,22 @@ class PassengerML(object):
         # Subscribers:
         
         # IMPORTANT: make sure to comment these out if you don't want to collect data
-        # self.in_bounds_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.data_collect_in_bounds, queue_size=10)
-        # self.out_bounds_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.data_collect_out_bounds, queue_size=10)
+        response = input("Do you want to add onto the in_bounds training data (I), out_bounds data (O), or none at all (N)? (I/O/N): ")
+        self.in_bounds_sub = None
+        self.out_bounds_sub = None
+
+        if response == "I":
+            self.in_bounds_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.data_collect_in_bounds, queue_size=10)
+        elif response == "O":
+            self.out_bounds_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.data_collect_out_bounds, queue_size=10)
+        else:
+            pass
 
         #Private Variables
-        self.in_bounds_X_data = []
-        self.in_bounds_y_data = []
-        self.out_bounds_X_data = []
-        self.out_bounds_y_data = []
+        self.in_bounds_X_data = np.load("./passenger_ML_data/in_bounds_X_data.npy").tolist()
+        self.in_bounds_y_data = np.load("./passenger_ML_data/in_bounds_y_data.npy").tolist()
+        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data.npy").tolist()
+        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data.npy").tolist()
 
         rospy.loginfo("Started data collection/ML node! (S23)")
 
@@ -75,15 +84,25 @@ class PassengerML(object):
         print("X: ", np.array(self.out_bounds_X_data).shape) # shape (num_entries, 18, 3)
         print("y: ", np.array(self.out_bounds_y_data).shape) # shape (num_entries,)
 
+class PassengerMLRandomForest():
+    def __init__(self):
+        self.in_bounds_X_data = np.load("./passenger_ML_data/in_bounds_X_data.npy")
+        self.in_bounds_y_data = np.load("./passenger_ML_data/in_bounds_y_data.npy")
+        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data.npy")
+        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data.npy")
+        print(self.in_bounds_X_data.shape)
+        print(self.in_bounds_y_data.shape)
+        print(self.out_bounds_X_data.shape)
+        print(self.out_bounds_y_data.shape)
 
 if __name__ == "__main__":
     try:
         pml = PassengerML()
 
         if np.array(pml.in_bounds_X_data).shape[0] > 0:
-            with open('./passenger_ML_data/in_bounds_X_data.npy', 'ab') as f:
+            with open('./passenger_ML_data/in_bounds_X_data.npy', 'wb') as f:
                 np.save(f, np.array(pml.in_bounds_X_data))
-            with open('./passenger_ML_data/in_bounds_y_data.npy', 'ab') as f:
+            with open('./passenger_ML_data/in_bounds_y_data.npy', 'wb') as f:
                 np.save(f, np.array(pml.in_bounds_y_data))
 
         if np.array(pml.out_bounds_X_data).shape[0] > 0:
@@ -91,6 +110,8 @@ if __name__ == "__main__":
                 np.save(f, np.array(pml.out_bounds_X_data))
             with open('./passenger_ML_data/out_bounds_y_data.npy', 'wb') as f:
                 np.save(f, np.array(pml.out_bounds_y_data))
+        
+        pmlrf = PassengerMLRandomForest()
 
     except rospy.ROSInterruptException:
         pass
