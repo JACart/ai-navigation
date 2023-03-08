@@ -43,6 +43,9 @@ class Passenger(object):
         people = msg.objects
         unsafe_person = False
 
+        if not people:
+            pass  # Nobody is in cart, don't let it move
+
         # Iterate through detected objects
         for person in people:
             person_corners = person.bounding_box_3d.corners
@@ -64,7 +67,10 @@ class Passenger(object):
                 continue
 
             # Detect if passengers are crossing threshold. This signifies unsafe.
-            if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge > DRIVER_EDGE_TOP_X_THRESHOLD) or (passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
+            if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD 
+                    and passenger_edge > DRIVER_EDGE_TOP_X_THRESHOLD) 
+                    or (passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD 
+                    and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
                 unsafe_person = True
            # if (r_shoulder < DRIVER_EDGE_TOP_X_THRESHOLD and l_shoulder > DRIVER_EDGE_TOP_X_THRESHOLD) or (l_shoulder > PASSENGER_EDGE_TOP_X_THRESHOLD and r_shoulder < PASSENGER_EDGE_TOP_X_THRESHOLD):
             #    unsafe_person = True
