@@ -41,11 +41,14 @@ class PassengerML(object):
             pass
 
         #Private Variables
-        self.in_bounds_X_data = np.load("./passenger_ML_data/in_bounds_X_data.npy").tolist()
-        self.in_bounds_y_data = np.load("./passenger_ML_data/in_bounds_y_data.npy").tolist()
-        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data.npy").tolist()
-        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data.npy").tolist()
-
+        # self.in_bounds_X_data = np.load("./passenger_ML_data/in_bounds_X_data.npy").tolist()
+        # self.in_bounds_y_data = np.load("./passenger_ML_data/in_bounds_y_data.npy").tolist()
+        self.in_bounds_X_data = []
+        self.in_bounds_y_data = []
+        # self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data.npy").tolist()
+        # self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data.npy").tolist()
+        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data_jake.npy").tolist()
+        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data_jake.npy").tolist()
         rospy.loginfo("Started data collection/ML node! (S23)")
 
         r = rospy.Rate(5)
@@ -100,15 +103,15 @@ if __name__ == "__main__":
         pml = PassengerML()
 
         if np.array(pml.in_bounds_X_data).shape[0] > 0:
-            with open('./passenger_ML_data/in_bounds_X_data.npy', 'wb') as f:
+            with open('./passenger_ML_data/in_bounds_X_data_jake.npy', 'wb') as f:
                 np.save(f, np.array(pml.in_bounds_X_data))
-            with open('./passenger_ML_data/in_bounds_y_data.npy', 'wb') as f:
+            with open('./passenger_ML_data/in_bounds_y_data_jake.npy', 'wb') as f:
                 np.save(f, np.array(pml.in_bounds_y_data))
 
         if np.array(pml.out_bounds_X_data).shape[0] > 0:
-            with open('./passenger_ML_data/out_bounds_X_data.npy', 'wb') as f:
+            with open('./passenger_ML_data/out_bounds_X_data_jake.npy', 'wb') as f:
                 np.save(f, np.array(pml.out_bounds_X_data))
-            with open('./passenger_ML_data/out_bounds_y_data.npy', 'wb') as f:
+            with open('./passenger_ML_data/out_bounds_y_data_jake.npy', 'wb') as f:
                 np.save(f, np.array(pml.out_bounds_y_data))
         
         pmlrf = PassengerMLRandomForest()
