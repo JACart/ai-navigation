@@ -75,8 +75,10 @@ class Passenger(object):
             if (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD \
                 and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): # Driver-side and passenger-side shoulders are inside cart
                 self.cart_occupied_pub.publish(True)
+                print ("Someone inside the cart")
             else:
                 self.cart_occupied_pub.publish(False)
+                print ("Someone within depth but outside the cart")
 
 
             # Detect if passengers are crossing threshold. This signifies unsafe.
