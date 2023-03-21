@@ -4,7 +4,7 @@ import time
 from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int8
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -14,9 +14,9 @@ Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
 Version: 02/2023
 '''
 PASSENGER_EDGE_TOP_X_THRESHOLD = 0.5
-DRIVER_EDGE_TOP_X_THRESHOLD = -0.5
+DRIVER_EDGE_TOP_X_THRESHOLD = -0.7
 OUT_COUNT_THRESHOLD = 1#5 # in frames
-DEPTH_THRESHOLD = 0.75
+DEPTH_THRESHOLD = 1.5
 
 class Passenger(object):
     def __init__(self):
@@ -27,7 +27,7 @@ class Passenger(object):
         
         # Publishers
         self.out_of_bounds_pub = rospy.Publisher('/passenger/out_of_bounds', Bool, queue_size=10)
-        self.cart_occupied_pub = rospy.Publisher('/passenger/cart_occupied', Bool, queue_size=10)
+        self.occupants_pub = rospy.Publisher('/passenger/occupants', Int8, queue_size=10)
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
 
@@ -52,11 +52,13 @@ class Passenger(object):
         #     print("Somebody is in the cart")
 
         # Iterate through detected objects
+
+        occupants = 0
         for person in people:
             person_corners = person.bounding_box_3d.corners
             driver_edge = person.skeleton_3d.keypoints[5].kp[1]# person_corners[3].kp[1] # driver's top left side, y point
             passenger_edge = person.skeleton_3d.keypoints[2].kp[1] #person_corners[0].kp[1] # passenger's top right side, y point
-            person_depth = person_corners[1].kp[2] # occupant's furthest back point, z position
+            person_depth = person_corners[1].kp[0] # occupant's furthest back point, z position
             #print("____________________________________")
             #print (person.skeleton_3d.keypoints[2].kp[1])
             #print ("_________________-")
@@ -72,25 +74,35 @@ class Passenger(object):
                 continue
 
             # Detect whether people are inside the cart
-            if (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD \
+            '''if (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD \
                 and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): # Driver-side and passenger-side shoulders are inside cart
-                self.cart_occupied_pub.publish(True)
+                self.cart_occupied_pub.publish(0)
                 print ("Someone inside the cart")
             else:
-                self.cart_occupied_pub.publish(False)
-                print ("Someone within depth but outside the cart")
+                self.cart_occupied_pub.publish(1)
+                print ("Someone within depth but outside the cart")'''
 
 
-            # Detect if passengers are crossing threshold. This signifies unsafe.
+            # Classify passengers based on position
             if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD  \
                     and passenger_edge > DRIVER_EDGE_TOP_X_THRESHOLD) \
                     or (passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD \
                     and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
+                # Passenger is crossing threshold, signifying an unsafe occupant
                 unsafe_person = True
+                occupants += 1
+            elif (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): 
+                # Passenger is within the threshold, signifying a safe occupant
+                occupants += 1
 
            # if (r_shoulder < DRIVER_EDGE_TOP_X_THRESHOLD and l_shoulder > DRIVER_EDGE_TOP_X_THRESHOLD) or (l_shoulder > PASSENGER_EDGE_TOP_X_THRESHOLD and r_shoulder < PASSENGER_EDGE_TOP_X_THRESHOLD):
             #    unsafe_person = True
             #break
+
+        # Publish number of occupants
+        print(occupants)
+        self.occupants_pub.publish(occupants)
+
         # Iterate out_count and publish true if passenger has been unsafe for too long. Otherwise publish false.
         if not unsafe_person:
             self.out_counter = 0
@@ -101,7 +113,7 @@ class Passenger(object):
             self.out_of_bounds_pub.publish(True)
         else:
             self.out_of_bounds_pub.publish(False)
-        print(self.out_counter)
+        #print(self.out_counter)
         
 
 if __name__ == "__main__":

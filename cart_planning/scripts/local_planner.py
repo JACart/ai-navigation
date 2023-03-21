@@ -47,6 +47,8 @@ class LocalPlanner(object):
 
         self.current_state = VehicleState()
 
+        self.occupants = 0
+
         # To allow other nodes to make stop requests mapping like so: Sender_ID : [stop(boolean), distance]
         # If distance == -1, there is no obstacle
         self.stop_requests = {}
@@ -69,6 +71,9 @@ class LocalPlanner(object):
 
         # Allows changes in speed
         self.set_speed_sub = rospy.Subscriber('/speed', Float32, self.speed_callback)
+
+        # Gets the number of occupants currently in the cart
+        self.occupants_sub = rospy.Subscriber('/passenger/occupants', Int8, self.occupants_callback)
 
         # Allow the sharing of the current staus of the vehicle driving
         self.vehicle_state_pub = rospy.Publisher('/vehicle_state', VehicleState, queue_size=10, latch=True)
@@ -123,6 +128,9 @@ class LocalPlanner(object):
     def speed_callback(self, msg):
         self.global_speed = msg.data / 3.6
         rospy.loginfo("Speed changed to " + str (self.global_speed))
+
+    def occupants_callback(self, msg):
+        self.occupants = msg.data
 
     def vel_callback(self, msg):
         if msg.data < 1.0:
@@ -218,6 +226,10 @@ class LocalPlanner(object):
             v = [state.v]
             t = [0.0]
             target_ind = pure_pursuit.calc_target_index(state, cx, cy, 0)
+
+            # Ensure the cart is occupied
+            #while self.occupants < 1:
+            #    print("Cart has no occupants")
 
             # Publish the ETA to the destination before we get started
             self.calc_eta(None)
