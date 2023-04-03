@@ -5,7 +5,8 @@ from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool, Int8
-from passengerclassifier import PassengerRFClassifier
+from passengerclassifier import PassengerRFClassifier, PassengerData
+import numpy as np
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -14,14 +15,14 @@ are inside or outside bounding box.
 Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
 Version: 02/2023
 '''
-PASSENGER_EDGE_TOP_X_THRESHOLD = 0.5
-DRIVER_EDGE_TOP_X_THRESHOLD = -0.7
+PASSENGER_EDGE_TOP_X_THRESHOLD = 0.7
+DRIVER_EDGE_TOP_X_THRESHOLD = -0.9
 OUT_COUNT_THRESHOLD = 1#5 # in frames
 DEPTH_THRESHOLD = 1.5
 
 class Passenger(object):
     def __init__(self):
-        rospy.init_node('Passenger')
+        rospy.init_node('Passenger_ML')
         
         # Topic that object detection data from passenger camera is coming from
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
@@ -34,7 +35,7 @@ class Passenger(object):
 
         #Private Variables
         self.out_counter = 0
-        self.prfc = PassengerRFClassifier()
+        self.prfc = PassengerRFClassifier.load_model("./saved_models/passengerRF_model_255")
 
         rospy.loginfo("Started pose tracking node! (S23)")
 
@@ -61,45 +62,26 @@ class Passenger(object):
             driver_edge = person.skeleton_3d.keypoints[5].kp[1]# person_corners[3].kp[1] # driver's top left side, y point
             passenger_edge = person.skeleton_3d.keypoints[2].kp[1] #person_corners[0].kp[1] # passenger's top right side, y point
             person_depth = person_corners[1].kp[0] # occupant's furthest back point, z position
-            #print("____________________________________")
-            #print (person.skeleton_3d.keypoints[2].kp[1])
-            #print ("_________________-")
-            #l_shoulder = person.skeleton_3d.keypoints[2].kp[1]
-            #r_shoulder = person.skeleton_3d.keypoints[5].kp[1]
-            """
-            msg.objects[0].label == "Person":
-            for i,kp in enumerate(msg.objects[0].skeleton_3d.keypoints):
-                curr_entry.append(kp.kp)
-            """
+
             # Ignore passengers beyond a certain depth
-            if person_depth > DEPTH_THRESHOLD:
+            if driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD or passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD or person_depth > DEPTH_THRESHOLD:
+                if driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD or passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD and person_depth < DEPTH_THRESHOLD:
+                    
+                    pass#rospy.loginfo("PERSON IS OUT OF BOUNDS")
                 continue
+            
+            passenger_keypoints = []
+            for kp in person.skeleton_3d.keypoints:
+                passenger_keypoints.append(kp.kp)
 
-            # Detect whether people are inside the cart
-            '''if (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD \
-                and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): # Driver-side and passenger-side shoulders are inside cart
-                self.cart_occupied_pub.publish(0)
-                print ("Someone inside the cart")
+            passenger_keypoints = np.reshape(np.array([passenger_keypoints]), (-1, 18*3))
+            prediction = self.prfc.predict(passenger_keypoints)
+            
+            if prediction[0] == 1:
+                rospy.loginfo("Passenger is SAFE")
             else:
-                self.cart_occupied_pub.publish(1)
-                print ("Someone within depth but outside the cart")'''
+                rospy.loginfo("Passenger is UNSAFE")
 
-
-            # Classify passengers based on position
-            if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD  \
-                    and passenger_edge > DRIVER_EDGE_TOP_X_THRESHOLD) \
-                    or (passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD \
-                    and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
-                # Passenger is crossing threshold, signifying an unsafe occupant
-                unsafe_person = True
-                occupants += 1
-            elif (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): 
-                # Passenger is within the threshold, signifying a safe occupant
-                occupants += 1
-
-           # if (r_shoulder < DRIVER_EDGE_TOP_X_THRESHOLD and l_shoulder > DRIVER_EDGE_TOP_X_THRESHOLD) or (l_shoulder > PASSENGER_EDGE_TOP_X_THRESHOLD and r_shoulder < PASSENGER_EDGE_TOP_X_THRESHOLD):
-            #    unsafe_person = True
-            #break
 
         # Publish number of occupants
         print(occupants)

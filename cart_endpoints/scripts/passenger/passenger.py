@@ -5,6 +5,7 @@ from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool, Int8
+from navigation_msgs.msg import VehicleState
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -30,9 +31,13 @@ class Passenger(object):
         self.occupants_pub = rospy.Publisher('/passenger/occupants', Int8, queue_size=10)
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
+        self.state_sub = rospy.Subscriber('/vehicle_state', VehicleState, callback=self.state_cb, queue_size=10)
 
         #Private Variables
         self.out_counter = 0
+        self.occupants = 0
+        self.startingOccupants = 1
+        self.stopped = False
 
         rospy.loginfo("Started pose tracking node! (S23)")
 
@@ -53,7 +58,7 @@ class Passenger(object):
 
         # Iterate through detected objects
 
-        occupants = 0
+        occupant_count = 0
         for person in people:
             person_corners = person.bounding_box_3d.corners
             driver_edge = person.skeleton_3d.keypoints[5].kp[1]# person_corners[3].kp[1] # driver's top left side, y point
@@ -90,18 +95,23 @@ class Passenger(object):
                     and driver_edge < PASSENGER_EDGE_TOP_X_THRESHOLD):
                 # Passenger is crossing threshold, signifying an unsafe occupant
                 unsafe_person = True
-                occupants += 1
+                occupant_count += 1
             elif (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): 
                 # Passenger is within the threshold, signifying a safe occupant
-                occupants += 1
+                occupant_count += 1
 
            # if (r_shoulder < DRIVER_EDGE_TOP_X_THRESHOLD and l_shoulder > DRIVER_EDGE_TOP_X_THRESHOLD) or (l_shoulder > PASSENGER_EDGE_TOP_X_THRESHOLD and r_shoulder < PASSENGER_EDGE_TOP_X_THRESHOLD):
             #    unsafe_person = True
             #break
 
+        # If number of occupants drops while cart is moving send pullover request
+        if not self.stopped and self.startingOccupants > self.occupants:
+            print("sending pullover")
+
         # Publish number of occupants
-        print(occupants)
-        self.occupants_pub.publish(occupants)
+        self.occupants = occupant_count
+        print(self.occupants)
+        self.occupants_pub.publish(self.occupants)
 
         # Iterate out_count and publish true if passenger has been unsafe for too long. Otherwise publish false.
         if not unsafe_person:
@@ -114,6 +124,11 @@ class Passenger(object):
         else:
             self.out_of_bounds_pub.publish(False)
         #print(self.out_counter)
+
+    def state_cb(self, msg):
+        self.stopped = msg.stop
+        if stopped:
+            self.startingOccupants = self.occupants
         
 
 if __name__ == "__main__":

@@ -1,7 +1,9 @@
 import sklearn
 import numpy as np
-import pandas
-from sklearn.model_selection import train_test_split
+import pandas as pd
+import joblib
+import os
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA
@@ -11,7 +13,7 @@ import matplotlib.pyplot as plt
 Passenger ML classifier, data processing, and visualization.
 
 Author: Daniel Hassler
-Version: 3/9/2023
+Version: 4/2/2023
 '''
 
 class PassengerData(object):
@@ -61,7 +63,7 @@ class PassengerData(object):
             np.save(f, self.out_bounds_y_data)
 
 
-class PassengerRFClassifier(object):
+class PassengerRFClassifier(RandomForestClassifier):
     '''
     Passenger RandomForestClassifier wrapper class for ease of access and use.
     '''
@@ -81,26 +83,58 @@ class PassengerRFClassifier(object):
         self.n_estimators = n_estimators
         self.n_jobs = n_jobs
 
-        self.X_train, self.X_test, self.y_train, self.y_test = self.pdata.preprocess()
-        print(self.X_train.shape)
-        print(self.X_test.shape)
-        self.model = RandomForestClassifier(n_estimators=self.n_estimators, max_depth=2, criterion="entropy", n_jobs=self.n_jobs)
+        super().__init__(n_estimators=self.n_estimators, max_depth=2, criterion="entropy", n_jobs=self.n_jobs)
 
-    def train_model(self, X_train, y_train):
-        '''
-        Wrapper function to train the model.
-        '''
-        return self.model.fit(X_train, y_train)
+        self.X_train, self.X_test, self.y_train, self.y_test = self.pdata.preprocess()
     
-    def predict(self, X_test):
+    def save_model(self, fpath):
         '''
-        Wrapper function to run predictions on an X_test dataset.
-        Make sure the X_test set is of shape (num_entries, 54). 
+        Wrapper function to save model.
+        '''
+        file = f"{fpath}.joblib"
+        joblib.dump(self, file)
+    
+    def load_model(fpath):
+        '''
+        Wrapper function to load model.
+        '''
+        print(f"Loaded model: {fpath}")
+        return joblib.load(f"{fpath}.joblib")
+    
+    def save_and_test_models(start, end):
+        '''
+        Function to save a bunch of models and figure out
+        which one is best for the current dataset.
+        '''
+        if not os.path.exists("./saved_models"):
+            os.mkdir("./saved_models")
+
+        file = open("./saved_models/results.txt", "w")
+
+        for i in range(start, end, 2):
+            saved_model_name = f"./saved_models/passengerRF_model_{i}"
+            prfc = PassengerRFClassifier(n_estimators=i)
+            prfc.fit(prfc.X_train, prfc.y_train)
+            y_pred = prfc.predict(prfc.X_test)
+
+            cross_val = cross_val_score(prfc, prfc.pdata.X, prfc.pdata.y, cv=StratifiedKFold(n_splits=5, shuffle=True)).mean()
+            accuracy = accuracy_score(prfc.y_test, y_pred)
+
+            file.write(
+                f"passengerRF_model_{i},{cross_val},{accuracy}\n")
         
-        Returns the y_predicted set.
-        '''
-        return self.model.predict(X_test)
-    
+            prfc.save_model(saved_model_name)
+            
+        file.close()
+        modelsdf = pd.read_csv("./saved_models/results.txt", header=None, index_col=0)
+        modelsdf = modelsdf.sort_values(by=[1, 2]).iloc[-1]
+        highest_val_acc = modelsdf[1]
+        highest_acc = modelsdf[2]
+        highest_name = modelsdf.name
+        print(f"The best model generated was:\n\tName: {highest_name}\n\tValidation Acc %: {highest_val_acc}\n\tAcc %: {highest_acc}")
+        return f"./saved_models/{highest_name}"
+
+
 class PlotPassenger():
     '''
     Class designed to visualize the PassengerRFClassifier with various metrics and plots.
@@ -117,14 +151,14 @@ class PlotPassenger():
             n_dim = 2
 
         pca = PCA(n_components=n_dim)
-        X_p = pca.fit_transform(self.prfc.X)
+        X_p = pca.fit_transform(self.prfc.pdata.X)
         if n_dim == 2:
-            plot = plt.scatter(X_p[:,0], X_p[:,1], c=self.prfc.y)
+            plot = plt.scatter(X_p[:,0], X_p[:,1], c=self.prfc.pdata.y)
             plt.legend(handles=plot.legend_elements()[0], labels=["Unafe", "Safe"])
         else:
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
-            ax.scatter(X_p[:,0], X_p[:,1], X_p[:,2], c=self.prfc.y)
+            ax.scatter(X_p[:,0], X_p[:,1], X_p[:,2], c=self.prfc.pdata.y)
 
         plt.title(f"Passenger Pose Dataset Where principal_components={n_dim}")
         plt.xlabel("PC1")
@@ -138,7 +172,7 @@ class PlotPassenger():
         '''
         fig, axes = plt.subplots(nrows = 1,ncols = self.prfc.n_estimators,figsize = (10,3), dpi=250)
         for index in range(self.prfc.n_estimators):
-            tree.plot_tree(self.prfc.model.estimators_[index],
+            tree.plot_tree(self.prfc.estimators_[index],
                         feature_names = [f"f{i}" for i in range(54)], 
                         class_names= ["Unsafe", "Safe"],
                         filled = True,
@@ -174,17 +208,12 @@ class PlotPassenger():
         plt.show()
 
 if __name__ == "__main__":
-    prfc = PassengerRFClassifier()
-    prfc.train_model(prfc.X_train, prfc.y_train)
-    y_pred = prfc.predict(prfc.X_test)
-    print("Total Unsafe entries: ", np.count_nonzero(prfc.pdata.y == 0))
-    print("Total Safe entries: ", np.count_nonzero(prfc.pdata.y == 1))
-    print("Unsafe y_test: ", np.count_nonzero(prfc.y_test == 0))
-    print("Safe y_est: ", np.count_nonzero(prfc.y_test == 1))
-    print(accuracy_score(prfc.y_test, y_pred))
+    #best_model = PassengerRFClassifier.save_and_test_models(21, 301)
+    #prfc = PassengerRFClassifier.load_model(best_model)
 
-    prfc_visualizer = PlotPassenger(prfc)
-    prfc_visualizer.plot_skeleton(200)
-
-
-    
+    modelsdf = pd.read_csv("./saved_models/results.txt", header=None, index_col=0)
+    modelsdf = modelsdf.sort_values(by=[1, 2]).iloc[-1]
+    highest_val_acc = modelsdf[1]
+    highest_acc = modelsdf[2]
+    highest_name = modelsdf.name
+    print(f"The best model generated was:\n\tName: {highest_name}\n\tValidation Acc %: {highest_val_acc}\n\tAcc %: {highest_acc}")
