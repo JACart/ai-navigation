@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import rospy
-import time
 from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
@@ -16,7 +15,7 @@ Version: 02/2023
 '''
 PASSENGER_EDGE_TOP_X_THRESHOLD = 0.5
 DRIVER_EDGE_TOP_X_THRESHOLD = -0.7
-OUT_COUNT_THRESHOLD = 1#5 # in frames
+COUNT_THRESHOLD = 5 # in frames
 DEPTH_THRESHOLD = 1.5
 
 class Passenger(object):
@@ -29,6 +28,8 @@ class Passenger(object):
         # Publishers
         self.out_of_bounds_pub = rospy.Publisher('/passenger/out_of_bounds', Bool, queue_size=10)
         self.occupants_pub = rospy.Publisher('/passenger/occupants', Int8, queue_size=10)
+        self.stop_pub = rospy.Publisher('/passenger/emergency_stop', Bool, queue_size=10)
+
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
         self.state_sub = rospy.Subscriber('/vehicle_state', VehicleState, callback=self.state_cb, queue_size=10)
@@ -37,56 +38,33 @@ class Passenger(object):
         self.out_counter = 0
         self.occupants = 0
         self.startingOccupants = 1
+        self.stop_counter = 0
         self.stopped = False
 
         rospy.loginfo("Started pose tracking node! (S23)")
 
         r = rospy.Rate(5)
         while not rospy.is_shutdown():
+            if self.stopped:
+                self.startingOccupants = self.occupants
             r.sleep()
     
+    ''' callback method for passenger camera frames '''
     def received_persons(self, msg):
         people = msg.objects
         unsafe_person = False
 
-        # if not people:  # Nobody is in cart, don't let it move
-        #     self.cart_occupied_pub.publish(False)
-        #     print("Nobody is in the cart")
-        # else:
-        #     self.cart_occupied_pub.publish(True)
-        #     print("Somebody is in the cart")
-
-        # Iterate through detected objects
-
+        # Iterate through and classify detected objects
         occupant_count = 0
         for person in people:
             person_corners = person.bounding_box_3d.corners
-            driver_edge = person.skeleton_3d.keypoints[5].kp[1]# person_corners[3].kp[1] # driver's top left side, y point
-            passenger_edge = person.skeleton_3d.keypoints[2].kp[1] #person_corners[0].kp[1] # passenger's top right side, y point
-            person_depth = person_corners[1].kp[0] # occupant's furthest back point, z position
-            #print("____________________________________")
-            #print (person.skeleton_3d.keypoints[2].kp[1])
-            #print ("_________________-")
-            #l_shoulder = person.skeleton_3d.keypoints[2].kp[1]
-            #r_shoulder = person.skeleton_3d.keypoints[5].kp[1]
-            """
-            msg.objects[0].label == "Person":
-            for i,kp in enumerate(msg.objects[0].skeleton_3d.keypoints):
-                curr_entry.append(kp.kp)
-            """
+            driver_edge = person.skeleton_3d.keypoints[5].kp[1]     # driver's top left side, y point
+            passenger_edge = person.skeleton_3d.keypoints[2].kp[1]  # passenger's top right side, y point
+            person_depth = person_corners[1].kp[0]                  # occupant's furthest back point, z position
+
             # Ignore passengers beyond a certain depth
             if person_depth > DEPTH_THRESHOLD:
                 continue
-
-            # Detect whether people are inside the cart
-            '''if (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD \
-                and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): # Driver-side and passenger-side shoulders are inside cart
-                self.cart_occupied_pub.publish(0)
-                print ("Someone inside the cart")
-            else:
-                self.cart_occupied_pub.publish(1)
-                print ("Someone within depth but outside the cart")'''
-
 
             # Classify passengers based on position
             if (driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD  \
@@ -96,39 +74,32 @@ class Passenger(object):
                 # Passenger is crossing threshold, signifying an unsafe occupant
                 unsafe_person = True
                 occupant_count += 1
+
             elif (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): 
                 # Passenger is within the threshold, signifying a safe occupant
                 occupant_count += 1
-
-           # if (r_shoulder < DRIVER_EDGE_TOP_X_THRESHOLD and l_shoulder > DRIVER_EDGE_TOP_X_THRESHOLD) or (l_shoulder > PASSENGER_EDGE_TOP_X_THRESHOLD and r_shoulder < PASSENGER_EDGE_TOP_X_THRESHOLD):
-            #    unsafe_person = True
-            #break
-
-        # If number of occupants drops while cart is moving send pullover request
-        if not self.stopped and self.startingOccupants > self.occupants:
-            print("sending pullover")
-
-        # Publish number of occupants
         self.occupants = occupant_count
-        print(self.occupants)
-        self.occupants_pub.publish(self.occupants)
+                
+        # Iterate stop_count
+        if not self.stopped and self.startingOccupants > self.occupants:
+            self.stop_counter += 1
+        else:
+            self.stop_counter = 0
 
-        # Iterate out_count and publish true if passenger has been unsafe for too long. Otherwise publish false.
+        # Iterate out_count
         if not unsafe_person:
             self.out_counter = 0
         else:
             self.out_counter += 1
 
-        if self.out_counter > OUT_COUNT_THRESHOLD:
-            self.out_of_bounds_pub.publish(True)
-        else:
-            self.out_of_bounds_pub.publish(False)
-        #print(self.out_counter)
+        # Publish passenger information
+        self.stop_pub.publish(self.stop_counter > COUNT_THRESHOLD)          # Publish Emergency Stop
+        self.occupants_pub.publish(self.occupants)                          # Publish Occupant Count
+        self.out_of_bounds_pub.publish(self.out_counter > COUNT_THRESHOLD)  # Publish Out of Bounds
 
+    ''' Call back method for detecting whether cart is stopped or not '''
     def state_cb(self, msg):
-        self.stopped = msg.stop
-        if stopped:
-            self.startingOccupants = self.occupants
+        self.stopped = msg.stopped
         
 
 if __name__ == "__main__":
