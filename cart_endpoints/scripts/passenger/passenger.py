@@ -11,7 +11,7 @@ This ROS node keeps track of passenger pose data and determines whether passenge
 are inside or outside bounding box.
 
 Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
-Version: 02/2023
+Version: 04/2023
 '''
 PASSENGER_EDGE_TOP_X_THRESHOLD = 0.5
 DRIVER_EDGE_TOP_X_THRESHOLD = -0.7
@@ -45,11 +45,18 @@ class Passenger(object):
 
         r = rospy.Rate(5)
         while not rospy.is_shutdown():
-            if self.stopped:
+            if not self.stopped:
                 self.startingOccupants = self.occupants
             r.sleep()
     
-    ''' callback method for passenger camera frames '''
+    ''' 
+    callback method for passenger camera frames
+    _______
+    Args:
+        msg: person objects from the zed camera.
+    ________
+
+    '''
     def received_persons(self, msg):
         people = msg.objects
         unsafe_person = False
@@ -74,6 +81,7 @@ class Passenger(object):
                 # Passenger is crossing threshold, signifying an unsafe occupant
                 unsafe_person = True
                 occupant_count += 1
+                self.has_seen_passanger = True
 
             elif (driver_edge > DRIVER_EDGE_TOP_X_THRESHOLD and passenger_edge < PASSENGER_EDGE_TOP_X_THRESHOLD): 
                 # Passenger is within the threshold, signifying a safe occupant
@@ -87,7 +95,7 @@ class Passenger(object):
             self.stop_counter = 0
 
         # Iterate out_count
-        if not unsafe_person:
+        if not unsafe_person and self.has_seen_passanger:
             self.out_counter = 0
         else:
             self.out_counter += 1
@@ -97,7 +105,13 @@ class Passenger(object):
         self.occupants_pub.publish(self.occupants)                          # Publish Occupant Count
         self.out_of_bounds_pub.publish(self.out_counter > COUNT_THRESHOLD)  # Publish Out of Bounds
 
-    ''' Call back method for detecting whether cart is stopped or not '''
+    ''' 
+    Call back method for detecting whether cart is stopped or not 
+    ____________
+    Args:
+        msg:
+            message containing a boolean value, T iff. cart is stopped
+    '''
     def state_cb(self, msg):
         self.stopped = msg.stopped
         
