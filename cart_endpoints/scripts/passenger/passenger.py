@@ -45,7 +45,7 @@ class Passenger(object):
 
         r = rospy.Rate(5)
         while not rospy.is_shutdown():
-            if not self.stopped:
+            if self.stopped:
                 self.startingOccupants = self.occupants
             r.sleep()
     
@@ -95,7 +95,7 @@ class Passenger(object):
             self.stop_counter = 0
 
         # Iterate out_count
-        if not unsafe_person and self.has_seen_passanger:
+        if not unsafe_person: #and self.has_seen_passanger:
             self.out_counter = 0
         else:
             self.out_counter += 1

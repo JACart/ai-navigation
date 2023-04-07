@@ -13,7 +13,7 @@ This ROS node keeps track of passenger pose data and determines whether passenge
 are inside or outside bounding box.
 
 Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
-Version: 02/2023
+Version: 04/2023
 '''
 PASSENGER_EDGE_TOP_X_THRESHOLD = 0.7
 DRIVER_EDGE_TOP_X_THRESHOLD = -0.9
@@ -47,15 +47,6 @@ class Passenger(object):
         people = msg.objects
         unsafe_person = False
 
-        # if not people:  # Nobody is in cart, don't let it move
-        #     self.cart_occupied_pub.publish(False)
-        #     print("Nobody is in the cart")
-        # else:
-        #     self.cart_occupied_pub.publish(True)
-        #     print("Somebody is in the cart")
-
-        # Iterate through detected objects
-
         occupants = 0
         for person in people:
             person_corners = person.bounding_box_3d.corners
@@ -66,7 +57,6 @@ class Passenger(object):
             # Ignore passengers beyond a certain depth
             if driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD or passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD or person_depth > DEPTH_THRESHOLD:
                 if driver_edge < DRIVER_EDGE_TOP_X_THRESHOLD or passenger_edge > PASSENGER_EDGE_TOP_X_THRESHOLD and person_depth < DEPTH_THRESHOLD:
-                    
                     pass#rospy.loginfo("PERSON IS OUT OF BOUNDS")
                 continue
             
