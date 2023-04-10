@@ -28,8 +28,9 @@ class Passenger(object):
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
         
         # Publishers
-        self.out_of_bounds_pub = rospy.Publisher('/passenger/out_of_bounds', Bool, queue_size=10)
-        self.occupants_pub = rospy.Publisher('/passenger/occupants', Int8, queue_size=10)
+        self.out_of_bounds_pub = rospy.Publisher('/passenger/out_of_bounds', Bool, queue_size=10) # true or false
+        self.occupants_pub = rospy.Publisher('/passenger/occupants', Int8, queue_size=10) # integer
+        
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
 
