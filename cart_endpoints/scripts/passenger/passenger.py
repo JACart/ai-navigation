@@ -4,7 +4,7 @@ from zed_interfaces.msg import ObjectsStamped
 from geometry_msgs.msg import TwistStamped, Vector3, PointStamped, TransformStamped
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool, Int8
-from navigation_msgs.msg import VehicleState
+from navigation_msgs.msg import VehicleState, Stop, VelAngle
 
 '''
 This ROS node keeps track of passenger pose data and determines whether passengers
@@ -16,7 +16,7 @@ Version: 04/2023
 PASSENGER_EDGE_TOP_X_THRESHOLD = 0.5
 DRIVER_EDGE_TOP_X_THRESHOLD = -0.7
 COUNT_THRESHOLD = 5 # in frames
-DEPTH_THRESHOLD = 1.5
+DEPTH_THRESHOLD = 1.3
 
 class Passenger(object):
     def __init__(self):
@@ -32,14 +32,14 @@ class Passenger(object):
 
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=10)
-        self.state_sub = rospy.Subscriber('/vehicle_state', VehicleState, callback=self.state_cb, queue_size=10)
+        self.nav_sub = rospy.Subscriber('/nav_cmd', VelAngle, self.nav_cb, queue_size=10)
 
         #Private Variables
         self.out_counter = 0
         self.occupants = 0
         self.startingOccupants = 1
         self.stop_counter = 0
-        self.stopped = False
+        self.stopped = True
 
         rospy.loginfo("Started pose tracking node! (S23)")
 
@@ -101,7 +101,9 @@ class Passenger(object):
             self.out_counter += 1
 
         # Publish passenger information
-        self.stop_pub.publish(self.stop_counter > COUNT_THRESHOLD)          # Publish Emergency Stop
+        if self.stop_counter > COUNT_THRESHOLD and not self.stopped:        # Publish Emergency Stop
+            self.stop_pub.publish(True)
+            self.stop_counter = 0 
         self.occupants_pub.publish(self.occupants)                          # Publish Occupant Count
         self.out_of_bounds_pub.publish(self.out_counter > COUNT_THRESHOLD)  # Publish Out of Bounds
 
@@ -113,7 +115,16 @@ class Passenger(object):
             message containing a boolean value, T iff. cart is stopped
     '''
     def state_cb(self, msg):
-        self.stopped = msg.stopped
+        #print(msg.stopped)
+        #self.stopped = msg.stopped
+        pass
+
+    def nav_cb(self, msg):
+        self.vel = msg.vel_curr
+        if self.vel < .2:
+            self.stopped = True
+        else:
+            self.stopped = False
         
 
 if __name__ == "__main__":

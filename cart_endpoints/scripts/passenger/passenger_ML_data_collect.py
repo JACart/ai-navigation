@@ -15,10 +15,11 @@ This ROS node collects passenger data for ML use.
 Authors: Daniel Hassler, et. al.
 Version: 02/2023
 '''
+DEPTH_THRESHOLD = 1.3
 
 class PassengerML(object):
     def __init__(self):
-        rospy.init_node('PassengerML')
+        rospy.init_node('PassengerML_Data_Collect')
         
         # Topic that object detection data from passenger camera is coming from
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
@@ -47,8 +48,8 @@ class PassengerML(object):
         self.in_bounds_y_data = []
         # self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data.npy").tolist()
         # self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data.npy").tolist()
-        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data_jake.npy").tolist()
-        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data_jake.npy").tolist()
+        self.out_bounds_X_data = []
+        self.out_bounds_y_data = []
         rospy.loginfo("Started data collection/ML node! (S23)")
 
         r = rospy.Rate(5)
@@ -64,10 +65,19 @@ class PassengerML(object):
         '''
         curr_entry = [] # shape (18,3)
         if msg.objects[0].label == "Person":
+            person = msg.objects[0]
+            person_corners = person.bounding_box_3d.corners
+            person_depth = person_corners[1].kp[0]
+
+            if person_depth > DEPTH_THRESHOLD:
+                return
+                
             for i,kp in enumerate(msg.objects[0].skeleton_3d.keypoints):
                 curr_entry.append(kp.kp) # appends keypoint x,y,z values to list.
+
             self.in_bounds_y_data.append(1)
             self.in_bounds_X_data.append(curr_entry)
+
         print("X: ", np.array(self.in_bounds_X_data).shape) # shape (num_entries, 18, 3)
         print("y: ", np.array(self.in_bounds_y_data).shape) # shape (num_entries,)
 
@@ -89,10 +99,10 @@ class PassengerML(object):
 
 class PassengerMLRandomForest():
     def __init__(self):
-        self.in_bounds_X_data = np.load("./passenger_ML_data/in_bounds_X_data.npy")
-        self.in_bounds_y_data = np.load("./passenger_ML_data/in_bounds_y_data.npy")
-        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_data.npy")
-        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_data.npy")
+        self.in_bounds_X_data = np.load("./passenger_ML_data/in_bounds_X_datav04172023.npy")
+        self.in_bounds_y_data = np.load("./passenger_ML_data/in_bounds_y_datav04172023.npy")
+        self.out_bounds_X_data = np.load("./passenger_ML_data/out_bounds_X_datav04172023.npy")
+        self.out_bounds_y_data = np.load("./passenger_ML_data/out_bounds_y_datav04172023.npy")
         print(self.in_bounds_X_data.shape)
         print(self.in_bounds_y_data.shape)
         print(self.out_bounds_X_data.shape)
@@ -103,15 +113,15 @@ if __name__ == "__main__":
         pml = PassengerML()
 
         if np.array(pml.in_bounds_X_data).shape[0] > 0:
-            with open('./passenger_ML_data/in_bounds_X_data_jake.npy', 'wb') as f:
+            with open('./passenger_ML_data/in_bounds_X_datav04172023.npy', 'wb') as f:
                 np.save(f, np.array(pml.in_bounds_X_data))
-            with open('./passenger_ML_data/in_bounds_y_data_jake.npy', 'wb') as f:
+            with open('./passenger_ML_data/in_bounds_y_datav04172023.npy', 'wb') as f:
                 np.save(f, np.array(pml.in_bounds_y_data))
 
         if np.array(pml.out_bounds_X_data).shape[0] > 0:
-            with open('./passenger_ML_data/out_bounds_X_data_jake.npy', 'wb') as f:
+            with open('./passenger_ML_data/out_bounds_X_datav04172023.npy', 'wb') as f:
                 np.save(f, np.array(pml.out_bounds_X_data))
-            with open('./passenger_ML_data/out_bounds_y_data_jake.npy', 'wb') as f:
+            with open('./passenger_ML_data/out_bounds_y_datav04172023.npy', 'wb') as f:
                 np.save(f, np.array(pml.out_bounds_y_data))
         
         pmlrf = PassengerMLRandomForest()
