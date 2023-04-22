@@ -67,10 +67,10 @@ class PassengerRFClassifier(RandomForestClassifier):
     '''
     Passenger RandomForestClassifier wrapper class for ease of access and use.
     '''
-    def __init__(self, pdata=PassengerData(np.load("./passenger_ML_data/in_bounds_X_datav03092023.npy"),
-        np.load("./passenger_ML_data/out_bounds_X_datav03092023.npy"),
-        np.load("./passenger_ML_data/in_bounds_y_datav03092023.npy"),
-        np.load("./passenger_ML_data/out_bounds_y_datav03092023.npy")), n_estimators=5, n_jobs=5):
+    def __init__(self, pdata=PassengerData(np.load("./passenger_ML_data/in_bounds_X_datav04172023.npy"),
+        np.load("./passenger_ML_data/out_bounds_X_datav04172023.npy"),
+        np.load("./passenger_ML_data/in_bounds_y_datav04172023.npy"),
+        np.load("./passenger_ML_data/out_bounds_y_datav04172023.npy")), n_estimators=5, n_jobs=5):
         '''
         This constructor takes in three optional parameters:
 
@@ -208,12 +208,6 @@ class PlotPassenger():
         plt.show()
 
 if __name__ == "__main__":
-    #best_model = PassengerRFClassifier.save_and_test_models(21, 301)
-    #prfc = PassengerRFClassifier.load_model(best_model)
-
-    modelsdf = pd.read_csv("./saved_models/results.txt", header=None, index_col=0)
-    modelsdf = modelsdf.sort_values(by=[1, 2]).iloc[-1]
-    highest_val_acc = modelsdf[1]
-    highest_acc = modelsdf[2]
-    highest_name = modelsdf.name
-    print(f"The best model generated was:\n\tName: {highest_name}\n\tValidation Acc %: {highest_val_acc}\n\tAcc %: {highest_acc}")
+    best_model = PassengerRFClassifier.save_and_test_models(101,131)
+    prfc = PassengerRFClassifier.load_model(best_model)
+    #print(f"The best model generated was:\n\tName: {highest_name}\n\tValidation Acc %: {highest_val_acc}\n\tAcc %: {highest_acc}")
