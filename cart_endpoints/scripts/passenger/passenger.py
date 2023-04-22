@@ -16,35 +16,41 @@ are inside or outside bounding box.
 Authors: Daniel Hassler, Jacob Hataway, Jakob Lindo, Maxwell Stevens
 Version: 04/2023
 '''
-PASSENGER_EDGE_TOP_X_THRESHOLD = 0.5
-DRIVER_EDGE_TOP_X_THRESHOLD = -0.7
-COUNT_THRESHOLD = 0 # in frames
-UNSAFE_COUNT_THRESHOLD = 40
-STOP_COUNT_THRESHOLD = 5
+
+# Camera threshold values. Used to filter objects.
+PASSENGER_EDGE_THRESHOLD = 0.5
+DRIVER_EDGE_THRESHOLD = -0.7
 DEPTH_THRESHOLD = 1.3
+
+
+# Count threshold values. Make sure we are confident before publishing.
+UNSAFE_POSE_THRESHOLD = 5
+POSE_STOP_THRESHOLD = 40
+PASSENGER_EXIT_THRESHOLD = 5
 
 
 class Passenger(object):
     def __init__(self):
-        rospy.init_node('Passenger_ML')
+        rospy.init_node('Passenger')
         
         # Topic that object detection data from passenger camera is coming from
         self.objects_in = rospy.get_param("objects_in", "/passenger_cam/passenger/obj_det/objects")
         
         # Publishers
-        self.out_of_bounds_pub = rospy.Publisher('/passenger/out_of_bounds', Bool, queue_size=10)
+        self.out_of_bounds_pub = rospy.Publisher('/passenger/unsafe_pose', Bool, queue_size=10)
         self.occupants_pub = rospy.Publisher('/passenger/occupants', Int8, queue_size=10)
         self.stop_pub = rospy.Publisher('/passenger/emergency_stop', String, queue_size=10)
 
         # subscribers:
         self.object_sub = rospy.Subscriber(self.objects_in, ObjectsStamped, callback=self.received_persons, queue_size=1)
-        self.nav_sub = rospy.Subscriber('/nav_cmd', VelAngle, self.nav_cb, queue_size=10)
+        self.nav_sub = rospy.Subscriber('/nav_cmd', VelAngle, self.nav_cb, queue_size=1)
 
-        #Private Variables
+        # Confidence Counters
         self.out_counter = 0
-        self.occupants = 0
-        self.startingOccupants = 1
         self.stop_counter = 0
+
+        self.occupants = 0
+        self.startingOccupants = 0
         self.stopped = True
         self.prfc = PassengerRFClassifier.load_model("./saved_models/passengerRF_model_113")
 
@@ -76,13 +82,12 @@ class Passenger(object):
             passenger_edge = person.skeleton_3d.keypoints[2].kp[1]  # passenger's top right side, y point
             person_depth = person_corners[1].kp[0]                  # occupant's furthest back point, z position
 
-            
-
             # Ignore passengers beyond a certain depth
             if person_depth > DEPTH_THRESHOLD:
                 continue
 
-            if passenger_edge < DRIVER_EDGE_TOP_X_THRESHOLD or driver_edge > PASSENGER_EDGE_TOP_X_THRESHOLD:
+            # Ignore passengers beyond a certain y threshold
+            if passenger_edge < DRIVER_EDGE_THRESHOLD or driver_edge > PASSENGER_EDGE_THRESHOLD:
                 continue
             
             occupant_count += 1
@@ -95,6 +100,7 @@ class Passenger(object):
             prediction = self.prfc.predict(passenger_keypoints)
 
             # Classify passengers based on position
+            unsafe_person = prediction == 0
             if prediction == 0:
                 # Passenger is crossing threshold, signifying an unsafe occupant
                 unsafe_person = True
@@ -108,35 +114,27 @@ class Passenger(object):
             self.stop_counter = 0
 
         # Iterate out_count
-        if unsafe_person and not self.stopped:
+        if unsafe_person:
             self.out_counter += 1
         else:
             self.out_counter = 0
-        
-        # Check if a pose is unsafe for too long.
-        if self.out_counter > UNSAFE_COUNT_THRESHOLD:
-            self.stop_pub.publish("unsafe-pose-stop")
-        
-        #print("UNSAFE COUNT: ", self.out_counter, "/", UNSAFE_COUNT_THRESHOLD)
 
         # Publish passenger information
-        if self.stop_counter > STOP_COUNT_THRESHOLD and not self.stopped:        # Publish Emergency Stop
+        if self.out_counter > POSE_STOP_THRESHOLD and not self.stopped:
+            self.stop_pub.publish("unsafe-pose-stop")                       # Publish unsafe pose Stop
+        if self.stop_counter > PASSENGER_EXIT_THRESHOLD and not self.stopped:   # Publish  passenger exit Stop
             self.stop_pub.publish("passenger-exit-stop")
             self.stop_counter = 0 
         self.occupants_pub.publish(self.occupants)                          # Publish Occupant Count
-        self.out_of_bounds_pub.publish(self.out_counter > COUNT_THRESHOLD)  # Publish Out of Bounds
+        self.out_of_bounds_pub.publish(self.out_counter > UNSAFE_POSE_THRESHOLD)  # Publish Out of Bounds
+
     ''' 
     Call back method for detecting whether cart is stopped or not 
     ____________
     Args:
         msg:
-            message containing a boolean value, T iff. cart is stopped
+            message containing a nav command. 
     '''
-    def state_cb(self, msg):
-        #print(msg.stopped)
-        #self.stopped = msg.stopped
-        pass
-
     def nav_cb(self, msg):
         self.vel = msg.vel_curr
         if self.vel < .2:
