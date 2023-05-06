@@ -150,6 +150,13 @@ def send_ready():
 def send_unsafe():
     send('passenger-unsafe',id)
     
+def send_passanger_oob():
+    """
+    (Hopefully) Sends message to UI_offline stating passanger is Out Of Bounds (OOB)
+    Currently unfinished
+    """
+    send("passenger-oob", id)
+
 
 
 # sender_id is important to ensure all parties 
@@ -190,6 +197,20 @@ def status_update(data):
     if not data.is_navigating:
         if data.reached_destination:
             arrived_dest()
+
+def passenger_out_of_bounds_callback(msg):
+    """
+    Unbuilt stub for sending message to offline_ui to 
+    send an alert stating that a passanger has been OOBs
+    for longer then maximum allowed time.
+    """
+    send_unsafe()
+   ''' current_message = msg
+    # simple hacky check for shutdown message.
+    if current_message.contains ("shutdown"):
+        send_passanger_oob()'''
+
+
                 
 #Processes and sends the image from the zed camera
 
@@ -255,9 +276,10 @@ if __name__ == "__main__":
     rospy.Subscriber('/pullover', Bool, pullover_callback)
     rospy.Subscriber('/speech_text', String, send_audio)
     rospy.Subscriber('/gps_coordinates', NavSatFix, send_location)
-    rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback)
+    #rospy.Subscriber('/passenger_safe', Bool, passenger_safe_callback) 
     rospy.Subscriber('/passenger_exit', Bool, passenger_exit_callback)
     rospy.Subscriber('/eta', UInt64, eta_callback)
+    rospy.Subscriber('/zed_passenger/out_of_bounds', String, passenger_out_of_bounds_callback)
     
     exit_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "exit.mp3"))
     enter_sound = vlc.MediaPlayer(os.path.join(os.path.expanduser("~"), "catkin_ws/src/ai-navigation/cart_endpoints/sounds/", "enter.mp3"))

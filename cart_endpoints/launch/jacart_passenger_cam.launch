@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2020, STEREOLABS.
+
+All rights reserved.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<launch>
+  <arg name="publish_urdf" default="true"/>
+
+  <!-- X is out the front of the cart -->
+  <!-- Y is left/right -->
+  <!-- Z is actually up -->
+  
+  <!-- CAMERA 2 (passenger) -->
+  <arg name="node_name_2"    default="passenger"/>
+  <arg name="camera_model_2" default="zed2i"/>
+  <arg name="camera_name_2"  default="passenger_cam"/>
+  <arg name="common_params_2"  default="$(find cart_endpoints)/zed_params/common_passenger.yaml"/>
+  <arg name="model_params_2"   default="$(find cart_endpoints)/zed_params/zed2i_passenger.yaml"/>
+  <arg name="cam_pos_x_2"    default="0.0"/>   <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pos_y_2"    default="0.102"/> <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pos_z_2"    default="0.5"/>   <!-- Position respect to base frame (i.e. "base_link) -->
+  <arg name="cam_roll_2"     default="0"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pitch_2"    default="0.3665"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_yaw_2"      default="-3.14"/>
+  <arg name="svo_file_2"     default="/home/jacart/videos/passenger.svo" />
+  <arg name="camera_sn_2"    default="31061594"/>
+
+
+  <group ns="$(arg camera_name_2)">
+    <include file="$(find cart_endpoints)/launch/include/zed_camera_mod.launch">
+      <arg name="camera_name"   value="$(arg camera_name_2)"/>
+      <arg name="node_name"     value="$(arg node_name_2)"/>
+      <arg name="camera_model"  value="$(arg camera_model_2)"/>
+      <arg name="common_params" value="$(arg common_params_2)"/>
+      <arg name="model_params"  value="$(arg model_params_2)"/>
+      <arg name="publish_urdf"  value="true"/>
+      <arg name="publish_tf"    value="false"/>
+   
+      <arg name="camera_id"     value="1"/>
+      <arg name="serial_number" value="$(arg camera_sn_2)"/>
+      <arg name="cam_pos_x"     value="$(arg cam_pos_x_2)"/>
+      <arg name="cam_pos_y"     value="$(arg cam_pos_y_2)"/>
+      <arg name="cam_pos_z"     value="$(arg cam_pos_z_2)"/>
+      <arg name="cam_roll"      value="$(arg cam_roll_2)"/>
+      <arg name="cam_pitch"     value="$(arg cam_pitch_2)"/>
+      <arg name="cam_yaw"       value="$(arg cam_yaw_2)"/>
+      <arg name="svo_file"      value="$(arg svo_file_2)"/>
+    </include>
+  </group>
+
+</launch>

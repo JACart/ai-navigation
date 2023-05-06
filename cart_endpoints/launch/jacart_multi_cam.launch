@@ -49,7 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="cam_pos_y_2"    default="0.102"/> <!-- Position respect to base frame (i.e. "base_link) -->
   <arg name="cam_pos_z_2"    default="0.5"/>   <!-- Position respect to base frame (i.e. "base_link) -->
   <arg name="cam_roll_2"     default="0"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
-  <arg name="cam_pitch_2"    default="0.0"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
+  <arg name="cam_pitch_2"    default="0.3665"/>   <!-- Orientation respect to base frame (i.e. "base_link) -->
   <arg name="cam_yaw_2"      default="-3.14"/>
   <arg name="svo_file_2"     default="/home/jacart/videos/passenger.svo" />
   <arg name="camera_sn_2"    default="31061594"/>
